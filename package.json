@@ -1,13 +1,12 @@
 {
   "name": "express-typescript-starter",
   "version": "0.1.0",
-  "description": "A starting point for Node.js express apps with TypeScript",
+  "description": "practicecoding is a website that will help developer across the world to improve their coding skills by suggesting coding problems based on their level",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/TypeScript-Node-Starter"
+    "url": "https://github.com/Zacle/practicecoding"
   },
-  "author": "Bowden Kelly",
-  "license": "MIT",
+  "author": "Zacle",
   "scripts": {
     "start": "npm run serve",
     "build": "npm run build-sass && npm run build-ts && npm run tslint && npm run copy-static-assets",
