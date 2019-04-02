@@ -18,7 +18,7 @@ export interface IProblem {
     getName(): string;
     getPlateformName(): PlateformName;
     getProblemURI(): string;
-    getProblemStatistic(problemID: string): ProblemStatistic;
+    getProblemStatistic(): ProblemStatistic;
 }
 
 export interface ProblemStatistic {
@@ -26,12 +26,13 @@ export interface ProblemStatistic {
     level: Level;
 }
 
-export interface PlateformStatisticFactory {
-    getUserStatistic(): Object;
+export interface UserStatistic {
+    problemSolvedCount: number;
+    listOfProblemsSolved: Array<IProblem>;
 }
 
 export interface PlateformFactory {
-    getProblems(key: string): InsightResponse;
-    getListOfProblems(): InsightResponse;
-    getProblemsFiltered(level: Level): InsightResponse;
+    getProblems(key: string): Promise<InsightResponse>;
+    getListOfProblems(): Promise<InsightResponse>;
+    getProblemsFiltered(level: Level): Promise<InsightResponse>;
 }

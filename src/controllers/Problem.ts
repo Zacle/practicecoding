@@ -1,6 +1,6 @@
 
 import {Level, PlateformName} from './Level';
-import {IProblem, ProblemStatistic} from './ResponseFacade';
+import {IProblem, ProblemStatistic} from './InterfaceFacade';
 
 /*
 *   Problem class for each problem
@@ -17,9 +17,9 @@ export default class Problem implements IProblem {
     private name: string;
     private plateform_name: PlateformName;
     private link: string;
-    private statistic: ProblemStatistic
+    private statistic: ProblemStatistic = null;
 
-    constructor(_id: number | string, _name: string, _plateform_name: PlateformName, _link: string, _stat: ProblemStatistic) {
+    constructor(_id: number | string, _name: string, _plateform_name: PlateformName, _link: string, _stat?: ProblemStatistic) {
         this.id = _id;
         this.name = _name;
         this.plateform_name = _plateform_name;
