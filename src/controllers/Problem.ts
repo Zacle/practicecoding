@@ -1,6 +1,6 @@
 
 import {Level, PlateformName} from './Level';
-import {IProblem, ProblemStatistic} from './InterfaceFacade';
+import {IProblem} from './InterfaceFacade';
 
 /*
 *   Problem class for each problem
@@ -9,7 +9,7 @@ import {IProblem, ProblemStatistic} from './InterfaceFacade';
 *       - name: name of the problem
 *       - plateform_name: name of the plateform (SPOJ, CODEFORCES, UVA, LIVEARCHIVE)
 *       - link: link to the problem on the plateformName
-*       - statisctic: statistics associated to this problem (solved count, level)
+*       - difficulty: difficulty of the problem of type Level
 */
 
 export default class Problem implements IProblem {
@@ -17,14 +17,14 @@ export default class Problem implements IProblem {
     private name: string;
     private plateform_name: PlateformName;
     private link: string;
-    private statistic: ProblemStatistic = null;
+    private difficulty: Level = null;
 
-    constructor(_id: number | string, _name: string, _plateform_name: PlateformName, _link: string, _stat?: ProblemStatistic) {
+    constructor(_id: number | string, _name: string, _plateform_name: PlateformName, _link: string, _stat?: Level) {
         this.id = _id;
         this.name = _name;
         this.plateform_name = _plateform_name;
         this.link = _link;
-        this.statistic = _stat;
+        this.difficulty = _stat;
     }
 
     getID(): number | string {
@@ -43,7 +43,7 @@ export default class Problem implements IProblem {
         return this.link;
     }
 
-    getProblemStatistic(): ProblemStatistic {
-        return this.statistic;
+    getProblemStatistic(): Level {
+        return this.difficulty;
     }
 }

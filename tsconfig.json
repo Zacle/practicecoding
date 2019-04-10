@@ -2,20 +2,26 @@
     "compilerOptions": {
         "module": "commonjs",
         "esModuleInterop": true,
-        "target": "es6",
+        "target": "ES6",
         "noImplicitAny": true,
         "moduleResolution": "node",
         "sourceMap": true,
         "outDir": "dist",
         "baseUrl": ".",
-        "paths": {
-            "*": [
-                "node_modules/*",
-                "src/types/*"
-            ]
-        }
+        "lib": [
+            "es7",
+            "es2017.object",
+            "dom"
+        ],
+        "typeRoots": [
+            "./node_modules/@types"
+        ],
     },
-    "include": [
-        "src/**/*"
+    "filesGlob": [
+        "/src/**/*.ts",
+        "/test/**/*.ts"
+    ],
+    "exclude": [
+        "node_modules"
     ]
 }

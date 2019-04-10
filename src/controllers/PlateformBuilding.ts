@@ -9,7 +9,8 @@ export default class PlateformBuilding {
     constructor() {}
 
     public createPlateform(typeOfPlateform: string): Plateform {
-        var plateform: Plateform;
+        
+        let plateform: Plateform;
 
         if (typeOfPlateform == "codeforces")
             plateform = new Codeforces();

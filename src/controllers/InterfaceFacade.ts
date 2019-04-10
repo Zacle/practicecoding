@@ -1,4 +1,4 @@
-import {Level, PlateformName} from './Level';
+import { Level, PlateformName } from "./Level";
 
 export interface InsightResponse {
     code: number;
@@ -18,7 +18,7 @@ export interface IProblem {
     getName(): string;
     getPlateformName(): PlateformName;
     getProblemURI(): string;
-    getProblemStatistic(): ProblemStatistic;
+    getProblemStatistic(): Level;
 }
 
 export interface ProblemStatistic {
@@ -35,4 +35,5 @@ export interface PlateformFactory {
     getProblems(key: string): Promise<InsightResponse>;
     getListOfProblems(): Promise<InsightResponse>;
     getProblemsFiltered(level: Level): Promise<InsightResponse>;
+    saveListOfProblems(problems: Promise<InsightResponse>): Promise<InsightResponse>;
 }
