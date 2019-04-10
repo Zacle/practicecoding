@@ -13,6 +13,15 @@ export interface InsightResponseErrorBody {
     error: string;
 }
 
+/*
+ *  Interface for every problem in all plateforms
+ *  Methods:
+ *      - getID(): returns the ID of the problem
+ *      - getName(): returns the name or title of the problem
+ *      - getPlateformName(): returns the plateform of the problem
+ *      - getProblemURI(): returns the link to the problem
+ *      - getProblemStatistic(): returns the difficulty of the problem
+*/
 export interface IProblem {
     getID(): number | string;
     getName(): string;
@@ -21,19 +30,28 @@ export interface IProblem {
     getProblemStatistic(): Level;
 }
 
-export interface ProblemStatistic {
-    solvedCount: number;
-    level: Level;
-}
-
+/*
+ *  Interface describing the statistics of a particular user
+ *  all plateforms
+ *  Fields:
+ *      - problemSolvedCount: number of problems solved in a particular plateform
+ *      - listOfProblemsSolved: all problems the user has solved in that plateform
+*/
 export interface UserStatistic {
     problemSolvedCount: number;
     listOfProblemsSolved: Array<IProblem>;
 }
 
+/*
+ *  Interface describing how we should query all plateforms
+ *  Methods:
+ *      - getProblems(key: string): returns all problems matching the key
+ *      - getListOfProblems(): returns all problems in a particular plateform
+ *      - getProblemsFiltered(level: Level): returns all problem of the difficulty equals to level
+*/
+
 export interface PlateformFactory {
     getProblems(key: string): Promise<InsightResponse>;
-    getListOfProblems(): Promise<InsightResponse>;
+    getListOfProblems(content: string, plateform: PlateformName): Promise<InsightResponse>;
     getProblemsFiltered(level: Level): Promise<InsightResponse>;
-    saveListOfProblems(problems: Promise<InsightResponse>): Promise<InsightResponse>;
 }

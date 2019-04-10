@@ -1,0 +1,324 @@
+{
+    "title": "SELECT All Plateforms hard problems",
+    "query": "hard",
+    "plateform": "all",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 1103,
+                    "name": "E. Radix",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1103/E"
+                },
+                {
+                    "id": 1096,
+                    "name": "G. Lucky Tickets",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1096/G"
+                },
+                {
+                    "id": 1054,
+                    "name": "H. Epic Convolution",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1054/H"
+                },
+                {
+                    "id": 1033,
+                    "name": "F. Boolean Computer",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1033/F"
+                },
+                {
+                    "id": 1036,
+                    "name": "E. Covered Points",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1036/E"
+                },
+                {
+                    "id": 1010,
+                    "name": "F. Tree",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1010/F"
+                },
+                {
+                    "id": 993,
+                    "name": "E. Nikita and Order Statistics",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/993/E"
+                },
+                {
+                    "id": 986,
+                    "name": "D. Perfect Encoding",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/986/D"
+                },
+                {
+                    "id": 981,
+                    "name": "H.K Paths",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/981/K"
+                },
+                {
+                    "id": 958,
+                    "name": "F3. Lightsabers (hard)",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/958/F3"
+                },
+                {
+                    "id": 960,
+                    "name": "G. Bandit Blues",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/960/G"
+                },
+                {
+                    "id": 954,
+                    "name": "I. Yet Another String Matching Problem",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/954/I"
+                },
+                {
+                    "id": 923,
+                    "name": "E. Perpetual Substraction",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/923/E"
+                },
+                {
+                    "id": 914,
+                    "name": "G. Sum the Fibonacci",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/914/G"
+                },
+                {
+                    "id": 901,
+                    "name": "E. Cyclic Cipher",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/901/E"
+                },
+                {
+                    "id": 850,
+                    "name": "E. Random Elections",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/850/E"
+                },
+                {
+                    "id": 848,
+                    "name": "E. Days of Floral Colours",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/848/E"
+                },
+                {
+                    "id": 827,
+                    "name": "E. Rusty String",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/827/E"
+                },
+                {
+                    "id": 773,
+                    "name": "F. Test Data Generation",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/773/F"
+                },
+                {
+                    "id": 755,
+                    "name": "G. PolandBall And Many Other Balls",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/755/G"
+                },
+                {
+                    "id": 754,
+                    "name": "E. Dasha and cyclic table",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/754/E"
+                },
+                {
+                    "id": 715,
+                    "name": "E. Complete the Permutations",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/715/E"
+                },
+                {
+                    "id": 662,
+                    "name": "C. Binary Table",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/662/C"
+                },
+                {
+                    "id": 632,
+                    "name": "E. Thief in a Shop",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/632/E"
+                },
+                {
+                    "id": 623,
+                    "name": "E. Transforming Sequence",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/623/E"
+                },
+                {
+                    "id": 553,
+                    "name": "E. Kyoya and Train",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/553/E"
+                },
+                {
+                    "id": 528,
+                    "name": "D. Fuzzy Search",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/528/D"
+                },
+                {
+                    "id": 472,
+                    "name": "G. Design Tutorial: Increase the Constraints",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/472/G"
+                },
+                {
+                    "id": 438,
+                    "name": "E. The Child and Binary Tree",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/438/E"
+                },
+                {
+                    "id": 300,
+                    "name": "D. Painting Square",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/300/D"
+                },
+                {
+                    "id": 286,
+                    "name": "E. Ladies’ Shop",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/286/E"
+                },
+                {
+                    "id": 1,
+                    "name": "2000 – Wrap it up",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=1"
+                },
+                {
+                    "id": 2,
+                    "name": "2001 - Compiler code generation",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=2"
+                },
+                {
+                    "id": 3,
+                    "name": "2002 – Crosswords",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=3"
+                },
+                {
+                    "id": 4,
+                    "name": "2003 - Genetic family tree",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=4"
+                },
+                {
+                    "id": 5,
+                    "name": "2004 - Fire trucks",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=5"
+                },
+                {
+                    "id": 10,
+                    "name": "2009 - Best Image Layout",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=10"
+                },
+                {
+                    "id": 11,
+                    "name": "2010 - Swiss Draw",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=11"
+                },
+                {
+                    "id": 12,
+                    "name": "2011 – Calypso",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=12"
+                },
+                {
+                    "id": 13,
+                    "name": "2012 - Four in a Line",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=13"
+                },
+                {
+                    "id": 17,
+                    "name": "2016 - Charity Begins at Home-page",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=17"
+                },
+                {
+                    "id": 19,
+                    "name": "2018 - If it's a Javelin  Duck!",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=19"
+                },
+                {
+                    "id": 20,
+                    "name": "2019 - The Party's in Dolores's Driveway",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=20"
+                },
+                {
+                    "id": 21,
+                    "name": "2020 - Programming Olympiad",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=21"
+                },
+                {
+                    "id": 23,
+                    "name": "2022 - The Plane Problem",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=23"
+                },
+                {
+                    "id": 24,
+                    "name": "2023 - Who Wants to Have the Fastest Fingers?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=24"
+                },
+                {
+                    "id": 25,
+                    "name": "2024 – Convoy",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=25"
+                },
+                {
+                    "id": 26,
+                    "name": "2025 - Digital Lab",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=26"
+                },
+                {
+                    "id": 29,
+                    "name": "2028 - Treasure Hunt",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=29"
+                },
+                {
+                    "id": 40,
+                    "name": "104 – Arbitrage",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=40"
+                },
+                {
+                    "id": 52,
+                    "name": "116 – Unidirectional TSP",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=52"
+                },
+                {
+                    "id": 61,
+                    "name": "125 - Numbering Paths",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=61"
+                }
+            ]
+        }
+    }
+}

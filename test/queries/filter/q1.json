@@ -1,0 +1,12 @@
+{
+    "title": "SELECT Codeforces easy problems",
+    "query": "easy",
+    "plateform": "codeforces",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+            ]
+        }
+    }
+}

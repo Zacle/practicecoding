@@ -1,6 +1,7 @@
 
-import {Level, PlateformName} from './Level';
-import {IProblem} from './InterfaceFacade';
+import { Level, PlateformName } from './Level';
+import { IProblem, InsightResponse } from './InterfaceFacade';
+import Log from '../Util';
 
 /*
 *   Problem class for each problem
@@ -12,7 +13,7 @@ import {IProblem} from './InterfaceFacade';
 *       - difficulty: difficulty of the problem of type Level
 */
 
-export default class Problem implements IProblem {
+export class Problem implements IProblem {
     private id: number | string;
     private name: string;
     private plateform_name: PlateformName;
@@ -20,6 +21,7 @@ export default class Problem implements IProblem {
     private difficulty: Level = null;
 
     constructor(_id: number | string, _name: string, _plateform_name: PlateformName, _link: string, _stat?: Level) {
+        Log.trace("ProblemImpl::init()");
         this.id = _id;
         this.name = _name;
         this.plateform_name = _plateform_name;
@@ -46,4 +48,12 @@ export default class Problem implements IProblem {
     getProblemStatistic(): Level {
         return this.difficulty;
     }
+}
+
+export class Saver {
+    
+    public static saveListOfProblems(problems: Array<IProblem>, plateform: PlateformName): Promise<InsightResponse> {
+        return Promise.reject({code: -1, body: null});
+    }
+
 }

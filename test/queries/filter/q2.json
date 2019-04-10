@@ -1,0 +1,12 @@
+{
+    "title": "SELECT Codeforces medium problems",
+    "query": "medium",
+    "plateform": "codeforces",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+            ]
+        }
+    }
+}

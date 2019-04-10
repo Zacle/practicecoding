@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as Validator from "jsonschema";
 import * as fspath from "path";
-import * as recursive from "recursive-readdir";
+import recursive from "recursive-readdir";
 
 import Log from "../src/Util";
 import { ITestQuery } from "./Plateform.spec";

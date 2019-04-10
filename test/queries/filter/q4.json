@@ -1,0 +1,24 @@
+{
+    "title": "SELECT Live Archive easy problems",
+    "query": "easy",
+    "plateform": "livearchive",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 22,
+                    "name": "2021 - Rectangular Rectitude",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=22"
+                },
+                {
+                    "id": 30,
+                    "name": "2029 - Coloration Problem",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=30"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,210 @@
+{
+    "title": "SELECT All Plateforms medium problems",
+    "query": "medium",
+    "plateform": "all",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 6,
+                    "name": "2005 - Message decoding",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=6"
+                },
+                {
+                    "id": 7,
+                    "name": "2006 - Most wanted word",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=7"
+                },
+                {
+                    "id": 8,
+                    "name": "2007 - Tag Checker",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=8"
+                },
+                {
+                    "id": 9,
+                    "name": "2008 - Bouncy Balls",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=9"
+                },
+                {
+                    "id": 14,
+                    "name": "2013 - Discrete Digital Tomography",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=14"
+                },
+                {
+                    "id": 15,
+                    "name": "2014 - Are We There Yet?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=15"
+                },
+                {
+                    "id": 16,
+                    "name": "2015 - Bob's Bingo Bonanza",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=16"
+                },
+                {
+                    "id": 18,
+                    "name": "2017 – Hey  You're Not Marion Jones!",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=18"
+                },
+                {
+                    "id": 27,
+                    "name": "2026 - Generating permutations",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=27"
+                },
+                {
+                    "id": 28,
+                    "name": "2027 - Island's Vegetation",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=28"
+                },
+                {
+                    "id": 36,
+                    "name": "100 – The 3n + 1 problem",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=36"
+                },
+                {
+                    "id": 37,
+                    "name": "101 - The Block Problem",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=37"
+                },
+                {
+                    "id": 38,
+                    "name": "102 – Ecological Bin Packing",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=38"
+                },
+                {
+                    "id": 39,
+                    "name": "103 – Stacking Boxes",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=39"
+                },
+                {
+                    "id": 41,
+                    "name": "105 – The Skyline Problem",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=41"
+                },
+                {
+                    "id": 42,
+                    "name": "106 – Fermat vs. Pythagoras",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=42"
+                },
+                {
+                    "id": 43,
+                    "name": "107 – The Cat in the Hat",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=43"
+                },
+                {
+                    "id": 44,
+                    "name": "108 – Maximun Sum",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=44"
+                },
+                {
+                    "id": 45,
+                    "name": "109 – SCUD Busters",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=45"
+                },
+                {
+                    "id": 46,
+                    "name": "110 – Meta-Loopless Sorts",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=46"
+                },
+                {
+                    "id": 47,
+                    "name": "111 – History Grading",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=47"
+                },
+                {
+                    "id": 48,
+                    "name": "112 – Tree Summing",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=48"
+                },
+                {
+                    "id": 49,
+                    "name": "113 – Power of Cryptography",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=49"
+                },
+                {
+                    "id": 50,
+                    "name": "114 – Simulation Wizardry",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=50"
+                },
+                {
+                    "id": 51,
+                    "name": "115 – Climbing Trees",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=51"
+                },
+                {
+                    "id": 53,
+                    "name": "117 - The Postal Worker Rings Once",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=53"
+                },
+                {
+                    "id": 54,
+                    "name": "118 - Mutant Flatworld Explorers",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=54"
+                },
+                {
+                    "id": 55,
+                    "name": "119 - Greedy Gift Givers",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=55"
+                },
+                {
+                    "id": 56,
+                    "name": "120 - Stacks of Flapjacks",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=56"
+                },
+                {
+                    "id": 57,
+                    "name": "121 - Pipe Fitters",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=57"
+                },
+                {
+                    "id": 58,
+                    "name": "122 - Trees on the level",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=58"
+                },
+                {
+                    "id": 59,
+                    "name": "123 - Searching Quickly",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=59"
+                },
+                {
+                    "id": 62,
+                    "name": "126 - The Errant Physicist",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=62"
+                }
+            ]
+        }
+    }
+}

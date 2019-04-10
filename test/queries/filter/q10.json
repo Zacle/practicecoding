@@ -1,0 +1,42 @@
+{
+    "title": "SELECT All Plateforms easy problems",
+    "query": "easy",
+    "plateform": "all",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 22,
+                    "name": "2021 - Rectangular Rectitude",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=22"
+                },
+                {
+                    "id": 30,
+                    "name": "2029 - Coloration Problem",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=30"
+                },
+                {
+                    "id": 60,
+                    "name": "124 - Following Orders",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=60"
+                },
+                {
+                    "id": 63,
+                    "name": "127 - “Accordian” Patience",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=63"
+                },
+                {
+                    "id": 64,
+                    "name": "128 - Software CRC",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=64"
+                }
+            ]
+        }
+    }
+}

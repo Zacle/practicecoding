@@ -1,0 +1,30 @@
+{
+    "title": "SELECT Uva easy problems",
+    "query": "easy",
+    "plateform": "uva",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 60,
+                    "name": "124 - Following Orders",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=60"
+                },
+                {
+                    "id": 63,
+                    "name": "127 - “Accordian” Patience",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=63"
+                },
+                {
+                    "id": 64,
+                    "name": "128 - Software CRC",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=64"
+                }
+            ]
+        }
+    }
+}

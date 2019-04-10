@@ -1,0 +1,72 @@
+{
+    "title": "SELECT Live Archive medium problems",
+    "query": "medium",
+    "plateform": "livearchive",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 6,
+                    "name": "2005 - Message decoding",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=6"
+                },
+                {
+                    "id": 7,
+                    "name": "2006 - Most wanted word",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=7"
+                },
+                {
+                    "id": 8,
+                    "name": "2007 - Tag Checker",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=8"
+                },
+                {
+                    "id": 9,
+                    "name": "2008 - Bouncy Balls",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=9"
+                },
+                {
+                    "id": 14,
+                    "name": "2013 - Discrete Digital Tomography",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=14"
+                },
+                {
+                    "id": 15,
+                    "name": "2014 - Are We There Yet?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=15"
+                },
+                {
+                    "id": 16,
+                    "name": "2015 - Bob's Bingo Bonanza",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=16"
+                },
+                {
+                    "id": 18,
+                    "name": "2017 – Hey  You're Not Marion Jones!",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=18"
+                },
+                {
+                    "id": 27,
+                    "name": "2026 - Generating permutations",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=27"
+                },
+                {
+                    "id": 28,
+                    "name": "2027 - Island's Vegetation",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=28"
+                }
+            ]
+        }
+    }
+}
