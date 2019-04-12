@@ -1,7 +1,7 @@
 
-import { Level, PlateformName } from './Level';
-import { IProblem, InsightResponse } from './InterfaceFacade';
-import Log from '../Util';
+import { Level, PlateformName } from "./Level";
+import { IProblem, InsightResponse } from "./InterfaceFacade";
+import Log from "../Util";
 
 /*
 *   Problem class for each problem

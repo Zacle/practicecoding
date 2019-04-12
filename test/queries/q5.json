@@ -1,0 +1,12 @@
+{
+    "title": "SELECT Codeforces problems that contain 'erec' ",
+    "query": "erec",
+    "plateform": "codeforces",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+            ]
+        }
+    }
+}

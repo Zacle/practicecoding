@@ -1,0 +1,30 @@
+{
+    "title": "SELECT Uva problems that contain 'tree' ",
+    "query": "tree",
+    "plateform": "uva",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 48,
+                    "name": "112 – Tree Summing",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=48"
+                },
+                {
+                    "id": 51,
+                    "name": "115 – Climbing Trees",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=51"
+                },
+                {
+                    "id": 58,
+                    "name": "122 - Trees on the level",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=58"
+                }
+            ]
+        }
+    }
+}

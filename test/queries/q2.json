@@ -1,0 +1,72 @@
+{
+    "title": "SELECT Codeforces problems that contain 'er' ",
+    "query": "er",
+    "plateform": "codeforces",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 1033,
+                    "name": "F. Boolean Computer",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1033/F"
+                },
+                {
+                    "id": 1036,
+                    "name": "E. Covered Points",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1036/E"
+                },
+                {
+                    "id": 993,
+                    "name": "E. Nikita and Order Statistics",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/993/E"
+                },
+                {
+                    "id": 986,
+                    "name": "D. Perfect Encoding",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/986/D"
+                },
+                {
+                    "id": 958,
+                    "name": "F3. Lightsabers (hard)",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/958/F3"
+                },
+                {
+                    "id": 954,
+                    "name": "I. Yet Another String Matching Problem",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/954/I"
+                },
+                {
+                    "id": 923,
+                    "name": "E. Perpetual Substraction",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/923/E"
+                },
+                {
+                    "id": 901,
+                    "name": "E. Cyclic Cipher",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/901/E"
+                },
+                {
+                    "id": 773,
+                    "name": "F. Test Data Generation",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/773/F"
+                },
+                {
+                    "id": 715,
+                    "name": "E. Complete the Permutations",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/715/E"
+                }
+            ]
+        }
+    }
+}

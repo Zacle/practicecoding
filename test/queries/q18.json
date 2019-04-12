@@ -1,0 +1,24 @@
+{
+    "title": "SELECT All problems that contain 'ere' ",
+    "query": "ere",
+    "plateform": "all",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 1036,
+                    "name": "E. Covered Points",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1036/E"
+                },
+                {
+                    "id": 15,
+                    "name": "2014 - Are We There Yet?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=15"
+                }
+            ]
+        }
+    }
+}

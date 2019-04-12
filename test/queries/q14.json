@@ -1,0 +1,12 @@
+{
+    "title": "SELECT Uva problems that contain 'ere' ",
+    "query": "ere",
+    "plateform": "uva",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+            ]
+        }
+    }
+}

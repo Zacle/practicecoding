@@ -1,5 +1,5 @@
-import {PlateformFactory} from './InterfaceFacade';
-import {Plateform, Codeforces, Uva, Spoj, LiveArchive, AllPlateforms} from './Plateform';
+import {PlateformFactory} from "./InterfaceFacade";
+import {Plateform, Codeforces, Uva, Spoj, LiveArchive, AllPlateforms} from "./Plateform";
 
 /*
  *  Create a specific plateform as specified by the user

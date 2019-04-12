@@ -16,7 +16,7 @@
         ],
         "no-var-keyword": true,
         "quotemark": [
-            true,
+            false,
             "double",
             "avoid-escape"
         ],
@@ -26,7 +26,7 @@
             "ignore-bound-class-methods"
         ],
         "whitespace": [
-            true,
+            false,
             "check-branch",
             "check-decl",
             "check-operator",
@@ -35,7 +35,7 @@
             "check-type"
         ],
         "typedef-whitespace": [
-            true,
+            false,
             {
                 "call-signature": "nospace",
                 "index-signature": "nospace",
@@ -52,8 +52,8 @@
             }
         ],
         "no-internal-module": true,
-        "no-trailing-whitespace": true,
-        "no-null-keyword": true,
+        "no-trailing-whitespace": false,
+        "no-null-keyword": false,
         "prefer-const": true,
         "jsdoc-format": true
     }

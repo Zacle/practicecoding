@@ -1,0 +1,42 @@
+{
+    "title": "SELECT Live Archive problems that contain 'er' ",
+    "query": "er",
+    "plateform": "livearchive",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 2,
+                    "name": "2001 - Compiler code generation",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=2"
+                },
+                {
+                    "id": 8,
+                    "name": "2007 - Tag Checker",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=8"
+                },
+                {
+                    "id": 15,
+                    "name": "2014 - Are We There Yet?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=15"
+                },
+                {
+                    "id": 24,
+                    "name": "2023 - Who Wants to Have the Fastest Fingers?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=24"
+                },
+                {
+                    "id": 27,
+                    "name": "2026 - Generating permutations",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=27"
+                }
+            ]
+        }
+    }
+}

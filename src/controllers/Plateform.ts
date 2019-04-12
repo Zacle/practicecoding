@@ -2,7 +2,7 @@ import { IProblem, PlateformFactory, UserStatistic } from "./InterfaceFacade";
 import { InsightResponse } from "./InterfaceFacade";
 import { Level, PlateformName } from "./Level";
 import Log from "../Util";
-import { Saver } from './Problem';
+import { Saver } from "./Problem";
 
 /*
  *  Define the plateform superclass that will serve as a base
@@ -13,8 +13,7 @@ import { Saver } from './Problem';
  *      - userStat: statistic of the user on a particular plateform
 */
 
-export abstract class Plateform implements PlateformFactory {
-    
+export abstract class Plateform implements PlateformFactory {    
     private plateformFactory: PlateformFactory;
     private listOfProblems: Array<IProblem> = [];
     private userStat: UserStatistic;
@@ -37,30 +36,29 @@ export abstract class Plateform implements PlateformFactory {
 }
 
 export class Codeforces extends Plateform {    
-
     constructor() {
         super();
         Log.trace("Codeforces::init()");
     }
 
     getProblems(key: string): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});
+        return Promise.reject({code: -1, body: undefined});
     }
     
     getListOfProblems(content: string, plateform: PlateformName): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});
+            return Promise.reject({code: -1, body: null});
     }
     
     getProblemsFiltered(level: Level): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});
+        return Promise.reject({code: -1, body: undefined});
     }
 
     getUserStatistic(): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});;
+        return Promise.reject({code: -1, body: null});
     }
     
     getPlateform(): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});;
+        return Promise.reject({code: -1, body: null});
     }
 }
 
@@ -128,7 +126,7 @@ export class LiveArchive extends Plateform {
     }
 
     getProblems(key: string): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});;
+        return Promise.reject({code: -1, body: null});
     }
     
     getListOfProblems(content: string, plateform: PlateformName): Promise<InsightResponse> {
@@ -162,7 +160,7 @@ export class AllPlateforms extends Plateform {
     }
     
     getProblems(key: string): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});;
+        return Promise.reject({code: -1, body: null});
     }
     
     getListOfProblems(content: string, plateform: PlateformName): Promise<InsightResponse> {

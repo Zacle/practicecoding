@@ -1,0 +1,12 @@
+{
+    "title": "SELECT Live Archive problems that contain 'ered' ",
+    "query": "ered",
+    "plateform": "livearchive",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+            ]
+        }
+    }
+}

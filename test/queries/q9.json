@@ -1,0 +1,18 @@
+{
+    "title": "SELECT Live Archive problems that contain 'ere' ",
+    "query": "ere",
+    "plateform": "livearchive",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 15,
+                    "name": "2014 - Are We There Yet?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=15"
+                }
+            ]
+        }
+    }
+}

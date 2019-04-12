@@ -1,0 +1,162 @@
+{
+    "title": "SELECT All problems that contain 'er' ",
+    "query": "er",
+    "plateform": "all",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+                {
+                    "id": 1033,
+                    "name": "F. Boolean Computer",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1033/F"
+                },
+                {
+                    "id": 1036,
+                    "name": "E. Covered Points",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/1036/E"
+                },
+                {
+                    "id": 993,
+                    "name": "E. Nikita and Order Statistics",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/993/E"
+                },
+                {
+                    "id": 986,
+                    "name": "D. Perfect Encoding",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/986/D"
+                },
+                {
+                    "id": 958,
+                    "name": "F3. Lightsabers (hard)",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/958/F3"
+                },
+                {
+                    "id": 954,
+                    "name": "I. Yet Another String Matching Problem",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/954/I"
+                },
+                {
+                    "id": 923,
+                    "name": "E. Perpetual Substraction",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/923/E"
+                },
+                {
+                    "id": 901,
+                    "name": "E. Cyclic Cipher",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/901/E"
+                },
+                {
+                    "id": 773,
+                    "name": "F. Test Data Generation",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/773/F"
+                },
+                {
+                    "id": 715,
+                    "name": "E. Complete the Permutations",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/715/E"
+                },
+                {
+                    "id": 2,
+                    "name": "2001 - Compiler code generation",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=2"
+                },
+                {
+                    "id": 8,
+                    "name": "2007 - Tag Checker",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=8"
+                },
+                {
+                    "id": 15,
+                    "name": "2014 - Are We There Yet?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=15"
+                },
+                {
+                    "id": 24,
+                    "name": "2023 - Who Wants to Have the Fastest Fingers?",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=24"
+                },
+                {
+                    "id": 27,
+                    "name": "2026 - Generating permutations",
+                    "plateform": "Live Archive",
+                    "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=27"
+                },
+                {
+                    "id": 42,
+                    "name": "106 – Fermat vs. Pythagoras",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=42"
+                },
+                {
+                    "id": 45,
+                    "name": "109 – SCUD Busters",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=45"
+                },
+                {
+                    "id": 49,
+                    "name": "113 – Power of Cryptography",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=49"
+                },
+                {
+                    "id": 53,
+                    "name": "117 - The Postal Worker Rings Once",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=53"
+                },
+                {
+                    "id": 54,
+                    "name": "118 - Mutant Flatworld Explorers",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=54"
+                },
+                {
+                    "id": 55,
+                    "name": "119 - Greedy Gift Givers",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=55"
+                },
+                {
+                    "id": 57,
+                    "name": "121 - Pipe Fitters",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=57"
+                },
+                {
+                    "id": 60,
+                    "name": "124 - Following Orders",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=60"
+                },
+                {
+                    "id": 61,
+                    "name": "125 - Numbering Paths",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=61"
+                },
+                {
+                    "id": 62,
+                    "name": "126 - The Errant Physicist",
+                    "plateform": "Uva",
+                    "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=62"
+                }
+            ]
+        }
+    }
+}

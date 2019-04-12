@@ -1,0 +1,12 @@
+{
+    "title": "SELECT All problems that contain 'erec' ",
+    "query": "erec",
+    "plateform": "all",
+    "response": {
+        "code": 200,
+        "body": {
+            "result": [
+            ]
+        }
+    }
+}
