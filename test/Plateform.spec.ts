@@ -98,8 +98,9 @@ describe("IntefaceFacade should add all plateforms problems", function () {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.lengthOf(31);
+            expect(response.body.result).to.have.lengthOf(32);
         }
+        
     });
 
     it("Should not add the same problems", async () => {
@@ -114,23 +115,7 @@ describe("IntefaceFacade should add all plateforms problems", function () {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.lengthOf(31);
-        }
-    });
-
-    it("Should not add invalid codeforces", async () => {
-        const id: string = "codeorces";
-        const plateform: PlateformName = PlateformName.CODEFORCES;
-        const expectedCode: number = 400;
-        let response: InsightResponse;
-
-        try {
-            response = await codeforces.getListOfProblems(datasets[id], plateform);
-        } catch (err) {
-            response = err;
-        } finally {
-            expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.property('error');
+            expect(response.body.result).to.have.lengthOf(32);
         }
     });
 
@@ -149,7 +134,7 @@ describe("IntefaceFacade should add all plateforms problems", function () {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.lengthOf(30);
+            expect(response.body.result).to.have.lengthOf(31);
         }
     });
 
@@ -165,23 +150,7 @@ describe("IntefaceFacade should add all plateforms problems", function () {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.lengthOf(30);
-        }
-    });
-
-    it("Should not add invalid livearchive", async () => {
-        const id: string = "livarchive";
-        const plateform: PlateformName = PlateformName.LIVEARCHIVE;
-        const expectedCode: number = 400;
-        let response: InsightResponse;
-
-        try {
-            response = await codeforces.getListOfProblems(datasets[id], plateform);
-        } catch (err) {
-            response = err;
-        } finally {
-            expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.property('error');
+            expect(response.body.result).to.have.lengthOf(31);
         }
     });
 
@@ -200,7 +169,7 @@ describe("IntefaceFacade should add all plateforms problems", function () {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.lengthOf(29);
+            expect(response.body.result).to.have.lengthOf(30);
         }
     });
 
@@ -216,27 +185,12 @@ describe("IntefaceFacade should add all plateforms problems", function () {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.lengthOf(29);
-        }
-    });
-
-    it("Should not add invalid uva", async () => {
-        const id: string = "uv";
-        const plateform: PlateformName = PlateformName.UVA;
-        const expectedCode: number = 400;
-        let response: InsightResponse;
-
-        try {
-            response = await uva.getListOfProblems(datasets[id], plateform);
-        } catch (err) {
-            response = err;
-        } finally {
-            expect(response.code).to.equal(expectedCode);
-            expect(response.body).to.have.property('error');
+            expect(response.body.result).to.have.lengthOf(30);
         }
     });
 
 });
+
 
 // This test suite dynamically generates tests from the JSON files in test/queries.
 // Do not modify it; instead, add additional files to the queries directory.

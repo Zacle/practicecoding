@@ -10,6 +10,7 @@ export interface InsightResponseSuccessBody {
 }
 
 export interface InsightResponseErrorBody {
+    result?: any[] | string;
     error: string;
 }
 
@@ -54,4 +55,15 @@ export interface PlateformFactory {
     getProblems(key: string): Promise<InsightResponse>;
     getListOfProblems(content: string, plateform: PlateformName): Promise<InsightResponse>;
     getProblemsFiltered(level: Level): Promise<InsightResponse>;
+}
+
+/*
+ * Interface for the returned body of each query
+*/
+
+export interface Body {
+    id: number | string;
+    name: string;
+    palteform: string;
+    link: string;
 }
