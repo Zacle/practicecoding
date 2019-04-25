@@ -7,19 +7,19 @@
         "body": {
             "result": [
                 {
-                    "id": 40,
+                    "id": "40",
                     "name": "104 – Arbitrage",
                     "plateform": "Uva",
                     "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=40"
                 },
                 {
-                    "id": 52,
+                    "id": "52",
                     "name": "116 – Unidirectional TSP",
                     "plateform": "Uva",
                     "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=52"
                 },
                 {
-                    "id": 61,
+                    "id": "61",
                     "name": "125 - Numbering Paths",
                     "plateform": "Uva",
                     "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=61"

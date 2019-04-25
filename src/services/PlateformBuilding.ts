@@ -1,5 +1,5 @@
 import {PlateformFactory} from "./InterfaceFacade";
-import {Plateform, Codeforces, Uva, Spoj, LiveArchive, AllPlateforms} from "./Plateform";
+import {Plateform, Codeforces, Uva, LiveArchive, AllPlateforms} from "./Plateform";
 
 /*
  *  Create a specific plateform as specified by the user
@@ -14,9 +14,6 @@ export default class PlateformBuilding {
 
         if (typeOfPlateform == "codeforces")
             plateform = new Codeforces();
-
-        else if (typeOfPlateform == "spoj")
-            plateform = new Spoj();
         
         else if (typeOfPlateform == "uva")
             plateform = new Uva();

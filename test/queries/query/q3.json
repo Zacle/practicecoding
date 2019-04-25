@@ -1,13 +1,13 @@
 {
-    "title": "SELECT All problems that contain 'ered' ",
-    "query": "ered",
-    "plateform": "all",
+    "title": "SELECT Codeforces problems that contain 'ere' ",
+    "query": "ere",
+    "plateform": "codeforces",
     "response": {
         "code": 200,
         "body": {
             "result": [
                 {
-                    "id": 1036,
+                    "id": "1036",
                     "name": "E. Covered Points",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1036/E"

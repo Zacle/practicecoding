@@ -6,12 +6,15 @@ export interface InsightResponse {
 }
 
 export interface InsightResponseSuccessBody {
-    result: any[] | string;
+    result: any[];
+    name?: string;
 }
 
 export interface InsightResponseErrorBody {
-    result?: any[] | string;
-    error: string;
+    result?: any[];
+    error?: string;
+
+    name?: string;
 }
 
 /*
@@ -26,9 +29,9 @@ export interface InsightResponseErrorBody {
 export interface IProblem {
     getID(): number | string;
     getName(): string;
-    getPlateformName(): PlateformName;
+    getPlateformName(): PlateformName | string;
     getProblemURI(): string;
-    getProblemStatistic(): Level;
+    getProblemStatistic(): string;
 }
 
 /*
@@ -53,8 +56,8 @@ export interface UserStatistic {
 
 export interface PlateformFactory {
     getProblems(key: string): Promise<InsightResponse>;
-    getListOfProblems(content: string, plateform: PlateformName): Promise<InsightResponse>;
-    getProblemsFiltered(level: Level): Promise<InsightResponse>;
+    getListOfProblems(): Promise<InsightResponse>;
+    getProblemsFiltered(level: string): Promise<InsightResponse>;
 }
 
 /*

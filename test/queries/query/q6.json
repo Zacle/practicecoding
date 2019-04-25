@@ -7,13 +7,13 @@
         "body": {
             "result": [
                 {
-                    "id": 1010,
+                    "id": "1010",
                     "name": "F. Tree",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1010/F"
                 },
                 {
-                    "id": 438,
+                    "id": "438",
                     "name": "E. The Child and Binary Tree",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/438/E"

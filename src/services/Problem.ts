@@ -16,11 +16,11 @@ import Log from "../Util";
 export class Problem implements IProblem {
     private id: number | string;
     private name: string;
-    private plateform_name: PlateformName;
+    private plateform_name: PlateformName | string;
     private link: string;
-    private difficulty: Level = null;
+    private difficulty: string = null;
 
-    constructor(_id: number | string, _name: string, _plateform_name: PlateformName, _link: string, _stat?: Level) {
+    constructor(_id: number | string, _name: string, _plateform_name: PlateformName | string, _link: string, _stat?: string) {
         Log.trace("ProblemImpl::init()");
         this.id = _id;
         this.name = _name;
@@ -37,7 +37,7 @@ export class Problem implements IProblem {
         return this.name;
     }
 
-    getPlateformName(): PlateformName {
+    getPlateformName(): PlateformName | string {
         return this.plateform_name;
     }
 
@@ -45,7 +45,7 @@ export class Problem implements IProblem {
         return this.link;
     }
 
-    getProblemStatistic(): Level {
+    getProblemStatistic(): string {
         return this.difficulty;
     }
 }

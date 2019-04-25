@@ -7,127 +7,127 @@
         "body": {
             "result": [
                 {
-                    "id": 2,
+                    "id": "2",
                     "name": "2001 - Compiler code generation",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=2"
                 },
                 {
-                    "id": 4,
+                    "id": "4",
                     "name": "2003 - Genetic family tree",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=4"
                 },
                 {
-                    "id": 5,
+                    "id": "5",
                     "name": "2004 - Fire trucks",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=5"
                 },
                 {
-                    "id": 6,
+                    "id": "6",
                     "name": "2005 - Message decoding",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=6"
                 },
                 {
-                    "id": 7,
+                    "id": "7",
                     "name": "2006 - Most wanted word",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=7"
                 },
                 {
-                    "id": 8,
+                    "id": "8",
                     "name": "2007 - Tag Checker",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=8"
                 },
                 {
-                    "id": 10,
+                    "id": "10",
                     "name": "2009 - Best Image Layout",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=10"
                 },
                 {
-                    "id": 13,
+                    "id": "13",
                     "name": "2012 - Four in a Line",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=13"
                 },
                 {
-                    "id": 14,
+                    "id": "14",
                     "name": "2013 - Discrete Digital Tomography",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=14"
                 },
                 {
-                    "id": 15,
+                    "id": "15",
                     "name": "2014 - Are We There Yet?",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=15"
                 },
                 {
-                    "id": 17,
+                    "id": "17",
                     "name": "2016 - Charity Begins at Home-page",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=17"
                 },
                 {
-                    "id": 18,
+                    "id": "18",
                     "name": "2017 – Hey  You're Not Marion Jones!",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=18"
                 },
                 {
-                    "id": 19,
+                    "id": "19",
                     "name": "2018 - If it's a Javelin  Duck!",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=19"
                 },
                 {
-                    "id": 20,
+                    "id": "20",
                     "name": "2019 - The Party's in Dolores's Driveway",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=20"
                 },
                 {
-                    "id": 22,
+                    "id": "22",
                     "name": "2021 - Rectangular Rectitude",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=22"
                 },
                 {
-                    "id": 23,
+                    "id": "23",
                     "name": "2022 - The Plane Problem",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=23"
                 },
                 {
-                    "id": 24,
+                    "id": "24",
                     "name": "2023 - Who Wants to Have the Fastest Fingers?",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=24"
                 },
                 {
-                    "id": 27,
+                    "id": "27",
                     "name": "2026 - Generating permutations",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=27"
                 },
                 {
-                    "id": 28,
+                    "id": "28",
                     "name": "2027 - Island's Vegetation",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=28"
                 },
                 {
-                    "id": 29,
+                    "id": "29",
                     "name": "2028 - Treasure Hunt",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=29"
                 },
                 {
-                    "id": 30,
+                    "id": "30",
                     "name": "2029 - Coloration Problem",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=30"

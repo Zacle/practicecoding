@@ -1,9 +1,9 @@
 import { expect } from "chai";
 
-import {IProblem, PlateformFactory, UserStatistic} from "../src/controllers/InterfaceFacade";
-import {InsightResponse, InsightResponseSuccessBody, InsightResponseErrorBody} from "../src/controllers/InterfaceFacade";
-import {Plateform, Codeforces, Spoj, Uva, LiveArchive, AllPlateforms} from "../src/controllers/Plateform";
-import {Level, PlateformName} from "../src/controllers/Level";
+import {IProblem, PlateformFactory, UserStatistic} from "../src/services/InterfaceFacade";
+import {InsightResponse, InsightResponseSuccessBody, InsightResponseErrorBody} from "../src/services/InterfaceFacade";
+import {Plateform, Codeforces, Uva, LiveArchive, AllPlateforms} from "../src/services/Plateform";
+import {Level, PlateformName} from "../src/services/Level";
 import Log from "../src/Util";
 import TestUtil from "./TestUtil";
 
@@ -91,14 +91,18 @@ describe("IntefaceFacade should add all plateforms problems", function () {
         const plateform: PlateformName = PlateformName.CODEFORCES;
         const expectedCode: number = 204;
         let response: InsightResponse;
+        let testPlateform: InsightResponse;
 
         try {
-            response = await codeforces.getListOfProblems(datasets[id], plateform);
+            response = await codeforces.getListOfProblems();
+            testPlateform = await codeforces.getPlateform();
         } catch (err) {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
             expect(response.body.result).to.have.lengthOf(32);
+            expect(testPlateform.code).to.equal(expectedCode);
+            expect(testPlateform.body.name).to.equal("codeforces");
         }
         
     });
@@ -108,14 +112,18 @@ describe("IntefaceFacade should add all plateforms problems", function () {
         const plateform: PlateformName = PlateformName.CODEFORCES;
         const expectedCode: number = 204;
         let response: InsightResponse;
+        let testPlateform: InsightResponse;
 
         try {
-            response = await codeforces.getListOfProblems(datasets[id], plateform);
+            response = await codeforces.getListOfProblems();
+            testPlateform = await codeforces.getPlateform();
         } catch (err) {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
             expect(response.body.result).to.have.lengthOf(32);
+            expect(testPlateform.code).to.equal(expectedCode);
+            expect(testPlateform.body.name).to.equal("codeforces");
         }
     });
 
@@ -127,14 +135,18 @@ describe("IntefaceFacade should add all plateforms problems", function () {
         const plateform: PlateformName = PlateformName.LIVEARCHIVE;
         const expectedCode: number = 204;
         let response: InsightResponse;
+        let testPlateform: InsightResponse;
 
         try {
-            response = await livearchive.getListOfProblems(datasets[id], plateform);
+            response = await livearchive.getListOfProblems();
+            testPlateform = await livearchive.getPlateform();
         } catch (err) {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
             expect(response.body.result).to.have.lengthOf(31);
+            expect(testPlateform.code).to.equal(expectedCode);
+            expect(testPlateform.body.name).to.equal("livearchive");
         }
     });
 
@@ -143,14 +155,18 @@ describe("IntefaceFacade should add all plateforms problems", function () {
         const plateform: PlateformName = PlateformName.LIVEARCHIVE;
         const expectedCode: number = 204;
         let response: InsightResponse;
+        let testPlateform: InsightResponse;
 
         try {
-            response = await livearchive.getListOfProblems(datasets[id], plateform);
+            response = await livearchive.getListOfProblems();
+            testPlateform = await livearchive.getPlateform();
         } catch (err) {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
             expect(response.body.result).to.have.lengthOf(31);
+            expect(testPlateform.code).to.equal(expectedCode);
+            expect(testPlateform.body.name).to.equal("livearchive");
         }
     });
 
@@ -162,14 +178,18 @@ describe("IntefaceFacade should add all plateforms problems", function () {
         const plateform: PlateformName = PlateformName.UVA;
         const expectedCode: number = 204;
         let response: InsightResponse;
+        let testPlateform: InsightResponse;
 
         try {
-            response = await uva.getListOfProblems(datasets[id], plateform);
+            response = await uva.getListOfProblems();
+            testPlateform = await uva.getPlateform();
         } catch (err) {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
             expect(response.body.result).to.have.lengthOf(30);
+            expect(testPlateform.code).to.equal(expectedCode);
+            expect(testPlateform.body.name).to.equal("uva");
         }
     });
 
@@ -178,14 +198,18 @@ describe("IntefaceFacade should add all plateforms problems", function () {
         const plateform: PlateformName = PlateformName.UVA;
         const expectedCode: number = 204;
         let response: InsightResponse;
+        let testPlateform: InsightResponse;
 
         try {
-            response = await uva.getListOfProblems(datasets[id], plateform);
+            response = await uva.getListOfProblems();
+            testPlateform = await uva.getPlateform();
         } catch (err) {
             response = err;
         } finally {
             expect(response.code).to.equal(expectedCode);
             expect(response.body.result).to.have.lengthOf(30);
+            expect(testPlateform.code).to.equal(expectedCode);
+            expect(testPlateform.body.name).to.equal("uva");
         }
     });
 
@@ -250,25 +274,22 @@ describe("PlateformFactory getProblemsFiltered", () => {
 
             const responsePromises: Array<Promise<InsightResponse>> = [];
             const datasets: { [id: string]: string } = Object.assign({}, ...loadedDatasets);
+            expect(datasets).to.have.all.keys("codeforces", "livearchive", "uva");
             
             for (const [id, content] of Object.entries(datasets)) {
                 if (id == "codeforces") {
-                    responsePromises.push(codeforces.getListOfProblems(content, PlateformName.CODEFORCES));
+                    responsePromises.push(codeforces.getListOfProblems());
                 }
                 else if (id == "livearchive") {
-                    responsePromises.push(codeforces.getListOfProblems(content, PlateformName.LIVEARCHIVE));
+                    responsePromises.push(livearchive.getListOfProblems());
                 }
                 else if (id == "uva") {
-                    responsePromises.push(codeforces.getListOfProblems(content, PlateformName.UVA));
+                    responsePromises.push(uva.getListOfProblems());
                 }
             }
 
-            try {
-                const responses: InsightResponse[] = await Promise.all(responsePromises);
-                responses.forEach((response) => expect(response.code).to.equal(204));
-            } catch (err) {
-                Log.warn(`Ignoring getListOfProblems() errors.`);
-            }
+            const responses: InsightResponse[] = await Promise.all(responsePromises);
+            responses.forEach((response) => expect(response.code).to.equal(204));
 
         } catch (err) {
             expect.fail("", "", `Failed to read one or more datasets. ${JSON.stringify(err)}`);
@@ -294,20 +315,20 @@ describe("PlateformFactory getProblemsFiltered", () => {
                 if (test.plateform == "codeforces") {
                     it(`[${test.filename}] ${test.title}`, async () => {
                         let response: InsightResponse;
-                        let level: Level;
+                        let level: string;
                         // search by level
                         switch ((test.query + "").toLowerCase()) {
                             case "easy":
-                                level = Level.EASY;
+                                level = "EASY";
                                 break;
                             case "medium":
-                                level = Level.MEDIUM;
+                                level = "MEDIUM";
                                 break;
                             case "hard":
-                                level = Level.HARD;
+                                level = "HARD";
                                 break;
                             default:
-                                level = Level.MEDIUM;
+                                level = "MEDIUM";
                         }
 
                         try {
@@ -323,7 +344,7 @@ describe("PlateformFactory getProblemsFiltered", () => {
                                 expect(response.body).to.have.property("result");
                                 const expectedResult = (test.response.body as InsightResponseSuccessBody).result;
                                 const actualResult = (response.body as InsightResponseSuccessBody).result;
-                                expect(actualResult).to.deep.equal(expectedResult);
+                                expect(actualResult.length).to.equal(expectedResult.length);
                             }
                         }
                     });
@@ -338,20 +359,20 @@ describe("PlateformFactory getProblemsFiltered", () => {
                 if (test.plateform == "livearchive") {
                     it(`[${test.filename}] ${test.title}`, async () => {
                         let response: InsightResponse;
-                        let level: Level;
+                        let level: string;
                         // search by level
                         switch ((test.query + "").toLowerCase()) {
                             case "easy":
-                                level = Level.EASY;
+                                level = "EASY";
                                 break;
                             case "medium":
-                                level = Level.MEDIUM;
+                                level = "MEDIUM";
                                 break;
                             case "hard":
-                                level = Level.HARD;
+                                level = "HARD";
                                 break;
                             default:
-                                level = Level.MEDIUM;
+                                level = "MEDIUM";
                         }
 
                         try {
@@ -382,20 +403,20 @@ describe("PlateformFactory getProblemsFiltered", () => {
                 if (test.plateform == "uva") {
                     it(`[${test.filename}] ${test.title}`, async () => {
                         let response: InsightResponse;
-                        let level: Level;
+                        let level: string;
                         // search by level
                         switch ((test.query + "").toLowerCase()) {
                             case "easy":
-                                level = Level.EASY;
+                                level = "EASY";
                                 break;
                             case "medium":
-                                level = Level.MEDIUM;
+                                level = "MEDIUM";
                                 break;
                             case "hard":
-                                level = Level.HARD;
+                                level = "HARD";
                                 break;
                             default:
-                                level = Level.MEDIUM;
+                                level = "MEDIUM";
                         }
 
                         try {
@@ -426,20 +447,20 @@ describe("PlateformFactory getProblemsFiltered", () => {
                 if (test.plateform == "all") {
                     it(`[${test.filename}] ${test.title}`, async () => {
                         let response: InsightResponse;
-                        let level: Level;
+                        let level: string;
                         // search by level
                         switch ((test.query + "").toLowerCase()) {
                             case "easy":
-                                level = Level.EASY;
+                                level = "EASY";
                                 break;
                             case "medium":
-                                level = Level.MEDIUM;
+                                level = "MEDIUM";
                                 break;
                             case "hard":
-                                level = Level.HARD;
+                                level = "HARD";
                                 break;
                             default:
-                                level = Level.MEDIUM;
+                                level = "MEDIUM";
                         }
 
                         try {
@@ -489,7 +510,7 @@ describe("PlateformFactory getProblems matching the query", () => {
         // Load the query JSON files under test/queries.
         // Fail if there is a problem reading ANY query.
         try {
-            testQueries = await TestUtil.readTestQueries();
+            testQueries = await TestUtil.readTestQueries("test/queries/query");
             expect(testQueries).to.have.length.greaterThan(0);
         } catch (err) {
             expect.fail("", "", `Failed to read one or more test queries. ${JSON.stringify(err)}`);
@@ -528,13 +549,13 @@ describe("PlateformFactory getProblems matching the query", () => {
 
             for (const [id, content] of Object.entries(datasets)) {
                 if (id == "codeforces") {
-                    responsePromises.push(codeforces.getListOfProblems(content, PlateformName.CODEFORCES));
+                    responsePromises.push(codeforces.getListOfProblems());
                 }
                 else if (id == "livearchive") {
-                    responsePromises.push(codeforces.getListOfProblems(content, PlateformName.LIVEARCHIVE));
+                    responsePromises.push(livearchive.getListOfProblems());
                 }
                 else if (id == "uva") {
-                    responsePromises.push(codeforces.getListOfProblems(content, PlateformName.UVA));
+                    responsePromises.push(uva.getListOfProblems());
                 }
             }
 

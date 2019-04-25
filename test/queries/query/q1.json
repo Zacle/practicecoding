@@ -7,169 +7,181 @@
         "body": {
             "result": [
                 {
-                    "id": 1103,
+                    "id": "1103",
                     "name": "E. Radix",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1103/E"
                 },
                 {
-                    "id": 1096,
+                    "id": "1096",
                     "name": "G. Lucky Tickets",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1096/G"
                 },
                 {
-                    "id": 1054,
+                    "id": "1054",
                     "name": "H. Epic Convolution",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1054/H"
                 },
                 {
-                    "id": 1033,
+                    "id": "1033",
                     "name": "F. Boolean Computer",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1033/F"
                 },
                 {
-                    "id": 1036,
+                    "id": "1036",
                     "name": "E. Covered Points",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1036/E"
                 },
                 {
-                    "id": 1010,
+                    "id": "1010",
                     "name": "F. Tree",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1010/F"
                 },
                 {
-                    "id": 993,
+                    "id": "993",
                     "name": "E. Nikita and Order Statistics",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/993/E"
                 },
                 {
-                    "id": 986,
+                    "id": "986",
                     "name": "D. Perfect Encoding",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/986/D"
                 },
                 {
-                    "id": 958,
+                    "id": "958",
                     "name": "F3. Lightsabers (hard)",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/958/F3"
                 },
                 {
-                    "id": 960,
+                    "id": "960",
                     "name": "G. Bandit Blues",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/960/G"
                 },
                 {
-                    "id": 954,
+                    "id": "954",
                     "name": "I. Yet Another String Matching Problem",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/954/I"
                 },
                 {
-                    "id": 923,
+                    "id": "923",
                     "name": "E. Perpetual Substraction",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/923/E"
                 },
                 {
-                    "id": 914,
+                    "id": "914",
                     "name": "G. Sum the Fibonacci",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/914/G"
                 },
                 {
-                    "id": 901,
+                    "id": "901",
                     "name": "E. Cyclic Cipher",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/901/E"
                 },
                 {
-                    "id": 850,
+                    "id": "850",
                     "name": "E. Random Elections",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/850/E"
                 },
                 {
-                    "id": 848,
+                    "id": "848",
                     "name": "E. Days of Floral Colours",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/848/E"
                 },
                 {
-                    "id": 827,
+                    "id": "827",
                     "name": "E. Rusty String",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/827/E"
                 },
                 {
-                    "id": 773,
+                    "id": "773",
                     "name": "F. Test Data Generation",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/773/F"
                 },
                 {
-                    "id": 754,
+                    "id": "755",
+                    "name": "G. PolandBall And Many Other Balls",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/755/G"
+                },
+                {
+                    "id": "754",
                     "name": "E. Dasha and cyclic table",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/754/E"
                 },
                 {
-                    "id": 715,
+                    "id": "715",
                     "name": "E. Complete the Permutations",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/715/E"
                 },
                 {
-                    "id": 662,
+                    "id": "662",
                     "name": "C. Binary Table",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/662/C"
                 },
                 {
-                    "id": 632,
+                    "id": "632",
                     "name": "E. Thief in a Shop",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/632/E"
                 },
                 {
-                    "id": 623,
+                    "id": "623",
                     "name": "E. Transforming Sequence",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/623/E"
                 },
                 {
-                    "id": 553,
+                    "id": "553",
                     "name": "E. Kyoya and Train",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/553/E"
                 },
                 {
-                    "id": 472,
+                    "id": "528",
+                    "name": "D. Fuzzy Search",
+                    "plateform": "Codeforces",
+                    "link": "https://codeforces.com/problemset/problem/528/D"
+                },
+                {
+                    "id": "472",
                     "name": "G. Design Tutorial: Increase the Constraints",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/472/G"
                 },
                 {
-                    "id": 438,
+                    "id": "438",
                     "name": "E. The Child and Binary Tree",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/438/E"
                 },
                 {
-                    "id": 300,
+                    "id": "300",
                     "name": "D. Painting Square",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/300/D"
                 },
                 {
-                    "id": 286,
+                    "id": "286",
                     "name": "E. Ladies’ Shop",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/286/E"

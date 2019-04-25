@@ -7,37 +7,37 @@
         "body": {
             "result": [
                 {
-                    "id": 1010,
+                    "id": "1010",
                     "name": "F. Tree",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/1010/F"
                 },
                 {
-                    "id": 438,
+                    "id": "438",
                     "name": "E. The Child and Binary Tree",
                     "plateform": "Codeforces",
                     "link": "https://codeforces.com/problemset/problem/438/E"
                 },
                 {
-                    "id": 4,
+                    "id": "4",
                     "name": "2003 - Genetic family tree",
                     "plateform": "Live Archive",
                     "link": "https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=4"
                 },
                 {
-                    "id": 48,
+                    "id": "48",
                     "name": "112 – Tree Summing",
                     "plateform": "Uva",
                     "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=48"
                 },
                 {
-                    "id": 51,
+                    "id": "51",
                     "name": "115 – Climbing Trees",
                     "plateform": "Uva",
                     "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=51"
                 },
                 {
-                    "id": 58,
+                    "id": "58",
                     "name": "122 - Trees on the level",
                     "plateform": "Uva",
                     "link": "https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=58"
