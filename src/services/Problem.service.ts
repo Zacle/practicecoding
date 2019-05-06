@@ -1,6 +1,5 @@
-
-import { Level, PlateformName } from "./Level";
-import { IProblem, InsightResponse } from "./InterfaceFacade";
+import { Service } from "@tsed/common";
+import { IProblem, InsightResponse, PlateformName } from "../interfaces/InterfaceFacade";
 import Log from "../Util";
 
 /*
@@ -12,7 +11,7 @@ import Log from "../Util";
 *       - link: link to the problem on the plateformName
 *       - difficulty: difficulty of the problem of type Level
 */
-
+@Service()
 export class Problem implements IProblem {
     private id: number | string;
     private name: string;
@@ -20,8 +19,11 @@ export class Problem implements IProblem {
     private link: string;
     private difficulty: string = null;
 
-    constructor(_id: number | string, _name: string, _plateform_name: PlateformName | string, _link: string, _stat?: string) {
+    constructor() {
         Log.trace("ProblemImpl::init()");
+    }
+
+    setProblems(_id: number | string, _name: string, _plateform_name: PlateformName | string, _link: string, _stat?: string): void {
         this.id = _id;
         this.name = _name;
         this.plateform_name = _plateform_name;
@@ -48,12 +50,4 @@ export class Problem implements IProblem {
     getProblemStatistic(): string {
         return this.difficulty;
     }
-}
-
-export class Saver {
-    
-    public static saveListOfProblems(problems: Array<IProblem>, plateform: PlateformName): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});
-    }
-
 }

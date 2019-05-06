@@ -1,0 +1,36 @@
+import { Property, Required, Allow } from "@tsed/common";
+import { Model, Unique, Indexed } from "@tsed/mongoose";
+import { Description } from "@tsed/swagger";
+
+/*
+ * The model that will be used to save problems gathered
+ * from different platforms in the database
+*/
+@Model()
+export class Problems {
+    @Property()
+    @Required()
+    @Allow("")
+    @Description("ID of the problem")
+    problemID: string;
+
+    @Property()
+    @Required()
+    @Indexed(true)
+    @Description("Name of the problem")
+    name: string;
+
+    @Property()
+    @Required()
+    @Description("The plateform name")
+    plateform: string;
+
+    @Property()
+    @Required()
+    @Description("The URI of the problem")
+    link: string;
+
+    @Property()
+    @Description("The level of the problem")
+    difficulty: string;
+}

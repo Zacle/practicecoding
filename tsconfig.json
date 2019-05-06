@@ -1,5 +1,7 @@
 {
     "compilerOptions": {
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
         "module": "commonjs",
         "esModuleInterop": true,
         "target": "ES6",
@@ -8,6 +10,7 @@
         "sourceMap": true,
         "outDir": "dist",
         "baseUrl": ".",
+        "skipLibCheck": true,
         "lib": [
             "es7",
             "es2017.object",

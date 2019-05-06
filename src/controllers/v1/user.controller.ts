@@ -2,11 +2,11 @@ import async from "async";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
 import passport from "passport";
-import { default as User, UserModel, AuthToken } from "../models/User";
+import { default as User, UserModel, AuthToken } from "../../models/User";
 import { Request, Response, NextFunction } from "express";
 import { IVerifyOptions } from "passport-local";
 import { WriteError } from "mongodb";
-import "../config/passport";
+import "../../config/passport";
 const request = require("express-validator");
 
 

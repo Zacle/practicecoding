@@ -1,4 +1,8 @@
-import { Level, PlateformName } from "./Level";
+export enum PlateformName {
+    CODEFORCES,
+    UVA,
+    LIVEARCHIVE
+}
 
 export interface InsightResponse {
     code: number;
@@ -32,6 +36,7 @@ export interface IProblem {
     getPlateformName(): PlateformName | string;
     getProblemURI(): string;
     getProblemStatistic(): string;
+    setProblems(_id: number | string, _name: string, _plateform_name: PlateformName | string, _link: string, _stat?: string): void;
 }
 
 /*
@@ -69,4 +74,40 @@ export interface Body {
     name: string;
     palteform: string;
     link: string;
+}
+
+export enum AccessType {
+    PRIVATE = 0,
+    PUBLIC = 1
+}
+
+export enum ContestType {
+    INDIVIDUAL = 1,
+    TEAM = 2
+}
+
+/*
+ * Contest interfaces
+*/
+export interface IContests {
+    getContestID(): string;
+    getStartTime(): Date;
+    getDuration(): Date;
+    getAccess(): AccessType;
+    getContestName(): string;
+    getContestOwner(): string;
+    getContestType(): ContestType;
+}
+
+/*
+ * Contests fields
+*/
+export interface IContest {
+    id: string;
+    startTime: Date;
+    duration: Date;
+    accesss: AccessType;
+    contestName: string;
+    contestOwner: string;
+    contestType: ContestType;
 }

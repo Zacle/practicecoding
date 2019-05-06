@@ -1,5 +1,5 @@
 import request from "supertest";
-import app from "../src/app";
+import { Server } from "../src/app";
 
 const chai = require("chai");
 const expect = chai.expect;
