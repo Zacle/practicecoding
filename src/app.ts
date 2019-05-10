@@ -77,7 +77,8 @@ app.use(
       '/': `${rootDir}/controllers/v1/**/**.controller.{ts,js}`
   },
   componentsScan: [
-      `${rootDir}/services/**/*.service.ts`
+      `${rootDir}/services/**/**.service.ts`,
+      `${rootDir}/middlewares/**/**.ts`
   ],
   httpPort: process.env.PORT || 3000,
   httpsPort: 3443,

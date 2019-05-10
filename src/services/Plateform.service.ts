@@ -76,7 +76,7 @@ export class Codeforces extends Plateform {
         console.log("RESULTTTTT: ", problems.length);
 
         return {
-            code: HTTPStatusCodes.CREATED,
+            code: HTTPStatusCodes.OK,
             body : {
                 result: problems
             }
@@ -203,7 +203,7 @@ export class Codeforces extends Plateform {
         console.log("RESULTTTTT: ", problems.length);
 
         return {
-            code: HTTPStatusCodes.CREATED,
+            code: HTTPStatusCodes.OK,
             body : {
                 result: problems
             }
@@ -253,7 +253,7 @@ export class Uva extends Plateform {
         console.log("RESULTTTTT: ", problems.length);
 
         return {
-            code: HTTPStatusCodes.CREATED,
+            code: HTTPStatusCodes.OK,
             body : {
                 result: problems
             }
@@ -324,7 +324,7 @@ export class Uva extends Plateform {
             return Promise.reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: "Can't get problems from Codeforces"
+                        name: "Can't get problems from Uva"
                     }
             });
         }
@@ -381,7 +381,7 @@ export class Uva extends Plateform {
             return  Promise.reject({
                         code: HTTPStatusCodes.BAD_REQUEST,
                         body: {
-                            name: "Can't get problems from Codeforces"
+                            name: "Can't get problems from Uva"
                         }
                     });
         }
@@ -389,7 +389,7 @@ export class Uva extends Plateform {
         console.log("RESULTTTTT: ", problems.length);
 
         return {
-            code: HTTPStatusCodes.CREATED,
+            code: HTTPStatusCodes.OK,
             body : {
                 result: problems
             }
@@ -431,7 +431,7 @@ export class LiveArchive extends Plateform {
             return  Promise.reject({
                         code: HTTPStatusCodes.BAD_REQUEST,
                         body: {
-                            name: "Can't get problems from Codeforces"
+                            name: "Can't get problems from Live Archive"
                         }
                     });
         }
@@ -439,7 +439,7 @@ export class LiveArchive extends Plateform {
         console.log("RESULTTTTT: ", problems.length);
 
         return {
-            code: HTTPStatusCodes.CREATED,
+            code: HTTPStatusCodes.OK,
             body : {
                 result: problems
             }
@@ -510,7 +510,7 @@ export class LiveArchive extends Plateform {
             return Promise.reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: "Can't get problems from Codeforces"
+                        name: "Can't get problems from Live Archive"
                     }
             });
         }
@@ -567,7 +567,7 @@ export class LiveArchive extends Plateform {
             return  Promise.reject({
                         code: HTTPStatusCodes.BAD_REQUEST,
                         body: {
-                            name: "Can't get problems from Codeforces"
+                            name: "Can't get problems from Live Archive"
                         }
                     });
         }
@@ -575,7 +575,7 @@ export class LiveArchive extends Plateform {
         console.log("RESULTTTTT: ", problems.length);
 
         return {
-            code: HTTPStatusCodes.CREATED,
+            code: HTTPStatusCodes.OK,
             body : {
                 result: problems
             }
@@ -637,7 +637,7 @@ export class AllPlateforms extends Plateform {
         }
 
         return {
-            code: HTTPStatusCodes.CREATED,
+            code: HTTPStatusCodes.OK,
             body : {
                 result: res
             }
@@ -708,7 +708,7 @@ export class AllPlateforms extends Plateform {
         }
 
         return {
-            code: HTTPStatusCodes.CREATED,
+            code: HTTPStatusCodes.OK,
             body : {
                 result: res
             }
