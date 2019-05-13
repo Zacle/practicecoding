@@ -43,8 +43,17 @@ export class Users {
 
     @Property()
     @PropertyType(Date)
-    @Description("The Expiration time of the token sent")
+    @Description("The Expiration time of the password token sent")
     passwordResetExpires: Date;
+
+    @Property()
+    @Description("Reset token for the email")
+    emailResetToken: String;
+
+    @Property()
+    @PropertyType(Date)
+    @Description("The Expiration time of the email token sent")
+    emailResetExpires: Date;
 
     @Property()
     @Description("Facebook OAuth for login")

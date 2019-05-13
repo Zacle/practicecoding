@@ -5,8 +5,11 @@ import {Summary} from "@tsed/swagger";
 import * as Express from "express";
 import * as Passport from "passport";
 import {BadRequest} from "ts-httpexceptions";
-import {IUser} from "../../interfaces/InterfaceFacade";
+import { IUser, InsightResponse } from "../../interfaces/InterfaceFacade";
 import { HTTPStatusCodes } from "../../util/httpCode";
+import { API_ERRORS } from "../../util/app.error";
+import { Users } from "../../models/Users";
+import { PassportService } from "../../services/Passport.service";
 
 /*
  * REST end-point for authentication
@@ -30,12 +33,47 @@ export class UsersCtrl {
                 @Req() request: Express.Request,
                 @Res() response: Express.Response) {
         
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            "email": email,
-            "password": password
-        });
+        Passport.authenticate("login", (err, res: InsightResponse) => {
+            if (err) {
+                response.status(API_ERRORS.USER_NOT_FOUND.status);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: false,
+                    status: "Login Unsuccessfull!",
+                    err: "Could not login user"
+                });
+            }
+
+            const user: Users = res.body.result;
+            if (!user) {
+                response.status(API_ERRORS.USER_NOT_FOUND.status);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: false,
+                    status: "Login Unsuccessfull!",
+                    err: "Could not login user"
+                });
+            }
+            request.login(user, (err) => {
+                if (err) {
+                    response.status(API_ERRORS.UNAUTHORIZED.status);
+                    response.setHeader("Content-Type", "application/json");
+                    response.json({
+                        success: false,
+                        status: "Login Unsuccessfull!",
+                        err: "Could not login user"
+                    });
+                }
+                let token = PassportService.getToken(user);
+                response.status(HTTPStatusCodes.OK);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: true,
+                    status: "Login Successfull!",
+                    token: token
+                });
+            });
+        })(request, response, () => {});
     }
 
     /**
@@ -64,36 +102,56 @@ export class UsersCtrl {
                  @Req() request: Express.Request,
                  @Res() response: Express.Response) {
         
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            "email": email,
-            "password": password,
-            "username": username,
-            "fullname": fullname,
-            "country": country,
-            "codeforces": codeforces,
-            "uva": uva,
-            "livearchive": livearchive
-        });
+        Passport.authenticate("signup", (err, res: InsightResponse) => {
+            if (err) {
+                response.status(API_ERRORS.USER_ALREADY_EXISTS.status);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: false,
+                    status: "Signup Unsuccessfull!",
+                    err: "Could not login user"
+                });
+            }
+
+            const user: Users = res.body.result;
+
+            request.login(user, (err) => {
+                if (err) {
+                    response.status(API_ERRORS.UNAUTHORIZED.status);
+                    response.setHeader("Content-Type", "application/json");
+                    response.json({
+                        success: false,
+                        status: "Signup Unsuccessfull!",
+                        err: "Could not login user"
+                    });
+                }
+                let token = PassportService.getToken(user);
+                response.status(HTTPStatusCodes.OK);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: true,
+                    status: "Signup Successfull!",
+                    token: token
+                });
+            });
+        })(request, response, () => {});
     }
 
     /**
      * Log out user.
      * @param request
      */
-    @Post("/logout")
+    @Get("/logout")
     @Summary("Disconnect the user")
     async logout(@Req() request: Express.Request,
                  @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "plain/text");
-        response.send("users/logout end-point called");
+        
+        request.logOut();
+        response.redirect("/");
     }
 
     /**
      * Try to update user account
-     * @param email
      * @param codeforces
      * @param uva
      * @param livearchive
@@ -104,8 +162,7 @@ export class UsersCtrl {
      */
     @Post("/account/profile")
     @Summary("Update user info")
-    async update(@BodyParams("email") email: string,
-                 @BodyParams("fullname") fullname: string,
+    async update(@BodyParams("fullname") fullname: string,
                  @BodyParams("country") country: string,
                  @BodyParams("codeforces") codeforces: string,
                  @BodyParams("uva") uva: string,
@@ -116,7 +173,6 @@ export class UsersCtrl {
         response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
         response.setHeader("Content-Type", "application/json");
         response.json({
-            "email": email,
             "fullname": fullname,
             "country": country,
             "codeforces": codeforces,
@@ -144,6 +200,44 @@ export class UsersCtrl {
         response.json({
             "password": password,
             "confirmation": confirmPassword
+        });
+    }
+
+    /**
+     * Validate token to reset email
+     * @param email
+     * @param request
+     * @param response
+     */
+    @Get("/account/resetEmail/:token")
+    @Summary("Update user email")
+    async getUpdateEmail(@Required() @PathParams("token") token: string,
+                      @Req() request: Express.Request,
+                      @Res() response: Express.Response) {
+        
+        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
+        response.setHeader("Content-Type", "application/json");
+        response.json({
+            "token": token
+        });
+    }
+
+    /**
+     * Validate token to reset email
+     * @param email
+     * @param request
+     * @param response
+     */
+    @Post("/account/resetEmail/:token")
+    @Summary("Update user email")
+    async postUpdateEmail(@Required() @PathParams("token") token: string,
+                          @Req() request: Express.Request,
+                          @Res() response: Express.Response) {
+        
+        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
+        response.setHeader("Content-Type", "application/json");
+        response.json({
+            "token": token
         });
     }
 

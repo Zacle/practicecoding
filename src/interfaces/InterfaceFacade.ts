@@ -10,7 +10,7 @@ export interface InsightResponse {
 }
 
 export interface InsightResponseSuccessBody {
-    result: any[];
+    result: any[] | any;
     name?: string;
 }
 
@@ -114,10 +114,12 @@ export interface IContest {
 
 export interface IUser {
     _id?: string;
-    firstName: string;
-    lastName: string;
+    username: string;
+    fullname: string;
     password: string;
     email: string;
-    phone?: string;
-    address?: string;
+    country: string;
+    codeforces?: string;
+    uva?: string;
+    livearchive?: string;
 }

@@ -51,7 +51,11 @@ export class Codeforces extends Plateform {
         Log.trace("Codeforces::init()");
     }
 
-
+    /**
+     * Return all Codeforces problems matching the given key
+     * @param key 
+     * @return {Promise<InsightResponse>}
+     */
     async getProblems(key: string): Promise<InsightResponse> {
         let problems: any[] = [];
 
@@ -83,6 +87,10 @@ export class Codeforces extends Plateform {
         };
     }
 
+    /**
+     * Get all problems from Codeforces website using their api
+     * @returns {Promise<InsightResponse>}
+     */
     async getListOfProblems(): Promise<InsightResponse> {
         const path: string = "https://codeforces.com/api/problemset.problems";
         let res: any[] = [];
@@ -136,11 +144,21 @@ export class Codeforces extends Plateform {
             });
         }
 
-        await this.problemsModel.create(res);
+        try {
+            await this.problemsModel.create(res);
 
-        ans = await this.problemsModel
-                    .find({})
-                    .exec();
+            ans = await this.problemsModel
+                        .find({})
+                        .exec();
+        }
+        catch(err) {
+            return Promise.reject({
+                code: HTTPStatusCodes.BAD_REQUEST,
+                body: {
+                    name: "Can't get problems from Codeforces"
+                }
+            });
+        }
         
         console.log("RESULTTTTT: ", ans.length);
 
@@ -181,6 +199,11 @@ export class Codeforces extends Plateform {
         return res;
     }
     
+    /**
+     * Return Codeforces problems of the given difficulty
+     * @param level 
+     * @returns {Promise<InsightResponse>}
+     */
     async getProblemsFiltered(level: string): Promise<InsightResponse> {
 
         let problems: any[] = [];
@@ -229,6 +252,11 @@ export class Uva extends Plateform {
         Log.trace("Uva::init()");
     }
     
+    /**
+     * Return all Uva problems matching the given key
+     * @param key 
+     * @return {Promise<InsightResponse>}
+     */
     async getProblems(key: string): Promise<InsightResponse> {
         let problems: any[] = [];
 
@@ -294,6 +322,11 @@ export class Uva extends Plateform {
 
         return result;
     }
+
+    /**
+     * Get all problems from Uva website using uhunt api
+     * @returns {Promise<InsightResponse>}
+     */
     async getListOfProblems(): Promise<InsightResponse> {
         const path: string = "https://uhunt.onlinejudge.org/api/p";
         let res: any[] = [];
@@ -329,11 +362,21 @@ export class Uva extends Plateform {
             });
         }
 
-        await this.problemsModel.create(res);
+        try {
+            await this.problemsModel.create(res);
 
-        ans = await this.problemsModel
+            ans = await this.problemsModel
                     .find({})
                     .exec();
+        }
+        catch(err) {
+            return Promise.reject({
+                code: HTTPStatusCodes.BAD_REQUEST,
+                body: {
+                    name: "Can't get problems from Uva"
+                }
+            });
+        }
         
         console.log("RESULTTTTT: ", ans.length);
 
@@ -367,6 +410,11 @@ export class Uva extends Plateform {
         return res;
     }
     
+    /**
+     * Return Uva problems of the given difficulty
+     * @param level 
+     * @returns {Promise<InsightResponse>}
+     */
     async getProblemsFiltered(level: string): Promise<InsightResponse> {
 
         let problems: any[] = [];
@@ -415,6 +463,11 @@ export class LiveArchive extends Plateform {
         Log.trace("LiveArchive::init()");
     }
 
+    /**
+     * Return all Live Archive problems matching the given key
+     * @param key 
+     * @return {Promise<InsightResponse>}
+     */
     async getProblems(key: string): Promise<InsightResponse> {
         let problems: any[] = [];
 
@@ -480,6 +533,11 @@ export class LiveArchive extends Plateform {
 
         return result;
     }
+
+    /**
+     * Get all problems from Live Archive website using uhunt api
+     * @returns {Promise<InsightResponse>}
+     */
     async getListOfProblems(): Promise<InsightResponse> {
         const path: string = "https://icpcarchive.ecs.baylor.edu/uhunt/api/p";
         let res: any[] = [];
@@ -515,11 +573,21 @@ export class LiveArchive extends Plateform {
             });
         }
 
-        await this.problemsModel.create(res);
+        try {
+            await this.problemsModel.create(res);
 
-        ans = await this.problemsModel
+            ans = await this.problemsModel
                     .find({})
                     .exec();
+        }
+        catch (err) {
+            return Promise.reject({
+                code: HTTPStatusCodes.BAD_REQUEST,
+                body: {
+                    name: "Can't get problems from Live Archive"
+                }
+            });
+        }
         
         console.log("RESULTTTTT: ", ans.length);
 
@@ -553,6 +621,11 @@ export class LiveArchive extends Plateform {
         return res;
     }
     
+    /**
+     * Return Live Archive problems of the given difficulty
+     * @param level 
+     * @returns {Promise<InsightResponse>}
+     */
     async getProblemsFiltered(level: string): Promise<InsightResponse> {
 
         let problems: any[] = [];
@@ -610,6 +683,11 @@ export class AllPlateforms extends Plateform {
         Log.trace("AllPlateforms::init()");
     }
     
+    /**
+     * Return all problems matching the given key
+     * @param key 
+     * @return {Promise<InsightResponse>}
+     */
     async getProblems(key: string): Promise<InsightResponse> {
         let codeforcesProblems: InsightResponse;
         let uvaProblems: InsightResponse;
@@ -644,6 +722,10 @@ export class AllPlateforms extends Plateform {
         };
     }
     
+    /**
+     * Get all problems from Codeforces, Uva and Live Archive websites using uhunt api
+     * @returns {Promise<InsightResponse>}
+     */
     async getListOfProblems(): Promise<InsightResponse> {
         
         let codeforcesProblems: InsightResponse;
@@ -681,6 +763,11 @@ export class AllPlateforms extends Plateform {
         throw new Error("Method not implemented.");
     }
     
+    /**
+     * Return all problems of the given difficulty
+     * @param level 
+     * @returns {Promise<InsightResponse>}
+     */
     async getProblemsFiltered(level: string): Promise<InsightResponse> {
         let codeforcesProblems: InsightResponse;
         let uvaProblems: InsightResponse;
