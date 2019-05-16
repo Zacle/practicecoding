@@ -122,4 +122,5 @@ export interface IUser {
     codeforces?: string;
     uva?: string;
     livearchive?: string;
+    admin?: boolean;
 }

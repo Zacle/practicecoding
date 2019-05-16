@@ -6,7 +6,7 @@ import {
     ServerSettingsService,
     Service
 } from "@tsed/common";
-import * as Passport from "passport";
+import Passport = require("passport");
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JwtStategy, ExtractJwt } from "passport-jwt";
 import {BadRequest, NotFound} from "ts-httpexceptions";
@@ -65,7 +65,7 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
      * @param user 
      */
     public static getToken(user: Users): Object {
-        return jwt.sign(user, 
+        return jwt.sign({uid: user._id},
                         JWT_SECRET,
                         {
                             expiresIn: "7d"
@@ -92,7 +92,7 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
                     // asynchronous
                     // User.findOne wont fire unless data is sent back
                     process.nextTick(() => {
-                        let user: IUser;
+                        let user: IUser = {} as any;
                         user.email = email;
                         user.password = password;
                         user.fullname = req.body.fullname;
@@ -101,6 +101,7 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
                         user.country = req.body.country;
                         user.uva = req.body.uva || "";
                         user.livearchive = req.body.livearchive || "";
+                        user.admin = req.body.admin || false;
                         this.signup(user)
                             .then((user) => done(null, user))
                             .catch((err) => done(err));
@@ -120,15 +121,13 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
 
         try {
             exists = await this.usersService.findByEmail(user.email);
-            if (exists.code == API_ERRORS.USER_ALREADY_EXISTS.code) { // User exists
-                throw new BadRequest("Email is already registered");
-            }
         }
         catch(err) {
-            throw new BadRequest(API_ERRORS.GENERAL_ERROR.message);
+            console.log("EXISTS");
+            throw new BadRequest("Email already exists");
         }
         
-
+        console.log("DOESN'T EXIST");
         // Create new User
         return await this.usersService.create(user);
     }
@@ -158,15 +157,11 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
         let user: InsightResponse;
         try {
             user = await this.usersService.findByCredential(email, password);
-
-            if (user.code == API_ERRORS.USER_NOT_FOUND.code) {
-                throw new NotFound("User not found");
-            }
         }
         catch (err) {
-            throw new BadRequest(API_ERRORS.GENERAL_ERROR.message);
+            throw new NotFound("User not found");
         }
-
+        console.log("USER CREDI: ", user);
         return user;
     }
 
@@ -195,12 +190,9 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
         
         try {
             user = await this.usersService.findById(id);
-            if (user.code == API_ERRORS.USER_NOT_FOUND.code) {
-                throw new NotFound("User not found");
-            }
         }
         catch(err) {
-            throw new BadRequest(API_ERRORS.GENERAL_ERROR.message);
+            Promise.reject(err);
         }
 
         return user;

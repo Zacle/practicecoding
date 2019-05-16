@@ -3,13 +3,14 @@
 import {BodyParams, Controller, Post, Req, Required, Res, Status, PathParams, Get} from "@tsed/common";
 import {Summary} from "@tsed/swagger";
 import * as Express from "express";
-import * as Passport from "passport";
+import Passport = require("passport");
 import {BadRequest} from "ts-httpexceptions";
 import { IUser, InsightResponse } from "../../interfaces/InterfaceFacade";
 import { HTTPStatusCodes } from "../../util/httpCode";
 import { API_ERRORS } from "../../util/app.error";
 import { Users } from "../../models/Users";
 import { PassportService } from "../../services/Passport.service";
+import { resolve } from "bluebird";
 
 /*
  * REST end-point for authentication
@@ -33,47 +34,57 @@ export class UsersCtrl {
                 @Req() request: Express.Request,
                 @Res() response: Express.Response) {
         
-        Passport.authenticate("login", (err, res: InsightResponse) => {
-            if (err) {
-                response.status(API_ERRORS.USER_NOT_FOUND.status);
-                response.setHeader("Content-Type", "application/json");
-                response.json({
-                    success: false,
-                    status: "Login Unsuccessfull!",
-                    err: "Could not login user"
-                });
-            }
-
-            const user: Users = res.body.result;
-            if (!user) {
-                response.status(API_ERRORS.USER_NOT_FOUND.status);
-                response.setHeader("Content-Type", "application/json");
-                response.json({
-                    success: false,
-                    status: "Login Unsuccessfull!",
-                    err: "Could not login user"
-                });
-            }
-            request.login(user, (err) => {
+        return new Promise<Users>((resolve, reject) => {
+            Passport.authenticate("login", (err, res: InsightResponse) => {
                 if (err) {
                     response.status(API_ERRORS.UNAUTHORIZED.status);
                     response.setHeader("Content-Type", "application/json");
                     response.json({
                         success: false,
                         status: "Login Unsuccessfull!",
-                        err: "Could not login user"
+                        err: "Couldn't log in user"
                     });
+                    reject(err);
                 }
-                let token = PassportService.getToken(user);
-                response.status(HTTPStatusCodes.OK);
-                response.setHeader("Content-Type", "application/json");
-                response.json({
-                    success: true,
-                    status: "Login Successfull!",
-                    token: token
-                });
-            });
-        })(request, response, () => {});
+                else {
+                    console.log("RESULT: ", res);
+                    const user: any = res.body;
+                    if (res && user.name) {
+                        response.status(API_ERRORS.USER_NOT_FOUND.status);
+                        response.setHeader("Content-Type", "application/json");                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                        response.json({
+                            success: false,
+                            status: "Login Unsuccessfull!",
+                            err: "Couldn't log in the user"
+                        });
+                        reject(!!err);
+                    }
+                    else if (res && user.result) {
+                        request.login(user.result, (err) => {
+                            if (err) {
+                                response.status(API_ERRORS.UNAUTHORIZED.status);
+                                response.setHeader("Content-Type", "application/json");
+                                response.json({
+                                    success: false,
+                                    status: "Login Unsuccessfull!",
+                                    err: err
+                                });
+                                reject(err);
+                            }
+                            let token = PassportService.getToken(user.result);
+                            response.status(HTTPStatusCodes.OK);
+                            response.setHeader("Content-Type", "application/json");
+                            response.json({
+                                success: true,
+                                status: "Login Successfull!",
+                                token: token
+                            });
+                            resolve(user.result);
+                        });
+                    }
+                }
+            })(request, response, () => {});
+        });
     }
 
     /**
@@ -96,45 +107,68 @@ export class UsersCtrl {
                  @Required() @BodyParams("username") username: string,
                  @Required() @BodyParams("fullname") fullname: string,
                  @Required() @BodyParams("country") country: string,
+                 @BodyParams("admin") admin: string,
                  @BodyParams("codeforces") codeforces: string,
                  @BodyParams("uva") uva: string,
                  @BodyParams("livearchive") livearchive: string,
                  @Req() request: Express.Request,
                  @Res() response: Express.Response) {
         
-        Passport.authenticate("signup", (err, res: InsightResponse) => {
-            if (err) {
-                response.status(API_ERRORS.USER_ALREADY_EXISTS.status);
-                response.setHeader("Content-Type", "application/json");
-                response.json({
-                    success: false,
-                    status: "Signup Unsuccessfull!",
-                    err: "Could not login user"
-                });
-            }
-
-            const user: Users = res.body.result;
-
-            request.login(user, (err) => {
+        return new Promise<Users>((resolve, reject) => {
+            Passport.authenticate("signup", (err, res: InsightResponse) => {
                 if (err) {
-                    response.status(API_ERRORS.UNAUTHORIZED.status);
+                    response.status(API_ERRORS.USER_ALREADY_EXISTS.status);
                     response.setHeader("Content-Type", "application/json");
                     response.json({
                         success: false,
                         status: "Signup Unsuccessfull!",
-                        err: "Could not login user"
+                        err: "Could not signup user"
                     });
+                    reject(err);
                 }
-                let token = PassportService.getToken(user);
-                response.status(HTTPStatusCodes.OK);
-                response.setHeader("Content-Type", "application/json");
-                response.json({
-                    success: true,
-                    status: "Signup Successfull!",
-                    token: token
-                });
-            });
-        })(request, response, () => {});
+    
+                else {
+                    const user: any = res.body;
+
+                    if (res && user.name) {
+                        response.status(API_ERRORS.USER_NOT_FOUND.status);
+                        response.setHeader("Content-Type", "application/json");
+                        response.json({
+                            success: false,
+                            status: "Login Unsuccessfull!",
+                            err: "Couldn't log in the user"
+                        });
+                        reject(!!err);
+                    }
+                    
+                    else if (res && user.result) {
+                        request.login(user.result, (err) => {
+                            console.log("RESULTTTT: ", user.result);
+                            if (err) {
+                                response.status(API_ERRORS.UNAUTHORIZED.status);
+                                response.setHeader("Content-Type", "application/json");
+                                response.json({
+                                    success: false,
+                                    status: "Signup Unsuccessfull!",
+                                    err: "Could not signup user"
+                                });
+                                reject(err);
+                            }
+    
+                            let token = PassportService.getToken(user.result);
+                            response.status(HTTPStatusCodes.OK);
+                            response.setHeader("Content-Type", "application/json");
+                            response.json({
+                                success: true,
+                                status: "Signup Successfull!",
+                                token: token
+                            });
+                            resolve(user.result);
+                        });
+                    }
+                }
+            })(request, response, () => {});
+        });
     }
 
     /**

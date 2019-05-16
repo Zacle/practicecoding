@@ -6,9 +6,9 @@ import { Description } from "@tsed/swagger";
 
 
 @Model()
-@PreHook("save", function save(next: any) {
-    const user = this;
-    if (!user.isModified("password")) { return next(); }
+@PreHook("save", (user: Users, next: any) => {
+    
+    if (!user.password) { return next(); }
 
     bcrypt.genSalt(10, (err, salt) => {
         if (err) {
@@ -25,79 +25,88 @@ import { Description } from "@tsed/swagger";
 })
 export class Users {
 
+    @Description("ID of each user")
+    _id?: string;
+
     @Property()
     @Email()
     @Required()
     @Unique()
     @Description("Email of the user")
-    email: String;
+    email: string;
 
     @Property()
     @Required()
     @Description("Password of the user")
-    password: String;
+    password: string;
 
     @Property()
     @Description("Reset token for the password")
-    passwordResetToken: String;
+    @Default("")
+    passwordResetToken?: string;
 
     @Property()
     @PropertyType(Date)
     @Description("The Expiration time of the password token sent")
-    passwordResetExpires: Date;
+    passwordResetExpires?: Date;
 
     @Property()
     @Description("Reset token for the email")
-    emailResetToken: String;
+    @Default("")
+    emailResetToken?: string;
 
-    @Property()
+    @Property()                                                                                                                 
     @PropertyType(Date)
     @Description("The Expiration time of the email token sent")
-    emailResetExpires: Date;
+    emailResetExpires?: Date;
 
     @Property()
     @Description("Facebook OAuth for login")
-    facebook: String;
+    @Default("")
+    facebook?: string;
 
     @Property()
     @Description("Google OAuth for login")
-    google: String;
+    @Default("")
+    google?: string;
 
     @Property()
     @Description("GitHub OAuth for login")
-    github: String;
+    @Default("")
+    github?: string;
 
     @Property()
     @Description("Twitter OAuth for login")
-    twitter: String;
+    @Default("")
+    twitter?: string;
 
     @Property()
     @Description("Codeforces Handle")
-    codeforces: String;
+    codeforces: string;
 
     @Property()
     @Description("Uva Handle")
-    uva: String;
+    uva: string;
 
     @Property()
     @Description("Live Archive Handle")
-    livearchive: String;
+    livearchive: string;
 
     @Property()
     @Required()
     @Description("User Full name")
-    fullname: String;
+    fullname: string;
 
     @Property()
     @Required()
     @Unique()
     @Description("User name that will be displayed")
-    username: String;
+    username: string;
 
     @Property()
     @Required()
     @Description("User Country")
-    country: String;
+    country: string;
 
     @Property()
     @Default(false)
