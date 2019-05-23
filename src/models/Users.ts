@@ -6,23 +6,6 @@ import { Description } from "@tsed/swagger";
 
 
 @Model()
-@PreHook("save", (user: Users, next: any) => {
-    
-    if (!user.password) { return next(); }
-
-    bcrypt.genSalt(10, (err, salt) => {
-        if (err) {
-            return next(err);
-        }
-        bcrypt.hash(user.password, salt, undefined, (err: mongoose.Error, hash) => {
-            if (err) {
-                return next(err);
-            }
-            user.password = hash;
-            next();
-        });
-    });
-})
 export class Users {
 
     @Description("ID of each user")
@@ -46,9 +29,8 @@ export class Users {
     passwordResetToken?: string;
 
     @Property()
-    @PropertyType(Date)
     @Description("The Expiration time of the password token sent")
-    passwordResetExpires?: Date;
+    passwordResetExpires?: number;
 
     @Property()
     @Description("Reset token for the email")
@@ -56,9 +38,8 @@ export class Users {
     emailResetToken?: string;
 
     @Property()                                                                                                                 
-    @PropertyType(Date)
     @Description("The Expiration time of the email token sent")
-    emailResetExpires?: Date;
+    emailResetExpires?: number;
 
     @Property()
     @Description("Facebook OAuth for login")

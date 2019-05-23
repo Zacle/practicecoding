@@ -29,6 +29,7 @@ export class ProblemsCtrl {
 
     @Post("/")
     @Summary("Get all problems from Codeforces, Live Archive, Uva and save them in the database")
+    @Authenticated({role: 'admin'})
     async save(
         @Req() request: Express.Request,
         @Res() response: Express.Response,

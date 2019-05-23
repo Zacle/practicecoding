@@ -1,6 +1,6 @@
 "use strict";
 
-import {BodyParams, Controller, Post, Req, Required, Res, Status, PathParams, Get} from "@tsed/common";
+import {BodyParams, Controller, Post, Req, Required, Res, Status, PathParams, Get, Authenticated, Inject} from "@tsed/common";
 import {Summary} from "@tsed/swagger";
 import * as Express from "express";
 import Passport = require("passport");
@@ -10,7 +10,8 @@ import { HTTPStatusCodes } from "../../util/httpCode";
 import { API_ERRORS } from "../../util/app.error";
 import { Users } from "../../models/Users";
 import { PassportService } from "../../services/Passport.service";
-import { resolve } from "bluebird";
+import { UsersService } from "../../services/Users.service";
+import { MongooseModel } from "@tsed/mongoose";
 
 /*
  * REST end-point for authentication
@@ -19,13 +20,14 @@ import { resolve } from "bluebird";
 @Controller("/users")
 export class UsersCtrl {
 
+    constructor(private usersServices: UsersService,
+                @Inject(Users) private users: MongooseModel<Users>) {}
     /**
      * Authenticate user with local info (in Database).
      * @param email
      * @param password
      * @param request
      * @param response
-     * @param next
      */
     @Post("/login")
     @Summary("Log in user with email and password")
@@ -60,7 +62,7 @@ export class UsersCtrl {
                         reject(!!err);
                     }
                     else if (res && user.result) {
-                        request.login(user.result, (err) => {
+                        request.login(user.result, { session: false }, (err) => {
                             if (err) {
                                 response.status(API_ERRORS.UNAUTHORIZED.status);
                                 response.setHeader("Content-Type", "application/json");
@@ -77,7 +79,8 @@ export class UsersCtrl {
                             response.json({
                                 success: true,
                                 status: "Login Successfull!",
-                                token: token
+                                token: token,
+                                user: request.user
                             });
                             resolve(user.result);
                         });
@@ -142,7 +145,7 @@ export class UsersCtrl {
                     }
                     
                     else if (res && user.result) {
-                        request.login(user.result, (err) => {
+                        request.login(user.result, { session: false },(err) => {
                             console.log("RESULTTTT: ", user.result);
                             if (err) {
                                 response.status(API_ERRORS.UNAUTHORIZED.status);
@@ -161,7 +164,8 @@ export class UsersCtrl {
                             response.json({
                                 success: true,
                                 status: "Signup Successfull!",
-                                token: token
+                                token: token,
+                                user: request.user
                             });
                             resolve(user.result);
                         });
@@ -196,6 +200,7 @@ export class UsersCtrl {
      */
     @Post("/account/profile")
     @Summary("Update user info")
+    @Authenticated()
     async update(@BodyParams("fullname") fullname: string,
                  @BodyParams("country") country: string,
                  @BodyParams("codeforces") codeforces: string,
@@ -204,36 +209,73 @@ export class UsersCtrl {
                  @Req() request: Express.Request,
                  @Res() response: Express.Response) {
         
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            "fullname": fullname,
-            "country": country,
-            "codeforces": codeforces,
-            "uva": uva,
-            "livearchive": livearchive
+        let result: InsightResponse;
+        return new Promise<Users>(async (resolve, reject) => {
+            const profile: any = {
+                "fullname": fullname,
+                "country": country,
+                "codeforces": codeforces,
+                "uva": uva,
+                "livearchive": livearchive
+            };
+            try {
+                result = await this.usersServices.updateProfile(request.user._id, profile);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: true,
+                    status: "Update Successfull!",
+                    user: result.body.result
+                });
+                resolve(result.body.result);
+            }
+            catch (err) {
+                response.status(HTTPStatusCodes.NOT_MODIFIED);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: false,
+                    status: "Coudn't modify user information"
+                });
+                reject(err);
+            }
         });
     }
 
     /**
      * Update user password
      * @param password
-     * @param confirmPassword
      * @param request
      * @param response
      */
     @Post("/account/password")
     @Summary("Update user password")
+    @Authenticated()
     async updatePassword(@Required() @BodyParams("password") password: string,
-                         @Required() @BodyParams("confirmPassword") confirmPassword: string,
                          @Req() request: Express.Request,
                          @Res() response: Express.Response) {
         
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            "password": password,
-            "confirmation": confirmPassword
+        let result: InsightResponse;
+        return new Promise<Users>(async (resolve, reject) => {
+            try {
+                result = await this.usersServices.updatePassword(request.user._id, password);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: true,
+                    status: "Update Successfull!",
+                    user: result.body.result
+                });
+                resolve(result.body.result);
+            }
+            catch (err) {
+                response.status(HTTPStatusCodes.NOT_MODIFIED);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: false,
+                    status: "Couldn't update user password"
+                });
+                reject(err);
+            }
         });
     }
 
@@ -287,15 +329,28 @@ export class UsersCtrl {
                         @Req() request: Express.Request,
                         @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            "token": token
-        });
+        let result: Boolean;
+        result = await this.usersServices.verifyPasswordToken(token);
+        if (result) {
+            response.status(HTTPStatusCodes.OK);
+            response.setHeader("Content-Type", "application/json");
+            response.json({
+                success: result,
+                status: "Valid Token"
+            });
+        }
+        else {
+            response.status(HTTPStatusCodes.OK);
+            response.setHeader("Content-Type", "application/json");
+            response.json({
+                success: result,
+                status: "Invalid Token"
+            });
+        }
     }
 
     /**
-     * Validate token to reset password
+     * Reset password in case of forgotten using the provided token
      * @param token
      * @param request
      * @param response
@@ -303,13 +358,58 @@ export class UsersCtrl {
     @Post("/reset/:token")
     @Summary("Reset password in case of forgotten using the provided token")
     async postResetToken(@Required() @PathParams("token") token: string,
+                         @Required() @BodyParams("password") password: string,
                          @Req() request: Express.Request,
                          @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            "token": token
+        let result: InsightResponse;
+        return new Promise<Users>(async (resolve, reject) => {
+            try {
+                result = await this.usersServices.updatePasswordToken(this.users, request, token, password);
+                const user: any = result.body;
+                if (result && user.name) {
+                    response.status(API_ERRORS.USER_NOT_FOUND.status);
+                    response.setHeader("Content-Type", "application/json");                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                    response.json({
+                        success: false,
+                        status: `Couldn't update password with the token: ${token}`
+                    });
+                    reject(`Couldn't update password with the token: ${token}`);
+                }
+                else if (result && user.result) {
+                    request.login(user.result, { session: false }, (err) => {
+                        if (err) {
+                            response.status(API_ERRORS.UNAUTHORIZED.status);
+                            response.setHeader("Content-Type", "application/json");
+                            response.json({
+                                success: false,
+                                status: "Login Unsuccessfull!",
+                                err: err
+                            });
+                            reject(err);
+                        }
+                        let token = PassportService.getToken(user.result);
+                        response.status(HTTPStatusCodes.OK);
+                        response.setHeader("Content-Type", "application/json");
+                        response.json({
+                            success: true,
+                            status: "Login Successfull!",
+                            token: token,
+                            user: request.user
+                        });
+                        resolve(user.result);
+                    });
+                }
+            }
+            catch (err) {
+                response.status(API_ERRORS.USER_NOT_FOUND.status);
+                response.setHeader("Content-Type", "application/json");                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                response.json({
+                    success: false,
+                    status: `Couldn't update password with the token: ${token}`
+                });
+                reject(`Couldn't update password with the token: ${token}`);
+            }
         });
     }
 
@@ -325,8 +425,27 @@ export class UsersCtrl {
                  @Req() request: Express.Request,
                  @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "plain/text");
-        response.send("users/forgot end-point called");
+        let result: InsightResponse;
+        return new Promise<Users>(async (resolve, reject) => {
+            try {
+                result = await this.usersServices.forgotPassword(this.users, request, email);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: true,
+                    status: `Reset token sent to ${email}`,
+                });
+                resolve(result.body.result);
+            }
+            catch (err) {
+                response.status(HTTPStatusCodes.BAD_REQUEST);
+                response.setHeader("Content-Type", "application/json");
+                response.json({
+                    success: false,
+                    status: `Couldn't send the reset token to ${email}`,
+                });
+                reject(err);
+            }
+        });
     }
 }

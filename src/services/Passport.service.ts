@@ -8,11 +8,10 @@ import {
 } from "@tsed/common";
 import Passport = require("passport");
 import { Strategy as LocalStrategy } from "passport-local";
-import { Strategy as JwtStategy, ExtractJwt } from "passport-jwt";
+import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import {BadRequest, NotFound} from "ts-httpexceptions";
 import { IUser, InsightResponse } from "../interfaces/InterfaceFacade";
 import { UsersService } from "./Users.service";
-import { API_ERRORS } from "../util/app.error";
 import { JWT_SECRET } from "../util/secrets";
 import jwt = require("jsonwebtoken");
 import { Users } from "../models/Users";
@@ -48,36 +47,34 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
 
     $beforeRoutesInit() {
         const options: any = this.serverSettings.get("passport") || {} as any;
-        const {userProperty, pauseStream} = options; // options stored with ServerSettings
 
-        this.expressApplication.use(Passport.initialize({userProperty}));
-        this.expressApplication.use(Passport.session({pauseStream}));
+        this.expressApplication.use(Passport.initialize());
+        this.expressApplication.use(Passport.session());
+
     }
 
     $afterRoutesInit() {
         this.initializeSignup();
-        this.initializeLogin();
         this.initializeJwt();
+        this.initializeLogin();
     }
 
     /**
      * Get The JWT token for the user
-     * @param user 
+     * @param user the user to encode
+     * @returns The signed token
      */
     public static getToken(user: Users): Object {
-        return jwt.sign({uid: user._id},
+
+        const body = { _id : user._id, email : user.email, admin: user.admin };
+
+        return jwt.sign(body,
                         JWT_SECRET,
                         {
-                            expiresIn: "7d"
+                            expiresIn: 86400 * 30
                         });
     }
 
-    /**
-     * Authenticate user using JWT
-     */
-    public static authenticate() {
-        Passport.authenticate("jwt", { session: false });
-    }
 
     public initializeSignup() {
 
@@ -161,17 +158,15 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
         catch (err) {
             throw new NotFound("User not found");
         }
-        console.log("USER CREDI: ", user);
         return user;
     }
 
     // JWT authentication
     public initializeJwt() {
-        Passport.use("jwt", new JwtStategy({
-            passReqToCallback: true, // allows us to pass back the entire request to the callback,
+        Passport.use(new JwtStrategy({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            secretOrKey: JWT_SECRET
-        }, (req: any, payload: any, done: any) => {
+            secretOrKey: JWT_SECRET,
+        }, (payload: any, done: any) => {
             process.nextTick(() => {
                 this.find(payload._id)
                 .then((user) => done(null, user))
@@ -187,6 +182,7 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
      */
     async find(id: string): Promise<InsightResponse> {
         let user: InsightResponse;
+        console.log("USER IDDDD", id);
         
         try {
             user = await this.usersService.findById(id);

@@ -4,9 +4,13 @@ import { HTTPStatusCodes } from "../util/httpCode";
 import { API_ERRORS } from "../util/app.error";
 import { Users } from "../models/Users";
 import { InsightResponse, IUser } from "../interfaces/InterfaceFacade";
-import { BadRequest } from "ts-httpexceptions";
+import { BadRequest, NotFound } from "ts-httpexceptions";
 import bcrypt from "bcrypt-nodejs";
 import mongoose from "mongoose";
+import * as Express from "express";
+import async from "async";
+import crypto from "crypto";
+import nodemailer from "nodemailer";
 
 @Service()
 export class UsersService {
@@ -66,6 +70,32 @@ export class UsersService {
     }
 
     /**
+     * Delete a specific user registered in our website
+     * @param id id of the user to be deleted
+     * @returns {Promise<InsightResponse>}
+     */
+    async deleteUser(id: string): Promise<InsightResponse> {
+
+        try {
+            await this.users.findById(id, '-__v').remove().exec();
+        }
+        catch (err) {
+            return Promise.reject({
+                code: HTTPStatusCodes.BAD_REQUEST,
+                body: {
+                    name: "An Error occurred while trying to delete this user"
+                }
+            });
+        }
+        return Promise.resolve({
+            code: HTTPStatusCodes.OK,
+            body: {
+                result: "Removed"
+            }
+        });
+    }
+
+    /**
      * Find a user by its id
      * @param id id to look for in the database
      * @returns {Promise<InsightResponse>}
@@ -116,7 +146,6 @@ export class UsersService {
             result = await this.users.findOne({ email: email.toLowerCase() }, '-__v').exec();
 
             if (result) {
-                console.log("EMAIL FOUND");
                 return Promise.reject({
                     code: API_ERRORS.USER_ALREADY_EXISTS.status,
                     body: {
@@ -133,7 +162,6 @@ export class UsersService {
                 }
             });
         }
-        console.log("EMAIL NOT FOUND");
         return Promise.resolve({
             code: HTTPStatusCodes.OK,
             body: {
@@ -167,9 +195,7 @@ export class UsersService {
                 this.validateEmail(email.toLowerCase());
                 
                 user = await this.users.findOne({email: email.toLowerCase()}, '-__v').exec();
-    
-                console.log("USERRRR: ", user);
-    
+        
                 if (!user) {
                     reject({
                         code: API_ERRORS.USER_NOT_FOUND.status,
@@ -189,7 +215,6 @@ export class UsersService {
                         });
                     }
                     if(isMatch) {
-                        console.log("MATCHED");
                         resolve({
                             code: HTTPStatusCodes.OK,
                             body: {
@@ -197,6 +222,12 @@ export class UsersService {
                             }
                         });
                     }
+                    reject({
+                        code: API_ERRORS.USER_WRONG_CREDENTIALS.status,
+                        body: {
+                            name: API_ERRORS.USER_WRONG_CREDENTIALS.message
+                        }
+                    });
                 });
             }
             catch(err) {
@@ -242,6 +273,20 @@ export class UsersService {
         };
 
         try {
+            const hashed = await new Promise<any>((resolve, reject) => {
+                bcrypt.genSalt(10, (err, salt) => {
+                    if (err) { 
+                        reject(err); 
+                    }
+                    bcrypt.hash(user.password, salt, undefined, async (err: mongoose.Error, hash) => {
+                        if (err) { 
+                            reject(err);
+                        }
+                        resolve(hash);
+                    });
+                });
+            });
+            data.password = hashed;
             await this.users.create(data);
 
             res = await this.users.findOne({
@@ -249,7 +294,6 @@ export class UsersService {
                     }, "-__v").exec();
         }
         catch(err) {
-            console.log("CREATE USER ERRRORR: ", err);
             return Promise.reject({
                 code: HTTPStatusCodes.BAD_REQUEST,
                 body: {
@@ -257,7 +301,6 @@ export class UsersService {
                 }
             });
         }
-        console.log("CREATED");
         return Promise.resolve({
             code: HTTPStatusCodes.OK,
             body: {
@@ -266,12 +309,96 @@ export class UsersService {
         });
     }
 
-    async updateProfile(profile: any): Promise<InsightResponse> {
-        return Promise.reject({code: HTTPStatusCodes.NOT_IMPLEMENTED, body: null});
+    /**
+     * Update user profile based on information provided. Authentication required
+     * @param id id of the user to update the profile
+     * @param profile information to be updated
+     * @returns the updated user information
+     */
+    async updateProfile(id: string, profile: any): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let updt: Users;
+            try {
+                result = await this.findById(id);
+                let user: Users = result.body.result;
+                user.fullname = profile.fullname || user.fullname;
+                user.country = profile.country || user.country;
+                user.codeforces = profile.codeforces || user.codeforces;
+                user.livearchive = profile.livearchive || user.livearchive;
+                user.uva = profile.uva || user.uva;
+                updt = await this.users.findByIdAndUpdate(user._id, user, {new: true, select: "-__v"}).exec();
+            
+                resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: updt
+                    }
+                });
+            }
+            catch(err) {
+                reject({
+                    code: HTTPStatusCodes.NOT_MODIFIED,
+                    body: {
+                        name: "Couldn't modify the user information"
+                    }
+                });
+            }
+        });
     }
 
-    async updatePassword(password: string, confirmation: string): Promise<InsightResponse> {
-        return Promise.reject({code: HTTPStatusCodes.NOT_IMPLEMENTED, body: null});
+    /**
+     * Update the user password
+     * @param id the id of the user to update password
+     * @param password new password
+     * @returns the updated password
+     */
+    async updatePassword(id: string, password: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let updt: Users;
+            try {
+                result = await this.findById(id);
+                let user: Users = result.body.result;
+                bcrypt.genSalt(10, (err, salt) => {
+                    if (err) { 
+                        reject({
+                            code: HTTPStatusCodes.NOT_MODIFIED,
+                            body: {
+                                name: "Couldn't modify the user password"
+                            }
+                        }); 
+                    }
+                    bcrypt.hash(password, salt, undefined, async (err: mongoose.Error, hash) => {
+                        if (err) { 
+                            reject({
+                                code: HTTPStatusCodes.NOT_MODIFIED,
+                                body: {
+                                    name: "Couldn't modify the user password"
+                                }
+                            }); 
+                        }
+                        user.password = hash;
+                        updt = await this.users.findByIdAndUpdate(user._id, user, {new: true, select: "-__v"}).exec();
+                        resolve({
+                            code: HTTPStatusCodes.OK,
+                            body: {
+                                result: updt
+                            }
+                        });
+                    });
+                });
+            }
+            catch(err) {
+                reject({
+                    code: HTTPStatusCodes.NOT_MODIFIED,
+                    body: {
+                        name: "Couldn't modify the user password"
+                    }
+                });
+            }
+        });
     }
 
     async verifyEmailToken(token: string): Promise<Boolean> {
@@ -282,15 +409,195 @@ export class UsersService {
         return Promise.reject({code: HTTPStatusCodes.NOT_IMPLEMENTED, body: null});
     }
 
+    /**
+     * Verify if the token provided is valid or has not yet expired
+     * @param token reset token sent to user via email
+     * @returns true if it is valid and has not yet expired
+     */
     async verifyPasswordToken(token: string): Promise<Boolean> {
-        return Promise.reject(false);
+        let user: Users;
+        try {
+            user = await this.users.findOne({ passwordResetToken: token })
+                             .where("passwordResetExpires")
+                             .gt(Date.now())
+                             .exec();
+            if (!user) {
+                return false;
+            }
+            return true;
+        }
+        catch (err) {
+            return false;
+        }
     }
 
-    async updatePasswordToken(token: string, password: string): Promise<InsightResponse> {
-        return Promise.reject({code: HTTPStatusCodes.NOT_IMPLEMENTED, body: null});
+    /**
+     * Update password based on the token
+     * @param users 
+     * @param request 
+     * @param token 
+     * @param password 
+     */
+    async updatePasswordToken(users: MongooseModel<Users>, request: Express.Request, token: string, password: string): Promise<InsightResponse> {
+        
+        let res: Users;
+        async.waterfall([
+            async function resetPassword(done: Function) {
+                let user: Users;
+                let updt: Users;
+                try {
+                    user = await users.findOne({ passwordResetToken: token })
+                                    .where("passwordResetExpires")
+                                    .gt(Date.now())
+                                    .exec();
+                    if (!user) {
+                        return Promise.reject({
+                            code: HTTPStatusCodes.NOT_FOUND,
+                            body: {
+                                name: "Password reset token is invalid or has expired."
+                            }
+                        });
+                    }
+                    const hashed = await new Promise<any>((resolve, reject) => {
+                        bcrypt.genSalt(10, (err, salt) => {
+                            if (err) { 
+                                reject(err); 
+                            }
+                            bcrypt.hash(password, salt, undefined, async (err: mongoose.Error, hash) => {
+                                if (err) { 
+                                    reject(err);
+                                }
+                                user.password = hash;
+                                user.passwordResetToken = undefined;
+                                user.passwordResetExpires = undefined;
+                                updt = await users.findByIdAndUpdate(user._id, user, {new: true, select: "-__v"}).exec();
+                                resolve(updt);
+                            });
+                        });
+                    });
+                    done(null, hashed);
+                }
+                catch (err) {
+                    return done(err);
+                }
+            },
+            function sendForgotPasswordEmail(user: Users, done: Function) {
+                res = user;
+                const transporter = nodemailer.createTransport({
+                    service: "SendGrid",
+                    auth: {
+                        user: process.env.SENDGRID_USER,
+                        pass: process.env.SENDGRID_PASSWORD
+                    }
+                });
+                const mailOptions = {
+                    to: user.email,
+                    from: "practicecodingoj@gmail.com",
+                    subject: "Your password has been changed",
+                    text: `Hello,\n\nThis is a confirmation that the password for your account ${user.email} has just been changed.\n`
+                };
+                transporter.sendMail(mailOptions, (err) => {
+                    done(err, user);
+                });
+            }
+        ], (err, user: Users) => {
+            if (err) {
+                return Promise.reject({
+                    code: HTTPStatusCodes.NOT_MODIFIED,
+                    body: {
+                        name: "Couldn't modify password"
+                    }
+                });
+            }
+            else {
+                res = user;
+                return Promise.resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: user
+                    }
+                });
+            }
+        });
+        return Promise.resolve({
+            code: HTTPStatusCodes.OK,
+            body: {
+                result: res
+            }
+        });
     }
 
-    async forgotPassword(): Promise<InsightResponse> {
-        return Promise.reject({code: HTTPStatusCodes.NOT_IMPLEMENTED, body: null});
+    /**
+     * Create a random token and send user an email with a reset link
+     * @param users users model
+     * @param request Express request
+     * @param response Express response
+     * @param next Express next
+     */
+    async forgotPassword(users: MongooseModel<Users>, request: Express.Request, email: string): Promise<InsightResponse> {
+        
+        async.waterfall([
+            function createRandomToken(done: Function) {
+                crypto.randomBytes(16, (err, buf) => {
+                  const token = buf.toString("hex");
+                  done(err, token);
+                });
+            },
+            async function setRandomToken(token: any, done: Function) {
+                let user: Users;
+                let updt: Users;
+                try {
+                    user = await users.findOne({ email: email.toLowerCase() }, '-__v').exec();
+                    if (!user) {
+                        throw new NotFound("Account with that email address does not exist.");
+                    }
+                    user.passwordResetToken = token;
+                    user.passwordResetExpires = Date.now() + 3600000; // 1 hour
+                    updt = await users.findByIdAndUpdate(user._id, user, {new: true, select: "-__v"}).exec();
+                    done(null, token, updt);
+                }
+                catch (err) {
+                    return done(err);
+                }
+            },
+            function sendForgotPasswordEmail(token: any, user: Users, done: Function) {
+                const transporter = nodemailer.createTransport({
+                    service: "SendGrid",
+                    auth: {
+                        user: process.env.SENDGRID_USER,
+                        pass: process.env.SENDGRID_PASSWORD
+                    }
+                });
+                const mailOptions = {
+                    to: user.email,
+                    from: "zacharienziuki@gmail.com",
+                    subject: "Reset your password on Practicecodingoj",
+                    text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
+                      Please click on the following link, or paste this into your browser to complete the process:\n\n
+                      http://${request.headers.host}/users/reset/${token}\n\n
+                      If you did not request this, please ignore this email and your password will remain unchanged.\n`
+                };
+                transporter.sendMail(mailOptions, (err, info) => {
+                    done(err, info);
+                });
+            }
+        ], (err: Error, info) => {
+            if (err) {
+                throw err;
+            }
+            console.log("Email Sent: ", info);
+            return Promise.resolve({
+                code: HTTPStatusCodes.OK,
+                body: {
+                    result: "Email sent."
+                }
+            });
+        });
+        return Promise.resolve({
+            code: HTTPStatusCodes.OK,
+            body: {
+                result: "Email sent."
+            }
+        });
     }
 }
