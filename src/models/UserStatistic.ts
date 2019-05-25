@@ -19,11 +19,31 @@ export class UserStatistic {
 
     @Property()
     @Required()
-    @Description("Number of problems solved on a particular platform")
-    solvedCount: number;
+    @Description("Number of problems solved on Codeforces")
+    codeforcesSolvedCount: number;
 
     @Property()
     @Required()
-    @Description("List of problems solved on a particular platform")
-    links: ILink[];
+    @Description("Number of problems solved on Uva")
+    uvaSolvedCount: number;
+
+    @Property()
+    @Required()
+    @Description("Number of problems solved on Live Archive")
+    livearchiveSolvedCount: number;
+
+    @Property()
+    @Required()
+    @Description("List of problems solved on Codeforces")
+    codeforcesLinks: ILink[];
+
+    @Property()
+    @Required()
+    @Description("List of problems solved on Uva")
+    uvaLinks: ILink[];
+
+    @Property()
+    @Required()
+    @Description("List of problems solved on Live Archive")
+    livearchiveLinks: ILink[];
 }
