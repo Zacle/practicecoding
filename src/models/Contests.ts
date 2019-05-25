@@ -6,7 +6,7 @@ import { Problems } from "./Problems";
 import { Submissions } from "./Submissions";
 import { Teams } from "./Teams";
 import { Standings } from "./Standings";
-import { AccessType } from "../interfaces/InterfaceFacade";
+import { AccessType, ContestType } from "../interfaces/InterfaceFacade";
 
 
 @Model()
@@ -33,8 +33,12 @@ export class Contests {
     owner: Ref<Users>[];
 
     @Property()
-    @Description("Individual or team contest")
+    @Description("Private or public contest")
     access: AccessType;
+
+    @Property()
+    @Description("Individual or team contest")
+    type: ContestType;
 
     @Ref(Problems)
     @Property()
