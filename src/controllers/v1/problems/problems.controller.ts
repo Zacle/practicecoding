@@ -11,12 +11,12 @@ import {
     Required,
     MergeParams
 } from "@tsed/common";
-import { Plateform, Codeforces } from "../../services/Plateform.service";
-import PlateformBuilding from "../../services/PlateformBuilding.service";
+import { Plateform, Codeforces } from "../../../services/plateform/Plateform.service";
+import PlateformBuilding from "../../../services/plateformBuilder/PlateformBuilding.service";
 import { Summary } from "@tsed/swagger";
 import * as Express from "express";
-import { HTTPStatusCodes } from "../../util/httpCode";
-import { InsightResponse } from "../../interfaces/InterfaceFacade";
+import { HTTPStatusCodes } from "../../../util/httpCode";
+import { InsightResponse } from "../../../interfaces/InterfaceFacade";
 import { BadRequest } from "ts-httpexceptions";
 
 /*

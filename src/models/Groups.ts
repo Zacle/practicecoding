@@ -2,8 +2,8 @@ import { Property } from "@tsed/common";
 import { Model, Ref, Unique } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
 import { Users } from "./Users";
-import { Submissions } from "./Submissions";
-import { Contests } from "./Contests";
+import { Submissions } from "./contests/Submissions";
+import { Contests } from "./contests/Contests";
 import { Teams } from "./Teams";
 import { AccessType } from "../interfaces/InterfaceFacade";
 
@@ -45,9 +45,4 @@ export class Groups {
     @Property()
     @Description("Group submissions")
     submissions: Ref<Submissions>[];
-
-    @Ref(Teams)
-    @Property()
-    @Description("Teams belonging to this group")
-    teams: Ref<Teams>[];
 }

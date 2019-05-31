@@ -1,9 +1,9 @@
 import { Property } from "@tsed/common";
 import { Model, Ref } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
-import { Users } from "./Users";
-import { Problems } from "./Problems";
-import { Teams } from "./Teams";
+import { Users } from "../Users";
+import { Problems } from "../Problems";
+import { Teams } from "../Teams";
 
 @Model()
 export class Standings {
@@ -33,13 +33,8 @@ export class Standings {
     @Description("Problems not solved by the user during the contest")
     problemsUnsolved: Ref<Problems>[];
 
-    @Ref(Users)
-    @Property()
-    @Description("Contest participant")
-    contestant?: Ref<Users>;
-
     @Ref(Teams)
     @Property()
     @Description("Team contest participant")
-    contestants?: Ref<Teams>;
+    contestants: Ref<Teams>;
 }

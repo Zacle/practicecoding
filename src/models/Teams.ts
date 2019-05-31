@@ -2,8 +2,8 @@ import { Property } from "@tsed/common";
 import { Model, Ref, Unique } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
 import { Users } from "./Users";
-import { Contests } from "./Contests";
-import { Submissions} from "./Submissions";
+import { Contests } from "./contests/Contests";
+import { Submissions} from "./contests/Submissions";
 
 @Model()
 export class Teams {

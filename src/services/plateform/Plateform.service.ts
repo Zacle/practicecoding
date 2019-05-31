@@ -1,13 +1,13 @@
 import { Inject , Service } from "@tsed/common";
 import {MongooseModel} from "@tsed/mongoose";
 import * as fs from "fs";
-import { IProblem, PlateformFactory, UserStatistic, PlateformName } from "../interfaces/InterfaceFacade";
-import { InsightResponse, InsightResponseSuccessBody, InsightResponseErrorBody } from "../interfaces/InterfaceFacade";
-import Log from "../Util";
-import { Problem } from "./Problem.service";
-import { Problems } from "../models/Problems";
+import { IProblem, PlateformFactory, UserStatistic, PlateformName } from "../../interfaces/InterfaceFacade";
+import { InsightResponse, InsightResponseSuccessBody, InsightResponseErrorBody } from "../../interfaces/InterfaceFacade";
+import Log from "../../Util";
+import { Problem } from "../Problem.service";
+import { Problems } from "../../models/Problems";
 import request = require("request-promise");
-import { HTTPStatusCodes } from "../util/httpCode";
+import { HTTPStatusCodes } from "../../util/httpCode";
 
 
 

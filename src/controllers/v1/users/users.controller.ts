@@ -5,12 +5,12 @@ import {Summary} from "@tsed/swagger";
 import * as Express from "express";
 import Passport = require("passport");
 import {BadRequest} from "ts-httpexceptions";
-import { IUser, InsightResponse } from "../../interfaces/InterfaceFacade";
-import { HTTPStatusCodes } from "../../util/httpCode";
-import { API_ERRORS } from "../../util/app.error";
-import { Users } from "../../models/Users";
-import { PassportService } from "../../services/Passport.service";
-import { UsersService } from "../../services/Users.service";
+import { IUser, InsightResponse } from "../../../interfaces/InterfaceFacade";
+import { HTTPStatusCodes } from "../../../util/httpCode";
+import { API_ERRORS } from "../../../util/app.error";
+import { Users } from "../../../models/Users";
+import { PassportService } from "../../../services/passport/Passport.service";
+import { UsersService } from "../../../services/users/Users.service";
 import { MongooseModel } from "@tsed/mongoose";
 
 /*

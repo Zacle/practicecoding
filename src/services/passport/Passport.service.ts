@@ -10,11 +10,11 @@ import Passport = require("passport");
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import {BadRequest, NotFound} from "ts-httpexceptions";
-import { IUser, InsightResponse } from "../interfaces/InterfaceFacade";
-import { UsersService } from "./Users.service";
-import { JWT_SECRET } from "../util/secrets";
+import { IUser, InsightResponse } from "../../interfaces/InterfaceFacade";
+import { UsersService } from "../users/Users.service";
+import { JWT_SECRET } from "../../util/secrets";
 import jwt = require("jsonwebtoken");
-import { Users } from "../models/Users";
+import { Users } from "../../models/Users";
 
 @Service()
 export class PassportService implements BeforeRoutesInit, AfterRoutesInit {

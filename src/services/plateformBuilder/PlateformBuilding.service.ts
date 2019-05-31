@@ -1,5 +1,5 @@
 import { Service } from "@tsed/common";
-import { Plateform, Codeforces, Uva, LiveArchive, AllPlateforms } from "./Plateform.service";
+import { Plateform, Codeforces, Uva, LiveArchive, AllPlateforms } from "../plateform/Plateform.service";
 
 /*
  *  Create a specific plateform as specified by the user

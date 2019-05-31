@@ -1,11 +1,11 @@
 import { Property } from "@tsed/common";
-import { Model, Ref } from "@tsed/mongoose";
+import { Model, Ref, Unique } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
 import { Users } from "./Users";
 import { Problems } from "./Problems";
-import { Submissions } from "./Submissions";
+import { Submissions } from "./contests/Submissions";
 import { Teams } from "./Teams";
-import { Standings } from "./Standings";
+import { Standings } from "./contests/Standings";
 import { AccessType, ContestType } from "../interfaces/InterfaceFacade";
 
 
@@ -16,6 +16,11 @@ export class Contests {
     _id?: string;
 
     @Property()
+    @Unique()
+    @Description("Contest name")
+    name: string;
+
+    @Property()
     @Description("Contest's start time")
     startTime: Date;
 
@@ -24,13 +29,21 @@ export class Contests {
     endTime: Date;
 
     @Property()
+    @Description("Contest's start date")
+    startDate: Date;
+
+    @Property()
+    @Description("Contest's end date")
+    endDate: Date;
+
+    @Property()
     @Description("Duration of the contest")
     duration: number;
 
     @Ref(Users)
     @Property()
-    @Description("Owner(s) of the contest")
-    owner: Ref<Users>[];
+    @Description("Owner of the contest")
+    owner: Ref<Users>;
 
     @Property()
     @Description("Private or public contest")
@@ -45,15 +58,10 @@ export class Contests {
     @Description("List of problems")
     problems: Ref<Problems>[];
 
-    @Ref(Users)
-    @Property()
-    @Description("Users registered in the contest")
-    registrants?: Ref<Users>[];
-
     @Ref(Teams)
     @Property()
     @Description("Teams registered in the contest")
-    teams?: Ref<Teams>[];
+    teams: Ref<Teams>[];
 
     @Ref(Submissions)
     @Property()

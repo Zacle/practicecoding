@@ -1,8 +1,8 @@
 import { Property } from "@tsed/common";
 import { Model, Ref } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
-import { Users } from "./Users";
-import { Teams } from "./Teams";
+import { Users } from "../Users";
+import { Teams } from "../Teams";
 
 @Model()
 export class Submissions {
@@ -32,11 +32,7 @@ export class Submissions {
 
     @Ref(Users)
     @Description("Contestant submission if INDIVIDUAL contest")
-    contestant?: Ref<Users>;
-
-    @Ref(Teams)
-    @Description("Team submission if TEAM contest")
-    team?: Ref<Teams>;
+    contestant: Ref<Users>;
 
     @Ref(Users)
     @Description("Contestants submission if TEAM contest")

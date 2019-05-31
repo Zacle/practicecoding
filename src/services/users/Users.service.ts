@@ -1,9 +1,9 @@
 import { Inject , Service } from "@tsed/common";
 import { MongooseModel } from "@tsed/mongoose";
-import { HTTPStatusCodes } from "../util/httpCode";
-import { API_ERRORS } from "../util/app.error";
-import { Users } from "../models/Users";
-import { InsightResponse, IUser } from "../interfaces/InterfaceFacade";
+import { HTTPStatusCodes } from "../../util/httpCode";
+import { API_ERRORS } from "../../util/app.error";
+import { Users } from "../../models/Users";
+import { InsightResponse, IUser } from "../../interfaces/InterfaceFacade";
 import { BadRequest, NotFound } from "ts-httpexceptions";
 import bcrypt from "bcrypt-nodejs";
 import mongoose from "mongoose";

@@ -20,7 +20,7 @@ export class AuthMiddleware {
         const options = endpoint.store.get(AuthenticatedMiddleware) || {};
         $log.debug("AuthMiddleware =>", options);
         $log.debug("AuthMiddleware isAuthenticated ? =>", request.isAuthenticated());
-
+        
         return new Promise<any>((resolve, reject) => {
             Passport.authenticate('jwt', { session: false, }, async (error, token) => {
                 if (error || !token) {
