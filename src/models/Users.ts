@@ -1,8 +1,10 @@
 import bcrypt from "bcrypt-nodejs";
 import mongoose from "mongoose";
 import { Property, Required, Email, PropertyType, Default } from "@tsed/common";
-import { Model, Unique, PreHook } from "@tsed/mongoose";
+import { Model, Unique, PreHook, Ref } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
+import { Teams } from "./Teams";
+import { Groups } from "./Groups";
 
 
 @Model()
@@ -93,4 +95,12 @@ export class Users {
     @Default(false)
     @Description("Whether or not the user is an admin")
     admin: Boolean;
+
+    @Ref(Teams)
+    @Description("Teams the user belongs to")
+    teams: Ref<Teams>[];
+
+    @Ref(Groups)
+    @Description("Groups the user belongs to")
+    groups: Ref<Groups>[];
 }

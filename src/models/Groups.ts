@@ -13,19 +13,23 @@ export class Groups {
     @Property()
     _id?: string;
 
-    @Ref(Users)
+    @Ref("Users")
     @Property()
     @Description("Membres of the group")
-    members: Ref<Users>;
+    members: Ref<Users>[];
 
     @Property()
     @Description("Public or Private group")
     access: AccessType;
 
-    @Ref(Users)
+    @Property()
+    @Description("What this group is all about")
+    description: string;
+
+    @Ref("Users")
     @Property()
     @Description("Admin(s) of the group")
-    admin: Ref<Users>[];
+    admin: Ref<Users>;
 
     @Ref(Contests)
     @Property()
@@ -40,9 +44,4 @@ export class Groups {
     @Unique()
     @Description("Group name")
     name: string;
-
-    @Ref(Submissions)
-    @Property()
-    @Description("Group submissions")
-    submissions: Ref<Submissions>[];
 }

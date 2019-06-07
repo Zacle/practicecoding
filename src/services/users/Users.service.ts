@@ -101,33 +101,73 @@ export class UsersService {
      * @returns {Promise<InsightResponse>}
      */
     async findById(id: string): Promise<InsightResponse> {
-        let result: Users;
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let result: Users;
 
-        try {
-            result = await this.users.findById(id, '-__v').exec();
-        }
-        catch (err) {
-            return Promise.reject({
-                code: HTTPStatusCodes.BAD_REQUEST,
-                body: {
-                    name: "An Error occurred while trying to retrieve user by its id"
+            try {
+                result = await this.users.findById(id, '-__v').exec();
+                if (!result) {
+                    return reject({
+                        code: API_ERRORS.USER_NOT_FOUND.status,
+                        body: {
+                            name: API_ERRORS.USER_NOT_FOUND.message
+                        }
+                    });
                 }
-            });
-        }
+        
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: result
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "An Error occurred while trying to retrieve user by its id"
+                    }
+                });
+            }
+        });
+    }
 
-        if (!result) {
-            return Promise.reject({
-                code: API_ERRORS.USER_NOT_FOUND.status,
-                body: {
-                    name: API_ERRORS.USER_NOT_FOUND.message
+    /**
+     * Find a user by its username
+     * @param username username to look for in the database
+     * @returns {Promise<InsightResponse>}
+     */
+    async findByUsername(username: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let result: Users;
+
+            try {
+                result = await this.users.findOne({ username: username }, '-__v').exec();
+                
+                if (!result) {
+                    return Promise.reject({
+                        code: API_ERRORS.USER_NOT_FOUND.status,
+                        body: {
+                            name: API_ERRORS.USER_NOT_FOUND.message
+                        }
+                    });
                 }
-            });
-        }
-
-        return Promise.resolve({
-            code: HTTPStatusCodes.OK,
-            body: {
-                result: result
+        
+                return Promise.resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: result
+                    }
+                });
+            }
+            catch (err) {
+                return Promise.reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "An Error occurred while trying to retrieve user by its username"
+                    }
+                });
             }
         });
     }
@@ -269,7 +309,9 @@ export class UsersService {
             codeforces: user.codeforces,
             uva: user.uva,
             livearchive: user.livearchive,
-            admin: user.admin
+            admin: user.admin,
+            teams: [],
+            groups: []
         };
 
         try {

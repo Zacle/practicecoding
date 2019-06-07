@@ -19,7 +19,6 @@ import { InsightResponse } from "../../../interfaces/InterfaceFacade";
 import {Summary} from "@tsed/swagger";
 import { Problems } from "../../../models/Problems";
 import { Submissions } from "../../../models/contests/Submissions";
-import { Submissions as teamSubmissions } from "../../../models/teamContests/teamSubmissions";
 
 /**
  * REST end-point for contests

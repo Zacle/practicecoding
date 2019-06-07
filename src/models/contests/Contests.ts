@@ -40,7 +40,7 @@ export class Contests {
     @Description("Duration of the contest")
     duration: number;
 
-    @Ref(Users)
+    @Ref("Users")
     @Property()
     @Description("Owner of the contest")
     owner: Ref<Users>;
@@ -58,17 +58,22 @@ export class Contests {
     @Description("List of problems")
     problems: Ref<Problems>[];
 
-    @Ref(Users)
+    @Ref("Users")
     @Property()
     @Description("Users registered in the contest")
-    registrants: Ref<Users>[];
+    users: Ref<Users>[];
 
-    @Ref(Submissions)
+    @Ref("Teams")
+    @Property()
+    @Description("Teams registered in the contest")
+    teams: Ref<Teams>[];
+
+    @Ref("Submissions")
     @Property()
     @Description("Contest's submissions")
     submissions: Ref<Submissions>[];
 
-    @Ref(Standings)
+    @Ref("Standings")
     @Property()
     @Description("Contest standing")
     standings: Ref<Standings>;

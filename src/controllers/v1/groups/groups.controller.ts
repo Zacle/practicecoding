@@ -17,18 +17,63 @@ import * as Express from "express";
 import { HTTPStatusCodes } from "../../../util/httpCode";
 import { InsightResponse } from "../../../interfaces/InterfaceFacade";
 import {Summary} from "@tsed/swagger";
+import { Groups } from "../../../models/Groups";
+import { GroupsService } from "../../../services/group/Groups.service";
 
 
 @Controller("/groups")
 export class GroupsCtrl {
 
+    constructor(private groups: GroupsService) {}
+
     @Get("/")
-    @Summary("Get all groups")
+    @Summary("Get all groups that are public")
+    @Authenticated({role: 'admin'})
+    async getAllGroups(@Req() request: Express.Request, @Res() response: Express.Response) {
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.getAllGroups();
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body);
+                resolve();
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    @Get("/my")
+    @Summary("Get all groups that contain the user")
     @Authenticated()
     async getGroups(@Req() request: Express.Request, @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "plain/text");
-        response.send("GET /groups");
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.getGroups(request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
     }
 
     @Post("/")
@@ -36,13 +81,27 @@ export class GroupsCtrl {
     @Authenticated()
     async addGroup(@Required() @BodyParams("name") name: string,
                    @Required() @BodyParams("access") access: string,
+                   @BodyParams("description") description: string,
                    @Req() request: Express.Request,
                    @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            name: name,
-            access: access
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.createGroup(name, request.user._id, access.toUpperCase(), description);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -50,9 +109,25 @@ export class GroupsCtrl {
     @Summary("Delete all groups")
     @Authenticated({role: 'admin'})
     async deleteGroups(@Req() request: Express.Request, @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "plain/text");
-        response.send("DELETE /groups");
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.deleteAllGroups();
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
     }
 
     @Get("/:id")
@@ -61,10 +136,51 @@ export class GroupsCtrl {
     async getGroup(@Required() @PathParams("id") groupID: string,
                    @Req() request: Express.Request,
                    @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.getGroup(groupID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    @Get("/by/:name")
+    @Summary("Get a specific group by name")
+    @Authenticated()
+    async getGroupName(@Required() @PathParams("name") name: string,
+                   @Req() request: Express.Request,
+                   @Res() response: Express.Response) {
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.getGroupName(name);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -75,11 +191,24 @@ export class GroupsCtrl {
                       @BodyParams("access") access: string,
                       @Req() request: Express.Request,
                       @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID,
-            access: access
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.updateGroup(groupID, access.toUpperCase(), request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -89,10 +218,24 @@ export class GroupsCtrl {
     async deleteGroup(@Required() @PathParams("id") groupID: string,
                       @Req() request: Express.Request,
                       @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.deleteGroup(groupID, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -102,11 +245,25 @@ export class GroupsCtrl {
     async getGroupMembers(@Required() @PathParams("id") groupID: string,
                          @Req() request: Express.Request,
                          @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID
-        }); 
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.getGroupMembers(groupID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
     }
 
     /**
@@ -121,23 +278,24 @@ export class GroupsCtrl {
     async getGroupContests(@Required() @PathParams("id") groupID: string,
                           @Req() request: Express.Request,
                           @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID
-        });
-    }
+        return new Promise<Groups>(async (resolve, reject) => {
 
-    @Get("/:id/submissions")
-    @Summary("Get group submissions")
-    @Authenticated()
-    async getGroupSubmissions(@Required() @PathParams("id") groupID: string,
-                             @Req() request: Express.Request,
-                             @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.getGroupContests(groupID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -148,48 +306,24 @@ export class GroupsCtrl {
                         @Required() @BodyParams("uid") userID: string,
                         @Req() request: Express.Request,
                         @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID,
-            userID: userID
-        });
-    }
+        return new Promise<Groups>(async (resolve, reject) => {
 
-    /**
-     * Add a contest the group has organized
-     * @param groupID 
-     * @param contestID 
-     * @param request 
-     * @param response 
-     */
-    @Post("/:id/contests")
-    @Summary("Add a group contest")
-    @Authenticated()
-    async addGroupContest(@Required() @PathParams("id") groupID: string,
-                     @Required() @BodyParams("cid") contestID: string,
-                     @Req() request: Express.Request,
-                     @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID,
-            contestID: contestID
-        });
-    }
+            let result: InsightResponse;
 
-    @Post("/:id/submissions")
-    @Summary("Add a submission")
-    @Authenticated()
-    async addGroupSubmission(@Required() @PathParams("id") groupID: string,
-                        @Required() @BodyParams("sid") submissionID: string,
-                        @Req() request: Express.Request,
-                        @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID,
-            submissionID: submissionID
+            try {
+                result = await this.groups.addGroupMember(groupID, userID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -200,11 +334,24 @@ export class GroupsCtrl {
                            @Required() @PathParams("uid") userID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            groupID: groupID,
-            userID: userID
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.deleteGroupMember(groupID, userID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 }

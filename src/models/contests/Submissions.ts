@@ -30,11 +30,11 @@ export class Submissions {
     @Description("Programming language of the submission")
     language: string;
 
-    @Ref(Users)
+    @Ref("Users")
     @Description("Contestant submission if INDIVIDUAL contest")
-    contestant: Ref<Users>;
+    user: Ref<Users>;
 
-    @Ref(Users)
+    @Ref("Teams")
     @Description("Contestants submission if TEAM contest")
-    contestants?: Ref<Users>[];
+    team: Ref<Teams>;
 }

@@ -1,9 +1,8 @@
-import { Property } from "@tsed/common";
+import { Property, PropertyType, IgnoreProperty } from "@tsed/common";
 import { Model, Ref, Unique } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
 import { Users } from "./Users";
 import { Contests } from "./contests/Contests";
-import { Submissions} from "./contests/Submissions";
 
 @Model()
 export class Teams {
@@ -12,21 +11,15 @@ export class Teams {
     _id?: string;
 
     @Ref(Contests)
-    @Property()
     @Description("Contests the team has participated")
     contests: Ref<Contests>[];
 
-    @Ref(Submissions)
-    @Property()
-    @Description("Team's submissions")
-    submissions: Ref<Submissions>[];
-
-    @Ref(Users)
+    @Ref("Users")
     @Property()
     @Description("Admin of the team")
     admin: Ref<Users>;
 
-    @Property()
+    @PropertyType(Date)
     @Description("Creation date of the team")
     creation: Date;
 
@@ -35,8 +28,7 @@ export class Teams {
     @Description("Team's name")
     name: string;
 
-    @Ref(Users)
-    @Property()
+    @Ref("Users")
     @Description("Members of the teams")
     members: Ref<Users>[];
 }

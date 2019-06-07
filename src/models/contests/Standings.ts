@@ -33,7 +33,7 @@ export class Standings {
     @Description("Problems not solved by the user during the contest")
     problemsUnsolved: Ref<Problems>[];
 
-    @Ref(Users)
+    @Ref("Users")
     @Property()
     @Description("Contest participant")
     contestant: Ref<Users>;

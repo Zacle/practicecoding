@@ -28,15 +28,17 @@ export class AuthMiddleware {
                     reject();
                 }
                 else {
-                    request.user = token.body.result;
+                    const user = {
+                        email: token.body.result.email,
+                        _id: token.body.result._id,
+                        username: token.body.result.username,
+                        admin: token.body.result.admin
+                    };
+                    request.user = user;
                 }
                 if (options.role == "admin") {
-                    if (request.user.admin) {
-                        resolve(next());
-                    }
-                    else {
+                    if (!request.user.admin) {
                         response.status(HTTPStatusCodes.UNAUTHORIZED).json({ message: "Unauthorized "});
-                        reject();
                     }
                 }
                 console.log("OUTSIDE AUTH: ", request.user);

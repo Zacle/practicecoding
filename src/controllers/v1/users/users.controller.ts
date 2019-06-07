@@ -188,6 +188,56 @@ export class UsersCtrl {
         response.redirect("/");
     }
 
+    @Get("/:id")
+    @Summary("get a user by its id")
+    async getByID(@Required() @PathParams("id") id: string,
+                  @Req() request: Express.Request,
+                  @Res() response: Express.Response) {
+        return new Promise<Users>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.usersServices.findById(id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch (err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    @Get("/username/:name")
+    @Summary("get a user by its id")
+    async getByUsername(@Required() @PathParams("name") name: string,
+                  @Req() request: Express.Request,
+                  @Res() response: Express.Response) {
+        return new Promise<Users>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.usersServices.findByUsername(name);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch (err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
     /**
      * Try to update user account
      * @param codeforces
