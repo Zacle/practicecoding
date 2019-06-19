@@ -8,6 +8,10 @@ import { Description } from "@tsed/swagger";
 */
 @Model()
 export class Problems {
+
+    @Property()
+    _id?: string;
+
     @Property()
     @Required()
     @Allow("")
@@ -15,8 +19,11 @@ export class Problems {
     problemID: string;
 
     @Property()
+    @Description("Contest ID of the problem")
+    contestID?: number;
+
+    @Property()
     @Required()
-    @Indexed(true)
     @Description("Name of the problem")
     name: string;
 

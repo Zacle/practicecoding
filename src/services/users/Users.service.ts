@@ -311,7 +311,8 @@ export class UsersService {
             livearchive: user.livearchive,
             admin: user.admin,
             teams: [],
-            groups: []
+            groups: [],
+            contests: []
         };
 
         try {

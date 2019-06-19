@@ -103,13 +103,19 @@ export interface IContests {
  * Contests fields
 */
 export interface IContest {
-    id: string;
-    startTime: Date;
-    duration: Date;
-    accesss: AccessType;
-    contestName: string;
-    contestOwner: string;
-    contestType: ContestType;
+    name: string;
+    startDateYear: number;
+    startDateMonth: number;
+    startDateDay: number;
+    endDateYear: number;
+    endDateMonth: number;
+    endDateDay: number;
+    startTimeHour: number;
+    startTimeMinute: number;
+    endTimeHour: number;
+    endTimeMinute: number;    
+    access: AccessType;
+    owner: string;
 }
 
 export interface IUser {

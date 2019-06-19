@@ -21,14 +21,6 @@ export class Contests {
     name: string;
 
     @Property()
-    @Description("Contest's start time")
-    startTime: Date;
-
-    @Property()
-    @Description("Contest's end time")
-    endTime: Date;
-
-    @Property()
     @Description("Contest's start date")
     startDate: Date;
 
@@ -38,7 +30,7 @@ export class Contests {
 
     @Property()
     @Description("Duration of the contest")
-    duration: number;
+    duration: string;
 
     @Ref("Users")
     @Property()

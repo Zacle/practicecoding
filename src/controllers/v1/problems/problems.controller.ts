@@ -9,7 +9,8 @@ import {
     Res,
     Next,
     Required,
-    MergeParams
+    MergeParams,
+    QueryParams
 } from "@tsed/common";
 import { Plateform, Codeforces } from "../../../services/plateform/Plateform.service";
 import PlateformBuilding from "../../../services/plateformBuilder/PlateformBuilding.service";
@@ -25,7 +26,7 @@ import { BadRequest } from "ts-httpexceptions";
 @Controller("/problems")
 export class ProblemsCtrl {
 
-    constructor(private plateform: Plateform, private plateformB: PlateformBuilding) {}
+    constructor(private plateformB: PlateformBuilding) {}
 
     @Post("/")
     @Summary("Get all problems from Codeforces, Live Archive, Uva and save them in the database")
@@ -57,34 +58,8 @@ export class ProblemsCtrl {
         @Req() request: Express.Request,
         @Res() response: Express.Response,
         @Next() next: Express.NextFunction,
-        @PathParams("key") @Required() key: string
-    ): Promise<void> {
-
-        let plat: Plateform = this.plateformB.createPlateform("all");
-
-        let res: InsightResponse;
-
-        try {
-            res = await plat.getProblems(key);
-            response.status(res.code);
-            response.setHeader('Content-Type', 'application/json');
-            response.json(res.body.result);
-        }
-        catch(err) {
-            throw new BadRequest(err);
-        }
-
-    }
-
-    @Get("/:key/:plateform")
-    @MergeParams()
-    @Summary("Select all problems matching the key in the specified platform")
-    async getPlateform(
-        @Req() request: Express.Request,
-        @Res() response: Express.Response,
-        @Next() next: Express.NextFunction,
         @PathParams("key") @Required() key: string,
-        @PathParams("plateform") @Required() plateform: string
+        @QueryParams("plateform") @Required() plateform: string
     ): Promise<void> {
 
         let plat: Plateform = this.plateformB.createPlateform(plateform);
@@ -109,34 +84,8 @@ export class ProblemsCtrl {
         @Req() request: Express.Request,
         @Res() response: Express.Response,
         @Next() next: Express.NextFunction,
-        @PathParams("difficulty") @Required() difficulty: string
-    ): Promise<void> {
-
-        let plat: Plateform = this.plateformB.createPlateform("all");
-
-        let res: InsightResponse;
-
-        try {
-            res = await plat.getProblemsFiltered(difficulty);
-            response.status(res.code);
-            response.setHeader('Content-Type', 'application/json');
-            response.json(res.body.result);
-        }
-        catch(err) {
-            throw new BadRequest(err);
-        }
-
-    }
-
-    @Get("/p/filter/:difficulty/:plateform")
-    @MergeParams()
-    @Summary("Filter all problems by difficulty in the specified platform")
-    async filterPlateform(
-        @Req() request: Express.Request,
-        @Res() response: Express.Response,
-        @Next() next: Express.NextFunction,
         @PathParams("difficulty") @Required() difficulty: string,
-        @PathParams("plateform") @Required() plateform: string
+        @QueryParams("plateform") @Required() plateform: string
     ): Promise<void> {
 
         let plat: Plateform = this.plateformB.createPlateform(plateform);

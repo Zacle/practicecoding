@@ -1,9 +1,8 @@
 import { Property } from "@tsed/common";
 import { Model, Ref } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
-import { Users } from "../Users";
-import { Problems } from "../Problems";
-import { Teams } from "../Teams";
+import { Trackers } from "./Trackers";
+import { Contests } from "./Contests";
 
 @Model()
 export class Standings {
@@ -11,30 +10,13 @@ export class Standings {
     @Property()
     _id?: string;
 
+    @Ref(Trackers)
     @Property()
-    @Description("Participant's country")
-    country: string;
+    @Description("Track user progress druring the contest")
+    trackers: Ref<Trackers>[];
 
+    @Ref("Contests")
     @Property()
-    @Description("Number of problems solved")
-    solvedCount: number;
-
-    @Property()
-    @Description("Penalty of user submissions")
-    penalty: number;
-
-    @Ref(Problems)
-    @Property()
-    @Description("Problems solved by the user during the contest")
-    problemsSolved: Ref<Problems>[];
-
-    @Ref(Problems)
-    @Property()
-    @Description("Problems not solved by the user during the contest")
-    problemsUnsolved: Ref<Problems>[];
-
-    @Ref("Users")
-    @Property()
-    @Description("Contest participant")
-    contestant: Ref<Users>;
+    @Description("Contest ID for this standing")
+    contestID: Ref<Contests>;
 }

@@ -14,13 +14,13 @@ export default class PlateformBuilding {
 
     public createPlateform(typeOfPlateform: string): Plateform {
         
-        if (typeOfPlateform == "codeforces")
+        if (typeOfPlateform == "Codeforces")
             return this.codeforces;
         
-        else if (typeOfPlateform == "uva")
+        else if (typeOfPlateform == "Uva")
             return this.uva;
 
-        else if (typeOfPlateform == "livearchive")
+        else if (typeOfPlateform == "Live Archive")
             return this.livearchive;
         
         else

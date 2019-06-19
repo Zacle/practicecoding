@@ -7,7 +7,6 @@ import {
     Post,
     Req,
     Res,
-    Next,
     Required,
     MergeParams,
     Delete,
@@ -15,9 +14,7 @@ import {
 } from "@tsed/common";
 import * as Express from "express";
 import { HTTPStatusCodes } from "../../../util/httpCode";
-import { InsightResponse } from "../../../interfaces/InterfaceFacade";
 import {Summary} from "@tsed/swagger";
-import { Problems } from "../../../models/Problems";
 import { Submissions } from "../../../models/contests/Submissions";
 
 /**
@@ -29,11 +26,17 @@ export class ContestsCtrl {
 
     /**
      * End-point to create contests
-     * @param name name of tghe contest
-     * @param startDate start date of the contest
-     * @param endDate end date of the contest
-     * @param startTime start time of the contest
-     * @param endTime end time of the contest
+     * @param name name of the contest
+     * @param startDateYear start date year of the contest
+     * @param startDateMonth start date month of the contest
+     * @param startDateDay start date day of the contest
+     * @param endDateYear end date year of the contest
+     * @param endDateMonth end date month of the contest
+     * @param endDateDay end date day of the contest
+     * @param startTimeHour start time hour of the contest
+     * @param startTimeMinute start time minute of the contest
+     * @param endTimeHour end time hour of the contest
+     * @param endTimeMinute end time minute of the contest
      * @param access public or private contest
      * @param type individual or team contest
      */
@@ -41,10 +44,16 @@ export class ContestsCtrl {
     @Summary("Create a contest")
     @Authenticated()
     async create(@Required() @BodyParams("name") name: string,
-                 @Required() @BodyParams("startDate") startDate: Date,
-                 @Required() @BodyParams("endDate") endDate: Date,
-                 @Required() @BodyParams("startTime") startTime: string,
-                 @Required() @BodyParams("endTime") endTime: string,
+                 @Required() @BodyParams("startDateYear") startDateYear: Date,
+                 @Required() @BodyParams("startDateMonth") startDateMonth: Date,
+                 @Required() @BodyParams("startDateDay") startDateDay: Date,
+                 @Required() @BodyParams("endDateYear") endDateYear: Date,
+                 @Required() @BodyParams("endDateMonth") endDateMonth: Date,
+                 @Required() @BodyParams("endDateDay") endDateDay: Date,
+                 @BodyParams("startTimeHour") startTimeHour: string,
+                 @BodyParams("startTimeMinute") startTimeMinute: string,
+                 @BodyParams("endTimeHour") endTimeHour: string,
+                 @BodyParams("endTimeMinute") endTimeMinute: string,
                  @Required() @BodyParams("access") access: string,
                  @Required() @BodyParams("type") type: string,
                  @Req() request: Express.Request,
@@ -53,41 +62,56 @@ export class ContestsCtrl {
         response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
         response.setHeader("Content-Type", "application/json");
         response.json({
-            name: name,
-            startDate: startDate,
-            endDate: endDate,
-            startTime: startTime,
-            endTime: endTime,
-            access: access,
-            type: type
+            name: name
         });
     }
 
     /**
-     * Return all contests
+     * Return all coming contests
      * @param request 
      * @param response 
      */
-    @Get("/")
-    @Summary("Get all contests")
-    async getContests(@Req() request: Express.Request, @Res() response: Express.Response) {
+    @Get("/coming")
+    @Summary("Get all coming public contests")
+    async getAllComingContests(@Req() request: Express.Request, @Res() response: Express.Response) {
         response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
         response.setHeader("Content-Type", "plain/text");
         response.send("GET /contests");
     }
 
     /**
-     * Delete all contests
+     * Return all running contests
      * @param request 
      * @param response 
      */
-    @Delete("/")
-    @Summary("Delete all contests")
-    @Authenticated({role: "admin"})
-    async deleteContests(@Req() request: Express.Request, @Res() response: Express.Response) {
+    @Get("/running")
+    @Summary("Get all running public contests")
+    async getAllRunningContests(@Req() request: Express.Request, @Res() response: Express.Response) {
         response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
         response.setHeader("Content-Type", "plain/text");
-        response.send("DELETE /contests");
+        response.send("GET /contests");
+    }
+
+    /**
+     * Return some past contests
+     * @param request 
+     * @param response 
+     */
+    @Get("/past")
+    @Summary("Get some past public contests")
+    async getSomePastContests(@Req() request: Express.Request, @Res() response: Express.Response) {
+        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
+        response.setHeader("Content-Type", "plain/text");
+        response.send("GET /contests");
+    }
+
+    @Get("/my")
+    @Summary("Contests attended by the user")
+    @Authenticated()
+    async getContests(@Req() request: Express.Request, @Res() response: Express.Response) {
+        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
+        response.setHeader("Content-Type", "plain/text");
+        response.send("GET /contests/my");
     }
 
     /**
@@ -111,20 +135,32 @@ export class ContestsCtrl {
 
     /**
      * Update contest info
-     * @param startDate 
-     * @param endDate 
-     * @param startTime 
-     * @param endTime 
+     * @param startDateYear start date year of the contest
+     * @param startDateMonth start date month of the contest
+     * @param startDateDay start date day of the contest
+     * @param endDateYear end date year of the contest
+     * @param endDateMonth end date month of the contest
+     * @param endDateDay end date day of the contest
+     * @param startTimeHour start time hour of the contest
+     * @param startTimeMinute start time minute of the contest
+     * @param endTimeHour end time hour of the contest
+     * @param endTimeMinute end time minute of the contest
      * @param access 
      * @param type 
      * @param contestID 
      */
     @Put("/:id")
     @Summary("Update contest info")
-    async updateContest(@BodyParams("startDate") startDate: Date,
-                        @BodyParams("endDate") endDate: Date,
-                        @BodyParams("startTime") startTime: string,
-                        @BodyParams("endTime") endTime: string,
+    async updateContest(@BodyParams("startDateYear") startDateYear: Date,
+                        @BodyParams("startDateMonth") startDateMonth: Date,
+                        @BodyParams("startDateDay") startDateDay: Date,
+                        @BodyParams("endDateYear") endDateYear: Date,
+                        @BodyParams("endDateMonth") endDateMonth: Date,
+                        @BodyParams("endDateDay") endDateDay: Date,
+                        @BodyParams("startTimeHour") startTimeHour: string,
+                        @BodyParams("startTimeMinute") startTimeMinute: string,
+                        @BodyParams("endTimeHour") endTimeHour: string,
+                        @BodyParams("endTimeMinute") endTimeMinute: string,
                         @BodyParams("access") access: string,
                         @BodyParams("type") type: string,
                         @Required() @PathParams("id") contestID: string,
@@ -135,10 +171,6 @@ export class ContestsCtrl {
         response.setHeader("Content-Type", "application/json");
         response.json({
             name: name,
-            startDate: startDate,
-            endDate: endDate,
-            startTime: startTime,
-            endTime: endTime,
             access: access,
             type: type,
             contestID: contestID
@@ -146,7 +178,7 @@ export class ContestsCtrl {
     }
 
     @Delete("/:id")
-    @Summary("Delete  aspecific contest")
+    @Summary("Delete a specific contest")
     @Authenticated()
     async deletecontest(@Required() @PathParams("id") contestID: string,
                         @Req() request: Express.Request,
@@ -211,6 +243,19 @@ export class ContestsCtrl {
         });
     }
 
+    @Get("/:id/update")
+    @Summary("Update contest standing")
+    async updateContestStanding(@Required() @PathParams("id") contestID: string,
+                                @Req() request: Express.Request,
+                                @Res() response : Express.Response) {
+
+        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
+        response.setHeader("Content-Type", "application/json");
+        response.json({
+            contestID: contestID
+        });
+    }
+
     /**
      * Add problems to the the contest only by the contest owner 
      * @param contestID 
@@ -222,7 +267,7 @@ export class ContestsCtrl {
     @Summary("Add problems to the contest")
     @Authenticated()
     async addProblems(@Required() @PathParams("id") contestID: string,
-                      @Required() @BodyParams("problem") problem: Problems,
+                      @Required() @BodyParams("id") problemID: string,
                       @Req() request: Express.Request,
                       @Res() response: Express.Response) {
 
@@ -230,7 +275,7 @@ export class ContestsCtrl {
         response.setHeader("Content-Type", "application/json");
         response.json({
             contestID: contestID,
-            problem: problem
+            problem: problemID
         });
     }
 
@@ -274,66 +319,6 @@ export class ContestsCtrl {
             contestID: contestID
         });
     }
-
-    /**
-     * Delete all contest problems
-     * @param contestID 
-     * @param request 
-     * @param response 
-     */
-    @Delete("/:id/problems")
-    @Summary("Delete all contest problems")
-    @Authenticated()
-    async deleteProblems(@Required() @PathParams("id") contestID: string,
-                         @Req() request: Express.Request,
-                         @Res() response: Express.Response) {
-
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
-        });
-    }
-
-    /**
-     * Delete all contest submissions
-     * @param contestID 
-     * @param request 
-     * @param response 
-     */
-    @Delete("/:id/submissions")
-    @Summary("Delete all contest submissions")
-    @Authenticated()
-    async deleteSubmissions(@Required() @PathParams("id") contestID: string,
-                            @Req() request: Express.Request,
-                            @Res() response: Express.Response) {
-
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
-        });
-    }
-
-    /**
-     * Delete all contest registrants (users or teams)
-     * @param contestID 
-     * @param request 
-     * @param response 
-     */
-    @Delete("/:id/registrants")
-    @Summary("Delete all contest registrants")
-    @Authenticated()
-    async deleteRegistrants(@Required() @PathParams("id") contestID: string,
-                            @Req() request: Express.Request,
-                            @Res() response: Express.Response) {
-
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
-        });
-    }
     
     /**
      * Delete a contest problem
@@ -356,30 +341,6 @@ export class ContestsCtrl {
         response.json({
             contestID: contestID,
             problemID: problemID
-        });
-    }
-
-    /**
-     * Delete a contest submission
-     * @param contestID 
-     * @param submissionID
-     * @param request 
-     * @param response 
-     */
-    @Delete("/:id/submissions/:sid")
-    @MergeParams()
-    @Summary("Delete a contest submission")
-    @Authenticated()
-    async deleteSubmission(@Required() @PathParams("id") contestID: string,
-                           @Required() @PathParams("sid") submissionID: string,
-                           @Req() request: Express.Request,
-                           @Res() response: Express.Response) {
-
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID,
-            submissionID: submissionID
         });
     }
 

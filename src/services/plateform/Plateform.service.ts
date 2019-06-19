@@ -1,12 +1,12 @@
 import { Inject , Service } from "@tsed/common";
 import {MongooseModel} from "@tsed/mongoose";
-import * as fs from "fs";
-import { IProblem, PlateformFactory, UserStatistic, PlateformName } from "../../interfaces/InterfaceFacade";
-import { InsightResponse, InsightResponseSuccessBody, InsightResponseErrorBody } from "../../interfaces/InterfaceFacade";
+import { PlateformFactory } from "../../interfaces/InterfaceFacade";
+import { InsightResponse } from "../../interfaces/InterfaceFacade";
 import Log from "../../Util";
-import { Problem } from "../Problem.service";
 import { Problems } from "../../models/Problems";
+import { Contests } from "../../models/contests/Contests";
 import request = require("request-promise");
+import axios from "axios";
 import { HTTPStatusCodes } from "../../util/httpCode";
 
 
@@ -22,7 +22,8 @@ import { HTTPStatusCodes } from "../../util/httpCode";
 @Service()
 export abstract class Plateform implements PlateformFactory {    
 
-    constructor(@Inject(Problems) private problems: MongooseModel<Problems>) {
+    constructor(@Inject(Problems) private problems: MongooseModel<Problems>,
+                @Inject(Contests) private contests: MongooseModel<Contests>) {
         Log.trace("Plateform::init()");
     }
 
@@ -36,6 +37,96 @@ export abstract class Plateform implements PlateformFactory {
 
     abstract getProblemsFiltered(level: string): Promise<InsightResponse>;
 
+    abstract addSpecificProblem(contestID: string, problemID: string): Promise<InsightResponse>;
+
+    addProblemsFromCodeforces(contestID: string, codeforceID: number): Promise<InsightResponse> {
+        return Promise.reject({
+            code: HTTPStatusCodes.BAD_REQUEST,
+            body: {
+                name: "Bad Request"
+            }
+        });
+    }
+    
+    addProblemsFromUVA(contestID: string, problems: number[]): Promise<InsightResponse> {
+        return Promise.reject({
+            code: HTTPStatusCodes.BAD_REQUEST,
+            body: {
+                name: "Bad Request"
+            }
+        });
+    }
+
+    abstract addRandomProblems(contestID: string, quantity: number): Promise<InsightResponse>;
+
+    async randomProblems(contestID: string, quantity: number, plateform: string): Promise<InsightResponse> {
+
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let problems: Problems[];
+            const EASY = Math.ceil(quantity * (40 / 100));
+            const MEDIUM = Math.floor(quantity * (40 / 100));
+            const HARD = Math.ceil(quantity * (20 / 100));
+
+            try {
+                contest = await this.contests.findById(contestID).exec();
+                let saveContest = new this.contests(contest);
+                if (EASY > 0) {
+                    problems = await this.problems.aggregate([
+                                                            { $sample : { size: EASY } },
+                                                            { $match: { "plateform": plateform } }
+                                                        ]
+                                                        ).exec();
+
+                    problems.forEach((pr: Problems) => {
+                        saveContest.problems.push(pr._id);
+                    });
+                    
+                }
+                if (MEDIUM > 0) {
+                    problems = await this.problems.aggregate([
+                                                            { $sample : { size: MEDIUM } },
+                                                            { $match: { "plateform": plateform } }
+                                                        ]
+                                                        ).exec();
+
+                    problems.forEach((pr: Problems) => {
+                        saveContest.problems.push(pr._id);
+                    });
+                    
+                }
+                if (HARD > 0) {
+                    problems = await this.problems.aggregate([
+                                                            { $sample : { size: HARD } },
+                                                            { $match: { "plateform": plateform } }
+                                                        ]
+                                                        ).exec();
+
+                    problems.forEach((pr: Problems) => {
+                        saveContest.problems.push(pr._id);
+                    });
+                    
+                }
+                await saveContest.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: saveContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: `Couldn't add random problems from ${plateform} to this contest`
+                    }
+                });
+            }
+        });
+    }
+
     /**
      * Wraps writeFile in a promise.
      * @param link The link of the API to get all problems.
@@ -45,9 +136,10 @@ export abstract class Plateform implements PlateformFactory {
 }
 
 @Service()
-export class Codeforces extends Plateform {    
-    constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>) {
-        super(problemsModel);
+export class Codeforces extends Plateform {   
+    constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
+                @Inject(Contests) private contestsModel: MongooseModel<Contests>) {
+        super(problemsModel, contestsModel);
         Log.trace("Codeforces::init()");
     }
 
@@ -66,7 +158,7 @@ export class Codeforces extends Plateform {
                                     "$regex": key,
                                     "$options": "i"
                                 }
-                            }).exec();
+                            }).limit(10).exec();
         }
         catch(err) {
             return  Promise.reject({
@@ -122,8 +214,9 @@ export class Codeforces extends Plateform {
 
                 let result: Problems = {
                     "problemID": problem.contestId + "" + problem.index,
+                    "contestID": problem.contestId,
                     "name": problem.index + ". " + problem.name,
-                    "plateform": "Codeforces",
+                    "plateform": this.getPlateform(),
                     "link": `https://codeforces.com/problemset/problem/${problem.contestId}/${problem.index}`,
                     "difficulty": diff
                 };
@@ -171,32 +264,28 @@ export class Codeforces extends Plateform {
     }
 
     /**
-     * Wraps writeFile in a promise.
      * @param link The link of the API to get all problems.
      */
     async readAPI(link: string): Promise<any> {
         
         console.info("CALLLLING Codeforces READ API");
 
-        let res: any = {};
+        return new Promise(async (resolve, reject) => {
+            let res: any = {};
 
-        let options = {
-            uri: link,
-            json: true
-        };
-
-        await request(options)
-            .then((body) => {
-                if (body.status === "FAILED") {
-                    throw new Error(body.comment);
-                }
-                console.log("BEFOOORE: ", body.result.problems.length);
-                res = body.result;
-            })
-            .catch((err) => {
-                throw new Error(err);
-            });
-        return res;
+            await axios.get(link)
+                .then((result) => {
+                    if (result.data.status === "FAILED") {
+                        return reject(result.data.comment);
+                    }
+                    console.log("BEFOOORE: ", result.data.result.problems.length);
+                    res = result.data.result;
+                })
+                .catch((err) => {
+                    return reject(err);
+                });
+            return resolve(res);
+        });
     }
     
     /**
@@ -233,6 +322,111 @@ export class Codeforces extends Plateform {
         };
     }
 
+    /**
+     * @description add a specific problem to the contest
+     * @param contestID 
+     * @param problemID 
+     */
+    addSpecificProblem(contestID: string, problemID: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let problem: Problems;
+
+            try {
+                contest = await this.contestsModel.findById(contestID).exec();
+                problem = await this.problemsModel.findOne({problemID: problemID, plateform: this.getPlateform()}).exec();
+
+                if (!problem) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_MODIFIED,
+                        body: {
+                            name: "Problem ID Not Found"
+                        }
+                    });
+                }
+
+                let saveContest = new this.contestsModel(contest);
+                let new_problem = new this.problemsModel(problem);
+                saveContest.problems.push(new_problem._id);
+                await saveContest.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: saveContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't add problem to this contest"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @description add problems from a codeforces contest
+     * @param contestID 
+     * @param codeforceID 
+     */
+    addProblemsFromCodeforces(contestID: string, codeforceID: number): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let codeforces: Problems[];
+
+            try {
+                contest = await this.contestsModel.findById(contestID).exec();
+                codeforces = await this.problemsModel.find({contestID: codeforceID, plateform: this.getPlateform()}).exec();
+                let saveContest = new this.contestsModel(contest);
+                codeforces.forEach((problem: Problems) => {
+                    saveContest.problems.push(problem._id);
+                });
+                await saveContest.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: saveContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't add problems from Codeforces contest to this contest"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @description add randoms problems to the contest with varying difficulties(EASY, MEDIUM, HARD)
+     * @param contestID 
+     * @param quantity 
+     */
+    addRandomProblems(contestID: string, quantity: number): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let response: InsightResponse;
+            try {
+                response = await super.randomProblems(contestID, quantity, this.getPlateform());
+                return resolve(response);
+            }
+            catch (err) {
+                response = err;
+                return reject(response);
+            }
+        });
+    } 
+
     getUserStatistic(): Promise<InsightResponse> {
         return Promise.reject({code: -1, body: null});
     }
@@ -247,8 +441,9 @@ export class Codeforces extends Plateform {
 @Service()
 export class Uva extends Plateform {
 
-    constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>) {
-        super(problemsModel);
+    constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
+                @Inject(Contests) private contestsModel: MongooseModel<Contests>) {
+        super(problemsModel, contestsModel);
         Log.trace("Uva::init()");
     }
     
@@ -267,7 +462,7 @@ export class Uva extends Plateform {
                                     "$regex": key,
                                     "$options": "i"
                                 }
-                            }).exec();
+                            }).limit(10).exec();
         }
         catch(err) {
             return  Promise.reject({
@@ -313,9 +508,10 @@ export class Uva extends Plateform {
     private parseProblem(problem: any[], diff: string): Problems {
 
         let result: Problems = {
-            "problemID": problem[0] + " " + problem[2],
+            "problemID": problem[0],
+            "contestID": problem[1],
             "name": problem[1] + " - " + problem[2],
-            "plateform": "Uva",
+            "plateform": this.getPlateform(),
             "link": `https://uva.onlinejudge.org/index.php?option=onlinejudge&page=show_problem&problem=${problem[0]}`,
             "difficulty": diff
         };
@@ -392,22 +588,22 @@ export class Uva extends Plateform {
         
         console.info("CALLLLING UVA READ API");
 
-        let res: any;
+        return new Promise(async (resolve, reject) => {
+            let res: any;
 
-        const options = {
-            uri: link,
-            json: true
-        };
-
-        await request(options)
-            .then((body) => {
-                console.log("BEFOOORE: ", body.length);
-                res = body;
-            })
-            .catch((err) => {
-                throw new Error(err);
-            });
-        return res;
+            await axios.get(link)
+                .then(response => {
+                    return JSON.parse(response.data);
+                })
+                .then((body) => {
+                    console.log("BEFOOORE: ", body.length);
+                    res = body;
+                })
+                .catch((err) => {
+                    return reject(err);
+                });
+            return resolve(res);
+        });
     }
     
     /**
@@ -444,6 +640,114 @@ export class Uva extends Plateform {
         };
     }
 
+    /**
+     * @description add a specific problem to the contest
+     * @param contestID 
+     * @param problemID 
+     * @param userID 
+     */
+    addSpecificProblem(contestID: string, problemID: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let problem: Problems;
+
+            try {
+                contest = await this.contestsModel.findById(contestID).exec();
+                problem = await this.problemsModel.findOne({problemID: problemID, plateform: this.getPlateform()}).exec();
+
+                if (!problem) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_MODIFIED,
+                        body: {
+                            name: "Problem ID Not Found"
+                        }
+                    });
+                }
+
+                let saveContest = new this.contestsModel(contest);
+                let new_problem = new this.problemsModel(problem);
+                saveContest.problems.push(new_problem._id);
+                await saveContest.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: saveContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't add problem to this contest"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @description add problems from past uva contest
+     * @param contestID 
+     * @param problems 
+     */
+    async addProblemsFromUVA(contestID: string, problems: number[]): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let problem: Problems;
+
+            try {
+                contest = await this.contestsModel.findById(contestID).exec();
+                let saveContest = new this.contestsModel(contest);
+                let new_contest: Contests = await new Promise<Contests>(async (resolve, reject) => {
+                    await problems.forEach(async (pr: number) => {
+                        problem = await this.problemsModel.findOne({contestID: pr, plateform: this.getPlateform()}).exec();
+                        saveContest.problems.push(problem._id);
+                    });
+                    await saveContest.save();
+                    return resolve(saveContest);
+                });
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: new_contest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't add problems from Uva contest to this contest"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @description add randoms problems to the contest with varying difficulties(EASY, MEDIUM, HARD)
+     * @param contestID 
+     * @param quantity 
+     */
+    addRandomProblems(contestID: string, quantity: number): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let response: InsightResponse;
+            try {
+                response = await super.randomProblems(contestID, quantity, this.getPlateform());
+                return resolve(response);
+            }
+            catch (err) {
+                response = err;
+                return reject(response);
+            }
+        });
+    }
+
     getUserStatistic(): Promise<InsightResponse> {
         return Promise.reject({code: -1, body: null});
     }
@@ -458,8 +762,9 @@ export class Uva extends Plateform {
 @Service()
 export class LiveArchive extends Plateform {
 
-    constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>) {
-        super(problemsModel);
+    constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
+                @Inject(Contests) private contestsModel: MongooseModel<Contests>) {
+        super(problemsModel, contestsModel);
         Log.trace("LiveArchive::init()");
     }
 
@@ -478,7 +783,7 @@ export class LiveArchive extends Plateform {
                                     "$regex": key,
                                     "$options": "i"
                                 }
-                            }).exec();
+                            }).limit(10).exec();
         }
         catch(err) {
             return  Promise.reject({
@@ -524,9 +829,10 @@ export class LiveArchive extends Plateform {
     private parseProblem(problem: any[], diff: string): Problems {
 
         let result: Problems = {
-            "problemID": problem[0] + " " + problem[2],
+            "problemID": problem[0],
+            "contestID": problem[1],
             "name": problem[1] + " - " + problem[2],
-            "plateform": "Live Archive",
+            "plateform": this.getPlateform(),
             "link": `https://icpcarchive.ecs.baylor.edu/index.php?option=onlinejudge&page=show_problem&problem=${problem[0]}`,
             "difficulty": diff
         };
@@ -603,22 +909,22 @@ export class LiveArchive extends Plateform {
         
         console.info("CALLLLING LA READ API");
 
-        let res: any;
+        return new Promise(async (resolve, reject) => {
+            let res: any;
 
-        const options = {
-            uri: link,
-            json: true
-        };
-
-        await request(options)
-            .then((body) => {
-                console.log("BEFOOORE: ", body.length);
-                res = body;
-            })
-            .catch((err) => {
-                throw new Error(err);
-            });
-        return res;
+            await axios.get(link)
+                .then(response => {
+                    return JSON.parse(response.data);
+                })
+                .then((body) => {
+                    console.log("BEFOOORE: ", body.length);
+                    res = body;
+                })
+                .catch((err) => {
+                    return reject(err);
+                });
+            return resolve(res);
+        });
     }
     
     /**
@@ -655,6 +961,72 @@ export class LiveArchive extends Plateform {
         };
     }
 
+    /**
+     * @description add a specific problem to the contest
+     * @param contestID 
+     * @param problemID 
+     */
+    addSpecificProblem(contestID: string, problemID: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let problem: Problems;
+
+            try {
+                contest = await this.contestsModel.findById(contestID).exec();
+                problem = await this.problemsModel.findOne({problemID: problemID, plateform: this.getPlateform()}).exec();
+
+                if (!problem) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_MODIFIED,
+                        body: {
+                            name: "Problem ID Not Found"
+                        }
+                    });
+                }
+
+                let saveContest = new this.contestsModel(contest);
+                let new_problem = new this.problemsModel(problem);
+                saveContest.problems.push(new_problem._id);
+                await saveContest.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: saveContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't add problem to this contest"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @description add randoms problems to the contest with varying difficulties(EASY, MEDIUM, HARD)
+     * @param contestID 
+     * @param quantity 
+     */
+    addRandomProblems(contestID: string, quantity: number): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let response: InsightResponse;
+            try {
+                response = await super.randomProblems(contestID, quantity, this.getPlateform());
+                return resolve(response);
+            }
+            catch (err) {
+                response = err;
+                return reject(response);
+            }
+        });
+    }
     getUserStatistic(): Promise<InsightResponse> {
         return Promise.reject({code: -1, body: null});
     }
@@ -676,10 +1048,11 @@ export class LiveArchive extends Plateform {
 export class AllPlateforms extends Plateform {
 
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
+                @Inject(Contests) private contestsModel: MongooseModel<Contests>,
                 private codeforces: Codeforces,
                 private livearchive: LiveArchive,
                 private uva: Uva) {
-        super(problemsModel);
+        super(problemsModel, contestsModel);
         Log.trace("AllPlateforms::init()");
     }
     
@@ -702,7 +1075,7 @@ export class AllPlateforms extends Plateform {
             res.push(codeforcesProblems.body.result);
             res.push(livearchiveProblems.body.result);
             res.push(uvaProblems.body.result);
-
+            res = this.shuflle(res);
         }
         catch(err) {
             console.log("ERRRRRORRR: ", err);
@@ -720,6 +1093,18 @@ export class AllPlateforms extends Plateform {
                 result: res
             }
         };
+    }
+
+    /**
+     * Shuffles array in place. ES6 version
+     * @param {Array} a items An array containing the items.
+     */
+    private shuflle(a: any[]) {
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
     }
     
     /**
@@ -802,13 +1187,84 @@ export class AllPlateforms extends Plateform {
         };
     }
 
+    addSpecificProblem(contestID: string, problemID: string): Promise<InsightResponse> {
+        throw new Error("Method not implemented.");
+    }
+
+    /**
+     * @description add randoms problems to the contest with varying difficulties(EASY, MEDIUM, HARD)
+     * @param contestID 
+     * @param quantity 
+     */
+    addRandomProblems(contestID: string, quantity: number): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let problems: Problems[];
+            const EASY = Math.ceil(quantity * (40 / 100));
+            const MEDIUM = Math.floor(quantity * (40 / 100));
+            const HARD = Math.ceil(quantity * (20 / 100));
+
+            try {
+                contest = await this.contestsModel.findById(contestID).exec();
+                let saveContest = new this.contestsModel(contest);
+                if (EASY > 0) {
+                    problems = await this.problemsModel.aggregate([
+                                                            { $sample : { size: EASY } }
+                                                        ]
+                                                        ).exec();
+
+                    problems.forEach((pr: Problems) => {
+                        saveContest.problems.push(pr._id);
+                    });
+                    
+                }
+                if (MEDIUM > 0) {
+                    problems = await this.problemsModel.aggregate([
+                                                            { $sample : { size: MEDIUM } }
+                                                        ]
+                                                        ).exec();
+
+                    problems.forEach((pr: Problems) => {
+                        saveContest.problems.push(pr._id);
+                    });
+                    
+                }
+                if (HARD > 0) {
+                    problems = await this.problemsModel.aggregate([
+                                                            { $sample : { size: HARD } }
+                                                        ]
+                                                        ).exec();
+
+                    problems.forEach((pr: Problems) => {
+                        saveContest.problems.push(pr._id);
+                    });
+                    
+                }
+                await saveContest.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: saveContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: `Couldn't add random problems to this contest`
+                    }
+                });
+            }
+        });
+    }
+
     getUserStatistic(): Promise<InsightResponse> {
         return null;
     }
     
     getPlateform(): string {
-        
         return null;
-    
     }
 }

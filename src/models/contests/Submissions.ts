@@ -11,6 +11,10 @@ export class Submissions {
     _id?: string;
 
     @Property()
+    @Description("OJ Submission ID")
+    submissionID: Date;
+
+    @Property()
     @Description("Submission Time")
     submissionTime: Date;
 

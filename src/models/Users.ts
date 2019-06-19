@@ -1,10 +1,9 @@
-import bcrypt from "bcrypt-nodejs";
-import mongoose from "mongoose";
 import { Property, Required, Email, PropertyType, Default } from "@tsed/common";
 import { Model, Unique, PreHook, Ref } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
 import { Teams } from "./Teams";
 import { Groups } from "./Groups";
+import { Contests } from "./contests/Contests";
 
 
 @Model()
@@ -103,4 +102,8 @@ export class Users {
     @Ref(Groups)
     @Description("Groups the user belongs to")
     groups: Ref<Groups>[];
+
+    @Ref(Contests)
+    @Description("Contests attended by the user")
+    contests: Ref<Contests>[];
 }
