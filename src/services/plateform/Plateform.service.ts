@@ -74,7 +74,10 @@ export abstract class Plateform implements PlateformFactory {
                 if (EASY > 0) {
                     problems = await this.problems.aggregate([
                                                             { $sample : { size: EASY } },
-                                                            { $match: { "plateform": plateform } }
+                                                            { $match: { 
+                                                                "plateform": plateform,
+                                                                "difficulty": "easy"
+                                                             } }
                                                         ]
                                                         ).exec();
 
@@ -86,7 +89,10 @@ export abstract class Plateform implements PlateformFactory {
                 if (MEDIUM > 0) {
                     problems = await this.problems.aggregate([
                                                             { $sample : { size: MEDIUM } },
-                                                            { $match: { "plateform": plateform } }
+                                                            { $match: { 
+                                                                "plateform": plateform,
+                                                                "difficulty": "medium"
+                                                             } }
                                                         ]
                                                         ).exec();
 
@@ -98,7 +104,10 @@ export abstract class Plateform implements PlateformFactory {
                 if (HARD > 0) {
                     problems = await this.problems.aggregate([
                                                             { $sample : { size: HARD } },
-                                                            { $match: { "plateform": plateform } }
+                                                            { $match: { 
+                                                                "plateform": plateform,
+                                                                "difficulty": "hard"
+                                                             } }
                                                         ]
                                                         ).exec();
 
@@ -1209,7 +1218,10 @@ export class AllPlateforms extends Plateform {
                 let saveContest = new this.contestsModel(contest);
                 if (EASY > 0) {
                     problems = await this.problemsModel.aggregate([
-                                                            { $sample : { size: EASY } }
+                                                            { $sample : { size: EASY } },
+                                                            { $match: {
+                                                                "difficulty": "easy"
+                                                             } }
                                                         ]
                                                         ).exec();
 
@@ -1220,7 +1232,10 @@ export class AllPlateforms extends Plateform {
                 }
                 if (MEDIUM > 0) {
                     problems = await this.problemsModel.aggregate([
-                                                            { $sample : { size: MEDIUM } }
+                                                            { $sample : { size: MEDIUM } },
+                                                            { $match: {
+                                                                "difficulty": "medium"
+                                                             } }
                                                         ]
                                                         ).exec();
 
@@ -1231,7 +1246,10 @@ export class AllPlateforms extends Plateform {
                 }
                 if (HARD > 0) {
                     problems = await this.problemsModel.aggregate([
-                                                            { $sample : { size: HARD } }
+                                                            { $sample : { size: HARD } },
+                                                            { $match: {
+                                                                "difficulty": "hard"
+                                                             } }
                                                         ]
                                                         ).exec();
 
