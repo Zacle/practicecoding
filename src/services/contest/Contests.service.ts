@@ -629,26 +629,45 @@ export abstract class ContestsService {
      */
     async removeProblem(contestID: string, problemID: string, userID: string): Promise<InsightResponse> {
         
-        return new Promise<InsightResponse>((resolve, reject) => {
-            
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+
+            try {
+                contest = await this.contests.findByIdAndUpdate(
+                    contestID,
+                    {$pull: { problems: { _id: problemID } } }
+                ).exec();
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: contest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't remove this problem"
+                    }
+                });
+            }
         });
     }
 
     /**
      * @description register a user or a team to the contest
      * @param contestID 
-     * @param rid 
      * @param userID
      */
-    protected abstract async register(contestID: string, userID: string, rid: string): Promise<InsightResponse>;
+    protected abstract async register(contestID: string, userID: string): Promise<InsightResponse>;
 
     /**
      * @description unregister a user or a team from the contest
      * @param contestID 
-     * @param rid 
      * @param userID
      */
-    protected abstract async unregister(contestID: string, userID: string, rid: string): Promise<InsightResponse>;
+    protected abstract async unregister(contestID: string, userID: string): Promise<InsightResponse>;
 
     /**
      * @description add a submission from user

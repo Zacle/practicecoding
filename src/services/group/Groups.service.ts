@@ -202,7 +202,6 @@ export class GroupsService {
 
                 if (group) {
                     group = await this.deleteUserGroup(group);
-                    group = await this.groups.findByIdAndRemove(id);
                     return resolve({
                         code: HTTPStatusCodes.OK,
                         body: {
@@ -239,15 +238,12 @@ export class GroupsService {
             let IDs: any[] = [...group.members];
             try {
                 await IDs.forEach(async id => {
-                    user = await this.users.findById(id, "-__v").exec();
-                    for (let i = 0; i < user.groups.length; i++) {
-                        if (user.groups[i].toString() == id.toString()) {
-                            user.groups.splice(i, 1);
-                        }
-                    }
-                    const saveUser = new this.users(user);
-                    await saveUser.save();
+                    user = await this.users.findByIdAndUpdate(
+                        id,
+                        {$pull: {groups: {_id: id}}}
+                    ).exec();
                 });
+                group = await this.groups.findByIdAndRemove(group._id);
                 resolve(group);
             }
             catch(err) {

@@ -8,6 +8,7 @@ import { InsightResponse, AccessType, IContest, ContestType } from "../../interf
 import { ContestsService } from "./Contests.service";
 import { Users } from "../../models/Users";
 import PlateformBuilding from "../../services/plateformBuilder/PlateformBuilding.service";
+import { Teams } from "src/models/Teams";
 
 
 @Service()
@@ -17,6 +18,7 @@ export class TeamContestService extends ContestsService {
                 @Inject(Submissions) protected submissions: MongooseModel<Submissions>,
                 @Inject(Standings) protected standings: MongooseModel<Standings>,
                 @Inject(Users) protected users: MongooseModel<Users>,
+                @Inject(Teams) protected teams: MongooseModel<Teams>,
                 protected plateformBuilder: PlateformBuilding) {
 
                 super(contests, submissions, standings, users, plateformBuilder);
@@ -218,12 +220,163 @@ export class TeamContestService extends ContestsService {
         });
     }
 
-    protected register(contestID: string, userID: string, rid: string): Promise<InsightResponse> {
-        throw new Error("Method not implemented.");
+    /**
+     * @description register a user or a team to the contest
+     * @param contestID 
+     * @param teamID
+     */
+    protected register(contestID: string, teamID: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let team: Teams;
+
+            try {
+                contest = await this.contestExists(contestID);
+                if (!contest) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "CONTEST ID Not Found"
+                        }
+                    });
+                }
+                
+                team = await this.teamExists(teamID);
+
+                if (!team) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "TEAM ID Not Found"
+                        }
+                    });
+                }
+                let date = new Date();
+                if (contest.endDate < date) {
+                    return reject({
+                        code: HTTPStatusCodes.FORBIDDEN,
+                        body: {
+                            name: "This contest is over"
+                        }
+                    });
+                }
+                let saveContest = new this.contests(contest);
+                saveContest.teams.push(team._id);
+                await saveContest.save();
+
+                let saveTeam = new this.teams(team);
+                saveTeam.contests.push(contest._id);
+                await saveTeam.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: saveContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't register the team to the contest"
+                    }
+                });
+            }
+        });
     }
 
-    protected unregister(contestID: string, userID: string, rid: string): Promise<InsightResponse> {
-        throw new Error("Method not implemented.");
+    /**
+     * Verify if the contest with this ID exists
+     * @param contestID 
+     */
+    private contestExists(contestID: string): Promise<Contests> {
+        return new Promise<Contests>(async (resolve, reject) => {
+            let contest: Contests;
+
+            try {
+                contest = await this.contests.findById(contestID).exec();
+                return resolve(contest);
+            }
+            catch(err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * Verify if the team with this ID exists
+     * @param teamID 
+     */
+    private teamExists(teamID: string): Promise<Teams> {
+        return new Promise<Teams>(async (resolve, reject) => {
+            let team: Teams;
+
+            try {
+                team = await this.teams.findById(teamID).exec();
+                return resolve(team);
+            }
+            catch(err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description unregister a user or a team from the contest
+     * @param contestID 
+     * @param teamID
+     */
+    protected unregister(contestID: string, teamID: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let team: Teams;
+
+            try {
+                contest = await this.contestExists(contestID);
+                if (!contest) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "CONTEST ID Not Found"
+                        }
+                    });
+                }
+                team = await this.teamExists(teamID);
+                if (!team) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "TEAM ID Not Found"
+                        }
+                    });
+                }
+                team = await this.teams.findByIdAndUpdate(teamID,
+                    {$pull: {contests: {_id: contestID}}}
+                    ).exec();
+
+                contest = await this.contests.findByIdAndUpdate(contestID,
+                    {$pull: {teams: {_id: teamID}}}
+                    ).exec();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: contest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't unregister the team from the contest"
+                    }
+                });
+            }
+        });
     }
 
     protected addSubmission(contestID: string, submission: any, userID: string): Promise<InsightResponse> {

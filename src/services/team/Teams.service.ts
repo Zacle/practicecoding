@@ -341,16 +341,10 @@ export class TeamsService {
             let IDs: any[] = [...team.members];
             try {
                 await IDs.forEach(async id => {
-                    return new Promise(async (resolve, reject) => {
-                        user = await this.users.findById(id, "-__v").exec();
-                        for (let i = 0; i < user.teams.length; i++) {
-                            if (user.teams[i].toString() == id.toString()) {
-                                user.teams.splice(i, 1);
-                            }
-                        }
-                        const saveUser = new this.users(user);
-                        await saveUser.save();
-                    });
+                    user = await this.users.findByIdAndUpdate(
+                        id,
+                        {$pull: {teams: {_id: id}}}
+                    ).exec();
                 });
                 team = await this.teams.findByIdAndRemove(team._id);
                 resolve(team);
