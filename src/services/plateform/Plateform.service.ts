@@ -5,25 +5,26 @@ import { InsightResponse } from "../../interfaces/InterfaceFacade";
 import Log from "../../Util";
 import { Problems } from "../../models/Problems";
 import { Contests } from "../../models/contests/Contests";
-import request = require("request-promise");
+import { Submissions } from "../../models/contests/Submissions";
+import { Trackers } from "../../models/contests/Trackers";
+import { Users } from "../../models/Users";
 import axios from "axios";
 import { HTTPStatusCodes } from "../../util/httpCode";
+import { resolve } from "bluebird";
 
 
 
 /*
  *  Define the plateform superclass that will serve as a base
  *  class for all plateform
- *  Fields:
- *      - plateformFactory: name of the plateform to search for the query
- *      - listOfProblems: list of problems matching the current query
- *      - userStat: statistic of the user on a particular plateform
 */
 @Service()
 export abstract class Plateform implements PlateformFactory {    
 
     constructor(@Inject(Problems) private problems: MongooseModel<Problems>,
-                @Inject(Contests) private contests: MongooseModel<Contests>) {
+                @Inject(Contests) private contests: MongooseModel<Contests>,
+                @Inject(Submissions) private submissions: MongooseModel<Submissions>,
+                @Inject(Trackers) private trackers: MongooseModel<Trackers>) {
         Log.trace("Plateform::init()");
     }
 
@@ -38,6 +39,8 @@ export abstract class Plateform implements PlateformFactory {
     abstract getProblemsFiltered(level: string): Promise<InsightResponse>;
 
     abstract addSpecificProblem(contestID: string, problemID: string): Promise<InsightResponse>;
+
+    abstract updateContest(contest: Contests, user: Users, problem?: Problems): Promise<InsightResponse>;
 
     addProblemsFromCodeforces(contestID: string, codeforceID: number): Promise<InsightResponse> {
         return Promise.reject({
@@ -77,7 +80,7 @@ export abstract class Plateform implements PlateformFactory {
                                                             { $match: { 
                                                                 "plateform": plateform,
                                                                 "difficulty": "easy"
-                                                             } }
+                                                            } }
                                                         ]
                                                         ).exec();
 
@@ -92,7 +95,7 @@ export abstract class Plateform implements PlateformFactory {
                                                             { $match: { 
                                                                 "plateform": plateform,
                                                                 "difficulty": "medium"
-                                                             } }
+                                                            } }
                                                         ]
                                                         ).exec();
 
@@ -107,7 +110,7 @@ export abstract class Plateform implements PlateformFactory {
                                                             { $match: { 
                                                                 "plateform": plateform,
                                                                 "difficulty": "hard"
-                                                             } }
+                                                            } }
                                                         ]
                                                         ).exec();
 
@@ -136,8 +139,11 @@ export abstract class Plateform implements PlateformFactory {
         });
     }
 
+    public getSubmission(submission: any | any[]): any {
+       return null;
+    }
+
     /**
-     * Wraps writeFile in a promise.
      * @param link The link of the API to get all problems.
      */
     abstract async readAPI(link: string): Promise<any>;
@@ -145,10 +151,13 @@ export abstract class Plateform implements PlateformFactory {
 }
 
 @Service()
-export class Codeforces extends Plateform {   
+export class Codeforces extends Plateform {
+     
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
-                @Inject(Contests) private contestsModel: MongooseModel<Contests>) {
-        super(problemsModel, contestsModel);
+                @Inject(Contests) private contestsModel: MongooseModel<Contests>,
+                @Inject(Submissions) private submissionsModel: MongooseModel<Submissions>,
+                @Inject(Trackers) private trackersModel: MongooseModel<Trackers>) {
+        super(problemsModel, contestsModel, submissionsModel, trackersModel);
         Log.trace("Codeforces::init()");
     }
 
@@ -436,6 +445,72 @@ export class Codeforces extends Plateform {
         });
     } 
 
+    /**
+     * @description update the contest standing
+     * @param contest
+     * @param user 
+     * @param problem
+     */
+    updateContest(contest: Contests, user: Users): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            const handle: string = user.codeforces;
+            const link: string = "https://codeforces.com/api/user.status?handle=" + handle;
+            let status: any[];
+            let statusFiltered: any[];
+            let startSecond: number = contest.startDate.getTime() / 1000;
+
+            try {
+                status = await this.readAPI(link);
+                statusFiltered = status.filter((submission) => {
+                    return submission.creationTimeSeconds >= startSecond;
+                });
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: statusFiltered
+                    }
+                });
+            }
+            catch (err) {
+                return resolve({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        result: []
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Return submission object based on platform
+     * @param submission 
+     */
+    public getSubmission(submission: any | any[]): Promise<Submissions> {
+        return new Promise<Submissions>((resolve) => {
+            let sub: Submissions = {
+                submissionID: submission.id,
+                verdict: this.getVerdict(submission.verdict),
+                language: submission.programmingLanguage,
+                submissionTime: new Date(submission.creationTimeSeconds * 1000),
+                problemName: submission.problem.index + ". " + submission.problem.name,
+                OJ: this.getPlateform(),
+                problemID: submission.problem.contestId + "" + submission.problem.index,
+                problemLink: "",
+                user: null,
+                team: null
+            };
+            resolve(sub);
+        });
+    }
+
+    private getVerdict(verdict: string): string {
+        if (verdict == "OK")
+            return "ACCEPTED";
+        return verdict;
+    }
+
     getUserStatistic(): Promise<InsightResponse> {
         return Promise.reject({code: -1, body: null});
     }
@@ -449,10 +524,12 @@ export class Codeforces extends Plateform {
 
 @Service()
 export class Uva extends Plateform {
-
+    
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
-                @Inject(Contests) private contestsModel: MongooseModel<Contests>) {
-        super(problemsModel, contestsModel);
+                @Inject(Contests) private contestsModel: MongooseModel<Contests>,
+                @Inject(Submissions) private submissionsModel: MongooseModel<Submissions>,
+                @Inject(Trackers) private trackersModel: MongooseModel<Trackers>) {
+        super(problemsModel, contestsModel, submissionsModel, trackersModel);
         Log.trace("Uva::init()");
     }
     
@@ -607,11 +684,11 @@ export class Uva extends Plateform {
                 .then((body) => {
                     console.log("BEFOOORE: ", body.length);
                     res = body;
+                    return resolve(res);
                 })
                 .catch((err) => {
                     return reject(err);
                 });
-            return resolve(res);
         });
     }
     
@@ -757,6 +834,129 @@ export class Uva extends Plateform {
         });
     }
 
+    /**
+     * @description update the contest standing
+     * @param contest
+     * @param user
+     * @param problem
+     */
+    updateContest(contest: Contests, user: Users, problem: Problems): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            const handle: string = user.uva;
+            let converToId: string = "https://uhunt.onlinejudge.org/api/uname2uid/" + handle;
+            const link: string = "https://uhunt.onlinejudge.org/api/subs-pids/";
+            let status: any;
+            let statusFiltered: any[];
+            let startSecond: number = contest.startDate.getTime() / 1000;
+
+            try {
+                let converted = await this.readAPI(converToId);
+                status = await this.readAPI(link + converted + "/" + problem.problemID);
+                statusFiltered = status.converted.subs.filter((submission: any[]) => {
+                    return submission[4] >= startSecond;
+                });
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: statusFiltered
+                    }
+                });
+            }
+            catch (err) {
+                return resolve({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        result: []
+                    }
+                });
+            }
+        });
+    } 
+
+    /**
+     * Return submission object based on platform
+     * @param submission 
+     */
+    public getSubmission(submission: any | any[]): Promise<Submissions> {
+        return new Promise<Submissions>(async (resolve, reject) => {
+            let problem: Problems;
+            try {
+                problem = await this.problemsModel.findOne({problemID: submission[1], plateform: this.getPlateform()}).exec();
+                let sub: Submissions = {
+                    submissionID: submission[0],
+                    problemID: submission[1],
+                    verdict: this.getVerdict(submission[2]),
+                    submissionTime: new Date(submission[4] * 1000),
+                    OJ: this.getPlateform(),
+                    problemName: problem.name,
+                    problemLink: problem.link,
+                    language: this.getLanguage(submission[5]),
+                    user: null,
+                    team: null
+                };
+                return resolve(sub);
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description convert to a readable language
+     * @param language 
+     */
+    private getLanguage(language: number): string {
+        switch(language) {
+            case 1:
+                return "AINSI C";
+            case 2:
+                return "Java";
+            case 3:
+                return "C++";
+            case 4:
+                return "Pascal";
+            case 5:
+                return "C++11";
+        }
+    }
+
+    /**
+     * @description return the verdict
+     * @param verdict 
+     */
+    private getVerdict(verdict: number): string {
+        switch(verdict) {
+            case 10:
+                return "FAILED";
+            case 15:
+                return "FAILED";
+            case 20:
+                return "IN_QUEUE";
+            case 30:
+                return "COMPILATION_ERROR";
+            case 35:
+                return "RESTRICTED_FUNCTION";
+            case 40:
+                return "RUNTIME_ERROR";
+            case 45:
+                return "OUTPUT_ERROR";
+            case 50:
+                return "TIME_LIMIT_EXCEEDED";
+            case 60:
+                return "MEMORY_LIMIT_EXCEEDED";
+            case 70:
+                return "WRONG_ANSWER";
+            case 80:
+                return "PRESENTATION_ERROR";
+            case 90:
+                return "ACCEPTED";
+            default:
+                return "FAILED";
+        }
+    }
+
     getUserStatistic(): Promise<InsightResponse> {
         return Promise.reject({code: -1, body: null});
     }
@@ -772,8 +972,10 @@ export class Uva extends Plateform {
 export class LiveArchive extends Plateform {
 
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
-                @Inject(Contests) private contestsModel: MongooseModel<Contests>) {
-        super(problemsModel, contestsModel);
+                @Inject(Contests) private contestsModel: MongooseModel<Contests>,
+                @Inject(Submissions) private submissionsModel: MongooseModel<Submissions>,
+                @Inject(Trackers) private trackersModel: MongooseModel<Trackers>) {
+        super(problemsModel, contestsModel, submissionsModel, trackersModel);
         Log.trace("LiveArchive::init()");
     }
 
@@ -1036,6 +1238,130 @@ export class LiveArchive extends Plateform {
             }
         });
     }
+
+    /**
+     * @description update the contest standing
+     * @param contest
+     * @param user
+     * @param problem
+     */
+    updateContest(contest: Contests, user: Users, problem: Problems): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            const handle: string = user.livearchive;
+            let converToId: string = "https://icpcarchive.ecs.baylor.edu/uhunt/api/uname2uid/" + handle;
+            const link: string = "https://icpcarchive.ecs.baylor.edu/uhunt/api/subs-pids/";
+            let status: any;
+            let statusFiltered: any[];
+            let startSecond: number = contest.startDate.getTime() / 1000;
+
+            try {
+                let converted = await this.readAPI(converToId);
+                status = await this.readAPI(link + converted + "/" + problem.problemID);
+                statusFiltered = status.converted.subs.filter((submission: any[]) => {
+                    return submission[4] >= startSecond;
+                });
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: statusFiltered
+                    }
+                });
+            }
+            catch (err) {
+                return resolve({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        result: []
+                    }
+                });
+            }
+        });
+    } 
+
+    /**
+     * Return submission object based on platform
+     * @param submission 
+     */
+    public getSubmission(submission: any | any[]): Promise<Submissions> {
+        return new Promise<Submissions>(async (resolve, reject) => {
+            let problem: Problems;
+            try {
+                problem = await this.problemsModel.findOne({problemID: submission[1], plateform: this.getPlateform()}).exec();
+                let sub: Submissions = {
+                    submissionID: submission[0],
+                    problemID: submission[1],
+                    verdict: this.getVerdict(submission[2]),
+                    submissionTime: new Date(submission[4] * 1000),
+                    OJ: this.getPlateform(),
+                    problemName: problem.name,
+                    problemLink: problem.link,
+                    language: this.getLanguage(submission[5]),
+                    user: null,
+                    team: null
+                };
+                return resolve(sub);
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description convert to a readable language
+     * @param language 
+     */
+    private getLanguage(language: number): string {
+        switch(language) {
+            case 1:
+                return "AINSI C";
+            case 2:
+                return "Java";
+            case 3:
+                return "C++";
+            case 4:
+                return "Pascal";
+            case 5:
+                return "C++11";
+        }
+    }
+
+    /**
+     * @description return the verdict
+     * @param verdict 
+     */
+    private getVerdict(verdict: number): string {
+        switch(verdict) {
+            case 10:
+                return "FAILED";
+            case 15:
+                return "FAILED";
+            case 20:
+                return "IN_QUEUE";
+            case 30:
+                return "COMPILATION_ERROR";
+            case 35:
+                return "RESTRICTED_FUNCTION";
+            case 40:
+                return "RUNTIME_ERROR";
+            case 45:
+                return "OUTPUT_ERROR";
+            case 50:
+                return "TIME_LIMIT_EXCEEDED";
+            case 60:
+                return "MEMORY_LIMIT_EXCEEDED";
+            case 70:
+                return "WRONG_ANSWER";
+            case 80:
+                return "PRESENTATION_ERROR";
+            case 90:
+                return "ACCEPTED";
+            default:
+                return "FAILED";
+        }
+    }
+
     getUserStatistic(): Promise<InsightResponse> {
         return Promise.reject({code: -1, body: null});
     }
@@ -1055,13 +1381,15 @@ export class LiveArchive extends Plateform {
 
 @Service()
 export class AllPlateforms extends Plateform {
-
+    
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
                 @Inject(Contests) private contestsModel: MongooseModel<Contests>,
+                @Inject(Submissions) private submissionsModel: MongooseModel<Submissions>,
+                @Inject(Trackers) private trackersModel: MongooseModel<Trackers>,
                 private codeforces: Codeforces,
                 private livearchive: LiveArchive,
                 private uva: Uva) {
-        super(problemsModel, contestsModel);
+        super(problemsModel, contestsModel, submissionsModel, trackersModel);
         Log.trace("AllPlateforms::init()");
     }
     
@@ -1277,6 +1605,16 @@ export class AllPlateforms extends Plateform {
             }
         });
     }
+
+    /**
+     * @description update the contest standing
+     * @param contest
+     * @param user
+     * @param problem
+     */
+    updateContest(contest: Contests, user: Users): Promise<InsightResponse> {
+        throw new Error("Method not implemented.");
+    } 
 
     getUserStatistic(): Promise<InsightResponse> {
         return null;

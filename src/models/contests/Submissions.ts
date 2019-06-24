@@ -12,15 +12,21 @@ export class Submissions {
 
     @Property()
     @Description("OJ Submission ID")
-    submissionID: Date;
+    submissionID: number;
 
     @Property()
     @Description("Submission Time")
     submissionTime: Date;
 
     @Property()
-    @Description("The name of the problem and its link")
-    problem: string;
+    problemID: string;
+
+    @Property()
+    @Description("The name of the problem")
+    problemName: string;
+
+    @Property()
+    problemLink: string;
 
     @Property()
     @Description("Online judge of the submission")

@@ -4,11 +4,14 @@ import { HTTPStatusCodes } from "../../util/httpCode";
 import { Contests } from "../../models/contests/Contests";
 import { Standings } from "../../models/contests/Standings";
 import { Submissions } from "../../models/contests/Submissions";
+import { Trackers } from "../../models/contests/Trackers";
 import { InsightResponse, AccessType, IContest, ContestType } from "../../interfaces/InterfaceFacade";
 import { ContestsService } from "./Contests.service";
 import { Users } from "../../models/Users";
 import PlateformBuilding from "../../services/plateformBuilder/PlateformBuilding.service";
 import { Teams } from "src/models/Teams";
+import { Plateform } from "../plateform/Plateform.service";
+import { Problems } from "../../models/Problems";
 
 
 @Service()
@@ -19,9 +22,10 @@ export class TeamContestService extends ContestsService {
                 @Inject(Standings) protected standings: MongooseModel<Standings>,
                 @Inject(Users) protected users: MongooseModel<Users>,
                 @Inject(Teams) protected teams: MongooseModel<Teams>,
+                @Inject(Trackers) protected trackers: MongooseModel<Trackers>,
                 protected plateformBuilder: PlateformBuilding) {
 
-                super(contests, submissions, standings, users, plateformBuilder);
+                super(contests, submissions, standings, users, trackers, plateformBuilder);
     }
 
     /**
@@ -230,6 +234,7 @@ export class TeamContestService extends ContestsService {
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
             let team: Teams;
+            let tracker: Trackers;
 
             try {
                 contest = await this.contestExists(contestID);
@@ -261,6 +266,19 @@ export class TeamContestService extends ContestsService {
                         }
                     });
                 }
+                tracker = {
+                    country: null,
+                    solvedCount: 0,
+                    penalty: 0,
+                    problemsSolved: [],
+                    problemsUnsolved: [],
+                    contestant: null,
+                    contestants: team._id,
+                    contestID: contest._id
+                };
+
+                await this.trackers.create(tracker);
+
                 let saveContest = new this.contests(contest);
                 saveContest.teams.push(team._id);
                 await saveContest.save();
@@ -379,13 +397,111 @@ export class TeamContestService extends ContestsService {
         });
     }
 
-    protected addSubmission(contestID: string, submission: any, userID: string): Promise<InsightResponse> {
-        throw new Error("Method not implemented.");
-    }
-
+    /**
+     * @description update the contest standing
+     * @param contestID 
+     */
     protected updateStanding(contestID: string): Promise<InsightResponse> {
-        throw new Error("Method not implemented.");
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            let standing: Standings;
+
+            try {
+                contest = await this.contests.findById(contestID)
+                                             .populate({
+                                                path: "teams",
+                                                populate: {
+                                                    path: "members"
+                                                }
+                                             })
+                                             .populate("problems")
+                                             .exec();
+                await this.query(contest);
+
+                standing = await this.standings.findOne({contestID: contest._id})
+                                               .populate("trackers")
+                                               .exec();
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: standing
+                    }
+                });
+            }
+            catch(err) {
+                return reject({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        name: err
+                    }
+                });
+            }
+        });
     }
 
-    
+    /**
+     * @description iterate over each problem and each user to update the standing
+     * @param contest 
+     */
+    private query(contest: Contests): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            let plateform: Plateform;
+            let tracker: Trackers;
+
+            contest.problems.forEach((problem: Problems) => {
+                contest.teams.forEach((team: Teams) => {
+                    team.members.forEach(async (user: Users) => {
+                        const name: string = problem.name;
+                        plateform = this.plateformBuilder.createPlateform(name);
+                        let result: InsightResponse;
+                        let statusFiltered: any[];
+
+                        try {
+                            result = await plateform.updateContest(contest, user, problem);
+                            statusFiltered = result.body.result;
+                            statusFiltered.forEach(async (sub) => {
+                                let submission: Submissions = await plateform.getSubmission(sub);
+                                if (problem.problemID == submission.problemID) {
+                                    let new_sub: Submissions = await this.submissions.findOne(
+                                        {
+                                            problemID: submission.problemID,
+                                            OJ: submission.OJ,
+                                            submissionID: submission.submissionID
+                                        }
+                                    ).exec();
+                                    if (!new_sub) {
+                                        submission.problemLink = problem.link;
+                                        submission.team = team._id;
+                                        let createSubmission = new this.submissions(submission);
+                                        await createSubmission.save();
+                                        tracker = await this.trackers.findOne({
+                                            contestants: team._id,
+                                            contestID: contest._id
+                                        }).exec();
+                                        let saveTracker = new this.trackers(tracker);
+                                        if (submission.verdict != "ACCEPTED") {
+                                            saveTracker.problemsUnsolved.push(problem._id);
+                                        }
+                                        else {
+                                            let diff = (submission.submissionTime.getTime() - contest.startDate.getTime()) / 6000;
+                                            saveTracker.penalty += diff;
+                                            saveTracker.solvedCount += 1;
+                                            saveTracker.problemsSolved.push(problem._id);
+                                            saveTracker.problemsUnsolved = saveTracker.problemsUnsolved.filter((pr) => problem._id != pr);
+                                        }
+                                        await saveTracker.save();
+                                    }
+                                }
+                            });
+                        }
+                        catch(err) {
+                            reject(err);
+                        }
+                    });
+                });
+            });
+            return resolve();
+        });
+    }
 }

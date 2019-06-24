@@ -4,6 +4,7 @@ import { HTTPStatusCodes } from "../../util/httpCode";
 import { Contests } from "../../models/contests/Contests";
 import { Standings } from "../../models/contests/Standings";
 import { Submissions } from "../../models/contests/Submissions";
+import { Trackers } from "../../models/contests/Trackers";
 import { Users } from "../../models/Users";
 import { InsightResponse, IContest, AccessType } from "../../interfaces/InterfaceFacade";
 import PlateformBuilding from "../plateformBuilder/PlateformBuilding.service";
@@ -17,6 +18,7 @@ export abstract class ContestsService {
                 @Inject(Submissions) protected submissions: MongooseModel<Submissions>,
                 @Inject(Standings) protected standings: MongooseModel<Standings>,
                 @Inject(Users) protected users: MongooseModel<Users>,
+                @Inject(Trackers) protected trackers: MongooseModel<Trackers>,
                 protected plateformBuilder: PlateformBuilding) {}
 
     /**
@@ -672,10 +674,35 @@ export abstract class ContestsService {
     /**
      * @description add a submission from user
      * @param contestID 
-     * @param submission 
-     * @param userID
+     * @param submissionID
      */
-    protected abstract async addSubmission(contestID: string, submission: any, userID: string): Promise<InsightResponse>;
+    protected async addSubmission(contestID: string, submissionID: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+
+            try {
+                contest = await this.contests.findById(contestID).exec();
+                let saveContest = new this.contests(contest);
+                saveContest.submissions.push(submissionID);
+                await saveContest.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: saveContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't add this sumbmission to the contest"
+                    }
+                });
+            }
+        });
+    }
 
     /**
      * @description update the contest standing
