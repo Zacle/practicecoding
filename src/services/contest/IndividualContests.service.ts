@@ -29,7 +29,7 @@ export class IndividualContestService extends ContestsService {
      * Create a new Contest
      * @param contest
      */
-    protected create(contest: IContest): Promise<InsightResponse> {
+    public create(contest: IContest): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
 
@@ -91,7 +91,7 @@ export class IndividualContestService extends ContestsService {
      * @param contestID 
      * @param page
      */
-    protected getSubmissions(contestID: string, page: number): Promise<InsightResponse> {
+    getSubmissions(contestID: string, page: number): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
@@ -131,7 +131,7 @@ export class IndividualContestService extends ContestsService {
      * @param contestID 
      * @param page
      */
-    protected getRegistrants(contestID: string, page: number): Promise<InsightResponse> {
+    getRegistrants(contestID: string, page: number): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
@@ -167,7 +167,7 @@ export class IndividualContestService extends ContestsService {
      * @param contestID 
      * @param page
      */
-    protected getStanding(contestID: string, page: number): Promise<InsightResponse> {
+    getStanding(contestID: string, page: number): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let standing: Standings;
@@ -218,7 +218,7 @@ export class IndividualContestService extends ContestsService {
      * @param contestID 
      * @param userID
      */
-    protected register(contestID: string, userID: string): Promise<InsightResponse> {
+    register(contestID: string, userID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
@@ -342,7 +342,7 @@ export class IndividualContestService extends ContestsService {
      * @param contestID 
      * @param userID
      */
-    protected unregister(contestID: string, userID: string): Promise<InsightResponse> {
+    unregister(contestID: string, userID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
@@ -408,7 +408,7 @@ export class IndividualContestService extends ContestsService {
      * @description update the contest standing
      * @param contestID 
      */
-    protected updateStanding(contestID: string): Promise<InsightResponse> {
+    updateStanding(contestID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;

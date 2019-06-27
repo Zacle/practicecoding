@@ -6,7 +6,7 @@ import { Standings } from "../../models/contests/Standings";
 import { Submissions } from "../../models/contests/Submissions";
 import { Trackers } from "../../models/contests/Trackers";
 import { Users } from "../../models/Users";
-import { InsightResponse, IContest, AccessType } from "../../interfaces/InterfaceFacade";
+import { InsightResponse, IContest, AccessType, ContestType } from "../../interfaces/InterfaceFacade";
 import PlateformBuilding from "../plateformBuilder/PlateformBuilding.service";
 import { Plateform } from "../plateform/Plateform.service";
 
@@ -25,7 +25,7 @@ export abstract class ContestsService {
      * Create a new Contest
      * @param contest
      */
-    protected abstract async create(contest: IContest): Promise<InsightResponse>;
+    public abstract async create(contest: IContest): Promise<InsightResponse>;
 
     /**
      * @description computes the duration of the contest
@@ -68,7 +68,7 @@ export abstract class ContestsService {
         if (minutes < 2)
             duration += minutes + " minute";
         else
-            duration += minutes + "minutes";
+            duration += minutes + " minutes";
 
         return duration;
 
@@ -189,16 +189,16 @@ export abstract class ContestsService {
     }
 
     /**
-     * @param userID
+     * @param username
      * @returns all contests attended by the user 
      */
-    async getContests(userID: string): Promise<InsightResponse> {
+    async getContests(username: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contests: Users;
 
             try {
-                contests = await this.users.findById(userID)
+                contests = await this.users.findById({username: username})
                                            .populate("contests")
                                            .exec();
 
@@ -254,32 +254,19 @@ export abstract class ContestsService {
 
     /**
      * Update contest
-     * @param name 
-     * @param startDateYear 
-     * @param startDateMonth 
-     * @param startDateDay 
-     * @param endDateYear 
-     * @param endDateMonth 
-     * @param endDateDay 
-     * @param startTimeHour 
-     * @param startTimeMinute 
-     * @param endTimeHour 
-     * @param endTimeMinute 
-     * @param access 
+     * @param Icontest 
      * @param contestID 
      */
-    async updateContest(name: string, startDateYear: number, startDateMonth: number, startDateDay: number, 
-                        endDateYear: number, endDateMonth: number, endDateDay: number, startTimeHour: number,
-                        startTimeMinute: number, endTimeHour: number, endTimeMinute: number, access: string, contestID: string, userID: string): Promise<InsightResponse> {
+    async updateContest(Icontest: IContest, contestID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
-            let startDate = new Date(startDateYear, startDateMonth - 1, startDateDay, startTimeHour, startTimeMinute);
-            let endDate = new Date(endDateYear, endDateMonth - 1, endDateDay, endTimeHour, endTimeMinute);
+            let startDate = new Date(Icontest.startDateYear, Icontest.startDateMonth - 1, Icontest.startDateDay, Icontest.startTimeHour, Icontest.startTimeMinute);
+            let endDate = new Date(Icontest.endDateYear, Icontest.endDateMonth - 1, Icontest.endDateDay, Icontest.endTimeHour, Icontest.endTimeMinute);
             let duration: string = this.duration(startDate, endDate);
 
             try {
-                const admin: boolean = await this.isAdmin(contestID, userID);
+                const admin: boolean = await this.isAdmin(contestID, Icontest.owner);
                 if (!admin) {
                     return reject({
                         code: HTTPStatusCodes.UNAUTHORIZED,
@@ -292,6 +279,7 @@ export abstract class ContestsService {
                 contest.startDate = startDate;
                 contest.endDate = endDate;
                 contest.duration = duration;
+                contest.name = name;
 
                 const saveContest = new this.contests(contest);
                 await saveContest.save();
@@ -380,11 +368,38 @@ export abstract class ContestsService {
     }
 
     /**
+     * @description return the type of the contest (INDIVIDUAL OR TEAM)
+     * @param contestID 
+     */
+    getContestType(contestID: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contest: Contests;
+            try {
+                contest = await this.contests.findById(contestID).exec();
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: contest.type
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't get the contest type"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
      * @description return all submissions of this contest
      * @param contestID 
      * @param page
      */
-    protected abstract async getSubmissions(contestID: string, page: number): Promise<InsightResponse>;
+    abstract async getSubmissions(contestID: string, page: number): Promise<InsightResponse>;
 
     /**
      * @description get all problems of this contest
@@ -432,14 +447,14 @@ export abstract class ContestsService {
      * @param contestID 
      * @param page
      */
-    protected abstract async getRegistrants(contestID: string, page: number): Promise<InsightResponse>;
+    abstract async getRegistrants(contestID: string, page: number): Promise<InsightResponse>;
 
     /**
      * @description get standing of the contest
      * @param contestID 
      * @param page
      */
-    protected abstract async getStanding(contestID: string, page: number):Promise<InsightResponse>;
+    abstract async getStanding(contestID: string, page: number):Promise<InsightResponse>;
 
     /**
      * @description add a specific problem to the contest
@@ -635,6 +650,15 @@ export abstract class ContestsService {
             let contest: Contests;
 
             try {
+                let admin = await this.isAdmin(contestID, userID);
+                if (!admin) {
+                    return reject({
+                        code: HTTPStatusCodes.UNAUTHORIZED,
+                        body: {
+                            name: "You're not authorized to add problems"
+                        }
+                    });
+                }
                 contest = await this.contests.findByIdAndUpdate(
                     contestID,
                     {$pull: { problems: { _id: problemID } } }
@@ -662,14 +686,14 @@ export abstract class ContestsService {
      * @param contestID 
      * @param userID
      */
-    protected abstract async register(contestID: string, userID: string): Promise<InsightResponse>;
+    abstract async register(contestID: string, userID: string): Promise<InsightResponse>;
 
     /**
      * @description unregister a user or a team from the contest
      * @param contestID 
      * @param userID
      */
-    protected abstract async unregister(contestID: string, userID: string): Promise<InsightResponse>;
+    abstract async unregister(contestID: string, userID: string): Promise<InsightResponse>;
 
     /**
      * @description add a submission from user
@@ -708,5 +732,5 @@ export abstract class ContestsService {
      * @description update the contest standing
      * @param contestID 
      */
-    protected abstract async updateStanding(contestID: string): Promise<InsightResponse>;
+    abstract async updateStanding(contestID: string): Promise<InsightResponse>;
 }

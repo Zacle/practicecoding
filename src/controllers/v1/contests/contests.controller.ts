@@ -4,6 +4,7 @@ import {
     Controller,
     Get,
     PathParams,
+    QueryParams,
     Post,
     Req,
     Res,
@@ -14,8 +15,12 @@ import {
 } from "@tsed/common";
 import * as Express from "express";
 import { HTTPStatusCodes } from "../../../util/httpCode";
+import { InsightResponse, ContestType, AccessType, IContest } from "../../../interfaces/InterfaceFacade";
 import {Summary} from "@tsed/swagger";
 import { Submissions } from "../../../models/contests/Submissions";
+import { Contests } from "../../../models/contests/Contests";
+import ContestBuilderService from "../../../services/contest/ContestBuilder.service";
+import { ContestsService } from "../../../services/contest/Contests.service";
 
 /**
  * REST end-point for contests
@@ -23,6 +28,9 @@ import { Submissions } from "../../../models/contests/Submissions";
 
 @Controller("/contests")
 export class ContestsCtrl {
+
+    constructor(private contestBuilder: ContestBuilderService,
+                private contestService: ContestsService) {}
 
     /**
      * End-point to create contests
@@ -44,25 +52,65 @@ export class ContestsCtrl {
     @Summary("Create a contest")
     @Authenticated()
     async create(@Required() @BodyParams("name") name: string,
-                 @Required() @BodyParams("startDateYear") startDateYear: Date,
-                 @Required() @BodyParams("startDateMonth") startDateMonth: Date,
-                 @Required() @BodyParams("startDateDay") startDateDay: Date,
-                 @Required() @BodyParams("endDateYear") endDateYear: Date,
-                 @Required() @BodyParams("endDateMonth") endDateMonth: Date,
-                 @Required() @BodyParams("endDateDay") endDateDay: Date,
-                 @BodyParams("startTimeHour") startTimeHour: string,
-                 @BodyParams("startTimeMinute") startTimeMinute: string,
-                 @BodyParams("endTimeHour") endTimeHour: string,
-                 @BodyParams("endTimeMinute") endTimeMinute: string,
+                 @Required() @BodyParams("startDateYear") startDateYear: number,
+                 @Required() @BodyParams("startDateMonth") startDateMonth: number,
+                 @Required() @BodyParams("startDateDay") startDateDay: number,
+                 @Required() @BodyParams("endDateYear") endDateYear: number,
+                 @Required() @BodyParams("endDateMonth") endDateMonth: number,
+                 @Required() @BodyParams("endDateDay") endDateDay: number,
+                 @BodyParams("startTimeHour") startTimeHour: number,
+                 @BodyParams("startTimeMinute") startTimeMinute: number,
+                 @BodyParams("endTimeHour") endTimeHour: number,
+                 @BodyParams("endTimeMinute") endTimeMinute: number,
                  @Required() @BodyParams("access") access: string,
                  @Required() @BodyParams("type") type: string,
                  @Req() request: Express.Request,
                  @Res() response: Express.Response) {
         
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            name: name
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contestType: ContestType;
+            let accessType: AccessType;
+            if (type.toUpperCase() == "TEAM") {
+                contestType = ContestType.TEAM;
+            }
+            else {
+                contestType = ContestType.INDIVIDUAL;
+            }
+            if (access.toUpperCase() == "PRIVATE") {
+                accessType = AccessType.PRIVATE;
+            }
+            let contest: IContest = {
+                name: name,
+                startDateYear: startDateYear,
+                startDateMonth: startDateMonth,
+                startDateDay: startDateDay,
+                endDateYear: endDateYear,
+                endDateMonth: endDateMonth,
+                endDateDay: endDateDay,
+                startTimeHour: startTimeHour,
+                startTimeMinute: startTimeMinute,
+                endTimeHour: endTimeHour,
+                endTimeMinute: endTimeMinute,
+                access: accessType,
+                owner: request.user._id
+            };
+            let contests: ContestsService = this.contestBuilder.createContest(contestType);
+
+            try {
+                result = await contests.create(contest);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -74,9 +122,24 @@ export class ContestsCtrl {
     @Get("/coming")
     @Summary("Get all coming public contests")
     async getAllComingContests(@Req() request: Express.Request, @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "plain/text");
-        response.send("GET /contests");
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.getAllComingContests();
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
     }
 
     /**
@@ -87,9 +150,24 @@ export class ContestsCtrl {
     @Get("/running")
     @Summary("Get all running public contests")
     async getAllRunningContests(@Req() request: Express.Request, @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "plain/text");
-        response.send("GET /contests");
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.getAllRunningContests();
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
     }
 
     /**
@@ -99,19 +177,49 @@ export class ContestsCtrl {
      */
     @Get("/past")
     @Summary("Get some past public contests")
-    async getSomePastContests(@Req() request: Express.Request, @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "plain/text");
-        response.send("GET /contests");
+    async getSomePastContests(@Req() request: Express.Request, @Res() response: Express.Response, @QueryParams("page") page: number) {
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.getPastContests(page);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
     }
 
     @Get("/my")
     @Summary("Contests attended by the user")
     @Authenticated()
-    async getContests(@Req() request: Express.Request, @Res() response: Express.Response) {
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "plain/text");
-        response.send("GET /contests/my");
+    async getContests(@Req() request: Express.Request, @Res() response: Express.Response, @QueryParams("username") username: string) {
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.getContests(username);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
     }
 
     /**
@@ -126,10 +234,23 @@ export class ContestsCtrl {
                      @Req() request: Express.Request,
                      @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.getContest(contestID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -151,29 +272,59 @@ export class ContestsCtrl {
      */
     @Put("/:id")
     @Summary("Update contest info")
-    async updateContest(@BodyParams("startDateYear") startDateYear: Date,
-                        @BodyParams("startDateMonth") startDateMonth: Date,
-                        @BodyParams("startDateDay") startDateDay: Date,
-                        @BodyParams("endDateYear") endDateYear: Date,
-                        @BodyParams("endDateMonth") endDateMonth: Date,
-                        @BodyParams("endDateDay") endDateDay: Date,
-                        @BodyParams("startTimeHour") startTimeHour: string,
-                        @BodyParams("startTimeMinute") startTimeMinute: string,
-                        @BodyParams("endTimeHour") endTimeHour: string,
-                        @BodyParams("endTimeMinute") endTimeMinute: string,
+    async updateContest(@BodyParams("startDateYear") startDateYear: number,
+                        @BodyParams("startDateMonth") startDateMonth: number,
+                        @BodyParams("startDateDay") startDateDay: number,
+                        @BodyParams("endDateYear") endDateYear: number,
+                        @BodyParams("endDateMonth") endDateMonth: number,
+                        @BodyParams("endDateDay") endDateDay: number,
+                        @BodyParams("startTimeHour") startTimeHour: number,
+                        @BodyParams("startTimeMinute") startTimeMinute: number,
+                        @BodyParams("endTimeHour") endTimeHour: number,
+                        @BodyParams("endTimeMinute") endTimeMinute: number,
                         @BodyParams("access") access: string,
                         @BodyParams("type") type: string,
                         @Required() @PathParams("id") contestID: string,
                         @Req() request: Express.Request,
                         @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            name: name,
-            access: access,
-            type: type,
-            contestID: contestID
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contestType: ContestType;
+            let accessType: AccessType;
+            if (access.toUpperCase() == "PRIVATE") {
+                accessType = AccessType.PRIVATE;
+            }
+            let contest: IContest = {
+                name: name,
+                startDateYear: startDateYear,
+                startDateMonth: startDateMonth,
+                startDateDay: startDateDay,
+                endDateYear: endDateYear,
+                endDateMonth: endDateMonth,
+                endDateDay: endDateDay,
+                startTimeHour: startTimeHour,
+                startTimeMinute: startTimeMinute,
+                endTimeHour: endTimeHour,
+                endTimeMinute: endTimeMinute,
+                access: accessType,
+                owner: request.user._id
+            };
+
+            try {
+                result = await this.contestService.updateContest(contest, contestID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -184,23 +335,53 @@ export class ContestsCtrl {
                         @Req() request: Express.Request,
                         @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.deleteContest(contestID, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
     @Get("/:id/submissions")
     @Summary("Get contest submissions")
     async getContestSubmissions(@Required() @PathParams("id") contestID: string,
+                                @QueryParams("page") page: number,
                                 @Req() request: Express.Request,
                                 @Res() response : Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
+        return new Promise<Submissions>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contest: ContestsService;
+
+            try {
+                result = await this.contestService.getContestType(contestID);
+                contest = this.contestBuilder.createContest(result.body.result);
+                result = await contest.getSubmissions(contestID, page);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch (err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -210,36 +391,83 @@ export class ContestsCtrl {
                                 @Req() request: Express.Request,
                                 @Res() response : Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.getProblems(contestID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
     @Get("/:id/registrants")
     @Summary("Get contest registrants")
     async getContestRegistrants(@Required() @PathParams("id") contestID: string,
+                                @QueryParams("page") page: number,
                                 @Req() request: Express.Request,
                                 @Res() response : Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
+        return new Promise<Submissions>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contest: ContestsService;
+
+            try {
+                result = await this.contestService.getContestType(contestID);
+                contest = this.contestBuilder.createContest(result.body.result);
+                result = await contest.getRegistrants(contestID, page);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch (err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
     @Get("/:id/standing")
     @Summary("Get contest standing")
     async getContestStanding(@Required() @PathParams("id") contestID: string,
+                             @QueryParams("page") page: number,
                              @Req() request: Express.Request,
                              @Res() response : Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
+        return new Promise<Submissions>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contest: ContestsService;
+
+            try {
+                result = await this.contestService.getContestType(contestID);
+                contest = this.contestBuilder.createContest(result.body.result);
+                result = await contest.getStanding(contestID, page);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch (err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -249,33 +477,203 @@ export class ContestsCtrl {
                                 @Req() request: Express.Request,
                                 @Res() response : Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
+        return new Promise<Submissions>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contest: ContestsService;
+
+            try {
+                result = await this.contestService.getContestType(contestID);
+                contest = this.contestBuilder.createContest(result.body.result);
+                result = await contest.updateStanding(contestID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch (err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
     /**
-     * Add problems to the the contest only by the contest owner 
+     * Add specific problem to the the contest only by the contest owner 
      * @param contestID 
      * @param problem 
      * @param request 
      * @param response 
      */
-    @Post("/:id/problems")
+    @Post("/:id/specificproblem")
     @Summary("Add problems to the contest")
     @Authenticated()
-    async addProblems(@Required() @PathParams("id") contestID: string,
-                      @Required() @BodyParams("id") problemID: string,
+    async addSpecificProblems(@Required() @PathParams("id") contestID: string,
+                      @Required() @BodyParams("problem") problem: any,
                       @Req() request: Express.Request,
                       @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID,
-            problem: problemID
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.addSpecificProblem(contestID, problem, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
+     * Add problems from a codeforces contest 
+     * @param contestID 
+     * @param problem 
+     * @param request 
+     * @param response 
+     */
+    @Post("/:id/codeforcecontest")
+    @Summary("Add problems to the contest")
+    @Authenticated()
+    async addProblemsFromCodeforces(@Required() @PathParams("id") contestID: string,
+                      @Required() @BodyParams("id") codeforceID: number,
+                      @Req() request: Express.Request,
+                      @Res() response: Express.Response) {
+
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.addProblemsFromCodeforces(contestID, codeforceID, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
+     * Add problems from uva/uhunt contest
+     * @param contestID 
+     * @param problems 
+     * @param request 
+     * @param response 
+     */
+    @Post("/:id/uvacontest")
+    @Summary("Add problems to the contest")
+    @Authenticated()
+    async addProblemsFromUva(@Required() @PathParams("id") contestID: string,
+                      @Required() @BodyParams("problem") problems: number[],
+                      @Req() request: Express.Request,
+                      @Res() response: Express.Response) {
+
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.addProblemsFromUVA(contestID, problems, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
+     * Add problems from an existing contest 
+     * @param contestID 
+     * @param existingID 
+     * @param request 
+     * @param response 
+     */
+    @Post("/:id/existingcontest")
+    @Summary("Add problems to the contest")
+    @Authenticated()
+    async addProblemsFromExistingContest(@Required() @PathParams("id") contestID: string,
+                      @Required() @BodyParams("id") existingID: string,
+                      @Req() request: Express.Request,
+                      @Res() response: Express.Response) {
+
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.addProblemsFromExisting(contestID, existingID, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
+     * Add random problems 
+     * @param contestID 
+     * @param quantity
+     * @param plateform 
+     * @param request 
+     * @param response 
+     */
+    @Post("/:id/randomproblems")
+    @Summary("Add problems to the contest")
+    @Authenticated()
+    async addRandomProblems(@Required() @PathParams("id") contestID: string,
+                      @Required() @BodyParams("quantity") quantity: number,
+                      @Required() @BodyParams("oj") plateform: string,
+                      @Req() request: Express.Request,
+                      @Res() response: Express.Response) {
+
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.addRandomProblems(contestID, quantity, request.user._id, plateform);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -283,41 +681,75 @@ export class ContestsCtrl {
      * Register a user to the contest
      * @param contestID 
      * @param userID 
+     * @param request 
+     * @param response 
+     */
+    @Post("/:id/registerUser")
+    @Summary("Register a user to the contest")
+    @Authenticated()
+    async registerUser(@Required() @PathParams("id") contestID: string,
+                   @BodyParams("userID") userID: string,
+                   @Req() request: Express.Request,
+                   @Res() response: Express.Response) {
+
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contest: ContestsService;
+            contest = this.contestBuilder.createContest(ContestType.INDIVIDUAL);
+
+            try {
+                result = await contest.register(contestID, userID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
+     * Register a team to the contest
+     * @param contestID 
      * @param teamID 
      * @param request 
      * @param response 
      */
-    @Post("/:id/registrants")
-    @Summary("Register a user or a team to the contest")
+    @Post("/:id/registerTeam")
+    @Summary("Register a team to the contest")
     @Authenticated()
-    async register(@Required() @PathParams("id") contestID: string,
-                   @BodyParams("userID") userID: string,
+    async registerTeam(@Required() @PathParams("id") contestID: string,
                    @BodyParams("teamID") teamID: string,
                    @Req() request: Express.Request,
                    @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID,
-            userID: userID,
-            teamID: teamID
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contest: ContestsService;
+            contest = this.contestBuilder.createContest(ContestType.TEAM);
+
+            try {
+                result = await contest.register(contestID, teamID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
 
-    }
-
-    @Post("/:id/submissions")
-    @Summary("Add a submissions")
-    async addSubmissions(@Required() @PathParams("id") contestID: string,
-                         @Required() @BodyParams("submission") submission: Submissions,
-                         @Req() request: Express.Request,
-                         @Res() response: Express.Response) {
-
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID
-        });
     }
     
     /**
@@ -336,35 +768,99 @@ export class ContestsCtrl {
                         @Req() request: Express.Request,
                         @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID,
-            problemID: problemID
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.removeProblem(contestID, problemID, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
     /**
-     * Delete a contest registrant (user or team)
+     * Delete a contest user
      * @param contestID 
-     * @param registrantID
+     * @param userID
      * @param request 
      * @param response 
      */
-    @Delete("/:id/registrants/:rid")
+    @Delete("/:id/unregisterUser/:rid")
     @MergeParams()
     @Summary("Delete a contest registrant")
     @Authenticated()
-    async deleteRegistrant(@Required() @PathParams("id") contestID: string,
-                           @Required() @PathParams("rid") registrantID: string,
+    async unregisterUser(@Required() @PathParams("id") contestID: string,
+                           @Required() @PathParams("userID") userID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
 
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            contestID: contestID,
-            registrantID: registrantID
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contest: ContestsService;
+            contest = this.contestBuilder.createContest(ContestType.INDIVIDUAL);
+
+            try {
+                result = await contest.unregister(contestID, userID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
+     * Delete a contest team
+     * @param contestID 
+     * @param teamID
+     * @param request 
+     * @param response 
+     */
+    @Delete("/:id/unregisterTeam/:rid")
+    @MergeParams()
+    @Summary("Delete a contest team")
+    @Authenticated()
+    async unregisterteam(@Required() @PathParams("id") contestID: string,
+                           @Required() @PathParams("teamID") teamID: string,
+                           @Req() request: Express.Request,
+                           @Res() response: Express.Response) {
+
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contest: ContestsService;
+            contest = this.contestBuilder.createContest(ContestType.TEAM);
+
+            try {
+                result = await contest.unregister(contestID, teamID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 }
