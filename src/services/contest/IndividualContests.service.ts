@@ -6,6 +6,7 @@ import { Standings } from "../../models/contests/Standings";
 import { Submissions } from "../../models/contests/Submissions";
 import { Trackers } from "../../models/contests/Trackers";
 import { Problems } from "../../models/Problems";
+import { Groups } from "../../models/Groups";
 import { InsightResponse, AccessType, IContest, ContestType } from "../../interfaces/InterfaceFacade";
 import { ContestsService } from "./Contests.service";
 import { Users } from "../../models/Users";
@@ -20,22 +21,24 @@ export class IndividualContestService extends ContestsService {
                 @Inject(Standings) protected standings: MongooseModel<Standings>,
                 @Inject(Users) protected users: MongooseModel<Users>,
                 @Inject(Trackers) protected trackers: MongooseModel<Trackers>,
+                @Inject(Groups) protected groups: MongooseModel<Groups>,
                 protected plateformBuilder: PlateformBuilding) {
 
-                super(contests, submissions, standings, users,trackers, plateformBuilder);
+                super(contests, submissions, standings, users,trackers, groups, plateformBuilder);
     }
 
     /**
      * Create a new Contest
      * @param contest
+     * @param userID
      */
-    public create(contest: IContest): Promise<InsightResponse> {
+    public create(contest: IContest, userID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
 
             let startDate = new Date(contest.startDateYear, contest.startDateMonth - 1, contest.startDateDay, contest.startTimeHour, contest.startTimeMinute);
             let endDate = new Date(contest.endDateYear, contest.endDateMonth - 1, contest.endDateDay, contest.endTimeHour, contest.endTimeMinute);
-            let duration: string = super.duration(startDate, endDate);
+            let duration: string = this.duration(startDate, endDate);
 
             let new_contest: Contests = {
                 name: contest.name,
@@ -54,7 +57,113 @@ export class IndividualContestService extends ContestsService {
             
 
             try {
+                let isValid: boolean = await this.isValidDate(startDate, endDate);
+                if (!isValid) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Start date and End date are not valid"
+                        }
+                    });
+                }
+                let user: Users = await this.users.findById(userID).exec();
                 let createdContest = new this.contests(new_contest);
+                createdContest.users.push(user._id);
+                await createdContest.save();
+                let tracker: Trackers;
+
+                tracker = {
+                    country: user.country,
+                    solvedCount: 0,
+                    penalty: 0,
+                    problemsSolved: [],
+                    problemsUnsolved: [],
+                    contestant: user._id,
+                    contestants: null,
+                    contestID: createdContest._id
+                };
+
+                let createTracker = new this.trackers(tracker);
+                await createTracker.save();
+
+                let standing: Standings = {
+                    trackers: [createTracker],
+                    contestID: createdContest._id
+                };
+
+                let createStanding = new this.standings(standing);
+                await createStanding.save();
+
+                createdContest.standings = createStanding._id;
+                await createdContest.save();
+
+                let saveUser = new this.users(user);
+                saveUser.contests.push(createdContest._id);
+                await saveUser.save();
+
+                return resolve({
+                    code: HTTPStatusCodes.CREATED,
+                    body: {
+                        result: createdContest
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: err
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Create a new group contest
+     * @param contest
+     * @param groupID
+     * @param userID
+     */
+    public createGroupContest(contest: IContest, groupID: string, userID: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+
+            let startDate = new Date(contest.startDateYear, contest.startDateMonth - 1, contest.startDateDay, contest.startTimeHour, contest.startTimeMinute);
+            let endDate = new Date(contest.endDateYear, contest.endDateMonth - 1, contest.endDateDay, contest.endTimeHour, contest.endTimeMinute);
+            let duration: string = this.duration(startDate, endDate);
+
+            let new_contest: Contests = {
+                name: contest.name,
+                startDate: startDate,
+                endDate: endDate,
+                duration: duration,
+                owner: contest.owner,
+                access: contest.access,
+                type: ContestType.INDIVIDUAL,
+                problems: [],
+                users: [],
+                teams: [],
+                submissions: [],
+                standings: null
+            };
+            let group: Groups;
+
+            try {
+                let isValid: boolean = await this.isValidDate(startDate, endDate);
+                if (!isValid) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Start date and End date are not valid"
+                        }
+                    });
+                }
+                let user: Users = await this.users.findById(userID).exec();
+                group = await this.groups.findById(groupID).exec();
+
+                let createdContest = new this.contests(new_contest);
+                createdContest.users.push(user._id);
                 await createdContest.save();
 
                 let standing: Standings = {
@@ -68,6 +177,14 @@ export class IndividualContestService extends ContestsService {
                 createdContest.standings = createStanding._id;
                 await createdContest.save();
 
+                let saveGroup = new this.groups(group);
+                saveGroup.contests.push(createdContest._id);
+                await saveGroup.save();
+
+                let saveUser = new this.users(user);
+                saveUser.contests.push(createdContest._id);
+                await saveUser.save();
+
                 return resolve({
                     code: HTTPStatusCodes.CREATED,
                     body: {
@@ -79,7 +196,7 @@ export class IndividualContestService extends ContestsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: "Couldn't create the contest"
+                        name: err
                     }
                 });
             }
@@ -214,7 +331,7 @@ export class IndividualContestService extends ContestsService {
     }
 
     /**
-     * @description register a user or a team to the contest
+     * @description register a user to the contest
      * @param contestID 
      * @param userID
      */
@@ -236,6 +353,15 @@ export class IndividualContestService extends ContestsService {
                         }
                     });
                 }
+                if (contest.type != ContestType.INDIVIDUAL) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "This is not an individual contest"
+                        }
+                    });
+                }
+
                 user = await this.userExists(userID);
 
                 if (!user) {
@@ -246,8 +372,8 @@ export class IndividualContestService extends ContestsService {
                         }
                     });
                 }
-                let date = new Date();
-                if (contest.endDate < date) {
+                
+                if (contest.endDate.getTime() < Date.now()) {
                     return reject({
                         code: HTTPStatusCodes.FORBIDDEN,
                         body: {
@@ -255,6 +381,16 @@ export class IndividualContestService extends ContestsService {
                         }
                     });
                 }
+                let isRegistered: boolean = await this.isUserAlreadyRegistered(user, contestID);
+                if (isRegistered) {
+                    return reject({
+                        code: HTTPStatusCodes.CONFLICT,
+                        body: {
+                            name: "User already registered to the contest"
+                        }
+                    });
+                }
+
                 standing = await this.standings.findOne({contestID: contest._id}).exec();
 
                 tracker = {
@@ -272,7 +408,7 @@ export class IndividualContestService extends ContestsService {
                 await createTracker.save();
 
                 let saveStanding = new this.standings(standing);
-                saveStanding.trackers.push(tracker._id);
+                saveStanding.trackers.push(createTracker._id);
                 await saveStanding.save();
 
                 let saveContest = new this.contests(contest);
@@ -338,6 +474,27 @@ export class IndividualContestService extends ContestsService {
     }
 
     /**
+     * Verify if the user is already registered to the contest
+     * so that he(she) cannot register more than once
+     * @param user 
+     * @param contestID 
+     */
+    private isUserAlreadyRegistered(user: Users, contestID: string): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            let contests: any[] = user.contests;
+            let isRegistered = false;
+
+            for (let i = 0; i < contests.length; i++) {
+                if (contests[i] == contestID) {
+                    isRegistered = true;
+                    break;
+                }
+            }
+            return resolve(isRegistered);
+        });
+    }
+
+    /**
      * @description unregister a user or a team from the contest
      * @param contestID 
      * @param userID
@@ -351,12 +508,21 @@ export class IndividualContestService extends ContestsService {
             let standing: Standings;
 
             try {
+                let admin = await this.isAdmin(contestID, userID);
                 contest = await this.contestExists(contestID);
                 if (!contest) {
                     return reject({
                         code: HTTPStatusCodes.NOT_FOUND,
                         body: {
                             name: "CONTEST ID Not Found"
+                        }
+                    });
+                }
+                if (contest.type != ContestType.INDIVIDUAL) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "This is not an individual contest"
                         }
                     });
                 }
@@ -372,23 +538,27 @@ export class IndividualContestService extends ContestsService {
                 }
                 tracker = await this.trackers.findOneAndRemove({contestID: contestID, contestant: user._id}).exec();
 
-                standing = await this.standings.findOneAndUpdate(
-                    {contestID: contest._id},
-                    {$pull: {trackers: {_id: tracker._id}}}
-                ).exec();
+                standing = await this.standings.findOne({contestID: contest._id}).exec();
 
-                user = await this.users.findByIdAndUpdate(userID,
-                    {$pull: {contests: {_id: contestID}}}
-                    ).exec();
+                let saveStanding = new this.standings(standing);
+                let saveUser = new this.users(user);
+                let saveContest = new this.contests(contest);
 
-                contest = await this.contests.findByIdAndUpdate(contestID,
-                    {$pull: {users: {_id: userID}}}
-                    ).exec();
+                saveStanding.trackers = saveStanding.trackers.filter((track: string) => track != tracker._id);
+                await saveStanding.save();
+
+                if (!admin) {
+                    saveUser.contests = saveUser.contests.filter((cont: string) => cont != contestID);
+                    await saveUser.save();
+                }
+
+                saveContest.users = saveContest.users.filter((us: string) => us != userID);
+                await saveContest.save();
 
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contest
+                        result: saveContest
                     }
                 });
                 
@@ -419,9 +589,21 @@ export class IndividualContestService extends ContestsService {
                                              .populate("users")
                                              .populate("problems")
                                              .exec();
-                await this.query(contest);
 
-                standing = await this.standings.findOne({contestID: contest._id})
+                let shouldBeUpdated: boolean = await this.shouldUpdate(contest.startDate, contest.endDate);
+
+                if (!shouldBeUpdated) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_MODIFIED,
+                        body: {
+                            name: "Contest is either not started yet or ended"
+                        }
+                    });
+                }
+
+                await this.queryProblems(contest);
+
+                standing = await this.standings.findById(contest.standings)
                                                .populate("trackers")
                                                .exec();
                 return resolve({
@@ -433,7 +615,7 @@ export class IndividualContestService extends ContestsService {
             }
             catch(err) {
                 return reject({
-                    code: HTTPStatusCodes.OK,
+                    code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
                         name: err
                     }
@@ -443,66 +625,146 @@ export class IndividualContestService extends ContestsService {
     }
 
     /**
-     * @description iterate over each problem and each user to update the standing
+     * @description iterate over each problem of the contest
      * @param contest 
      */
-    private query(contest: Contests): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            let plateform: Plateform;
-            let tracker: Trackers;
+    private queryProblems(contest: Contests): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
 
-            contest.problems.forEach((problem: Problems) => {
-                contest.users.forEach(async (user: Users) => {
-                    const name: string = problem.name;
-                    plateform = this.plateformBuilder.createPlateform(name);
-                    let result: InsightResponse;
-                    let statusFiltered: any[];
-
-                    try {
-                        result = await plateform.updateContest(contest, user, problem);
-                        statusFiltered = result.body.result;
-                        statusFiltered.forEach(async (sub) => {
-                            let submission: Submissions = await plateform.getSubmission(sub);
-                            if (problem.problemID == submission.problemID) {
-                                let new_sub: Submissions = await this.submissions.findOne(
-                                    {
-                                        problemID: submission.problemID,
-                                        OJ: submission.OJ,
-                                        submissionID: submission.submissionID
-                                    }
-                                ).exec();
-                                if (!new_sub) {
-                                    submission.problemLink = problem.link;
-                                    submission.user = user._id;
-                                    let createSubmission = new this.submissions(submission);
-                                    await createSubmission.save();
-                                    tracker = await this.trackers.findOne({
-                                        contestant: user._id,
-                                        contestID: contest._id
-                                    }).exec();
-                                    let saveTracker = new this.trackers(tracker);
-                                    if (submission.verdict != "ACCEPTED") {
-                                        saveTracker.problemsUnsolved.push(problem._id);
-                                    }
-                                    else {
-                                        let diff = (submission.submissionTime.getTime() - contest.startDate.getTime()) / 6000;
-                                        saveTracker.penalty += diff;
-                                        saveTracker.solvedCount += 1;
-                                        saveTracker.problemsSolved.push(problem._id);
-                                        saveTracker.problemsUnsolved = saveTracker.problemsUnsolved.filter((pr) => problem._id != pr);
-                                    }
-                                    await saveTracker.save();
-                                }
-                            }
-                        });
-                    }
-                    catch(err) {
-                        reject(err);
-                    }
-                });
-            });
-            return resolve();
+            try {
+                console.log('INSIDE QUERY PROBLEMS');
+                for (let i = 0; i < contest.problems.length; i++) {
+                    console.log("problem (", i, ") ", contest.problems[i]);
+                    await this.queryUsers(contest, contest.problems[i]);
+                }
+                return resolve();
+            }
+            catch (err) {
+                return reject(err);
+            }
         });
     }
 
+    /**
+     * @description iterate over each user to see if they solved (or tried to solve) a problem 
+     * @param problem 
+     * @param contest
+     */
+    private queryUsers(contest: Contests, problem: any): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            let plateform: Plateform;
+            const name: string = problem.plateform;
+            plateform = this.plateformBuilder.createPlateform(name);
+            let result: InsightResponse;
+            let statusFiltered: any[];
+            try {
+                console.log('INSIDE QUERY USERS');
+                for (let i = 0; i < contest.users.length; i++) {
+                    let user: any = contest.users[i];
+                    result = await plateform.updateContest(contest, user, problem);
+                    console.log("user (", i, ") ", result);
+                    statusFiltered = result.body.result;
+                    await this.querySubmissions(contest, problem, user, statusFiltered, plateform);
+                }
+                return resolve();
+            }
+            catch (err) {
+                console.log("ERROR: ", err);
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description iterate over all user submissions during the contest and check the verdict
+     * @param contest 
+     * @param problem 
+     * @param user 
+     * @param status 
+     */
+    private querySubmissions(contest: Contests, problem: any, user: any, status: any[], plateform: Plateform): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                console.log('INSIDE QUERY SUBMISSIONS');
+                for (let i = 0; i < status.length; i++) {
+                    await this.getSubmission(contest, user, problem, status[i], plateform);
+                }
+                return resolve();
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description retrieve a specific submission from the specified platform
+     * @param contest 
+     * @param user 
+     * @param problem 
+     * @param sub 
+     */
+    private getSubmission(contest: Contests, user: any, problem: any, sub: any, platform: Plateform): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            let tracker: Trackers;
+
+            try {
+                let submission: Submissions = await platform.getSubmission(sub);
+                if (problem.problemID == submission.problemID) {
+                    let new_sub: Submissions = await this.submissions.findOne(
+                        {
+                            problemID: submission.problemID,
+                            OJ: submission.OJ,
+                            submissionID: submission.submissionID
+                        }
+                    ).exec();
+                    if (!new_sub) {
+                        submission.problemLink = problem.link;
+                        submission.user = user._id;
+                        
+                        
+                        tracker = await this.trackers.findOne({
+                            contestant: user._id,
+                            contestID: contest._id
+                        }).exec();
+                        let saveTracker = new this.trackers(tracker);
+                        for (let i = 0; i < saveTracker.problemsSolved.length; i++) {
+                            let prblm: string = saveTracker.problemsSolved[i] + "";
+                            console.log("SOLVED AND UNSOLVED: ", prblm, " ", problem._id);
+                            if (prblm == (problem._id + "")) {
+                                console.log("INSIDE");
+                                return resolve();
+                            }
+                        }
+                        let shouldSave: boolean = true;
+                        for (let i = 0; i < saveTracker.problemsUnsolved.length; i++) {
+                            let prblm: string = saveTracker.problemsUnsolved[i] + "";
+                            if (prblm == (problem._id + "")) {
+                                shouldSave = false;
+                            }
+                        }
+                        let createSubmission = new this.submissions(submission);
+                        await createSubmission.save();
+                        if (submission.verdict != "ACCEPTED") {
+                            if (shouldSave) {
+                                saveTracker.problemsUnsolved.push(problem._id);
+                            }
+                        }
+                        else {
+                            let diff = (submission.submissionTime.getTime() - contest.startDate.getTime()) / 6000;
+                            saveTracker.penalty += Math.round(diff);
+                            saveTracker.solvedCount += 1;
+                            saveTracker.problemsSolved.push(problem._id);
+                            saveTracker.problemsUnsolved = saveTracker.problemsUnsolved.filter((pr: string) => pr != problem._id);
+                        }
+                        await saveTracker.save();
+                    }
+                }
+                return resolve();
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    }
 }

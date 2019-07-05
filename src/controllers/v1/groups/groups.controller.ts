@@ -15,16 +15,21 @@ import {
 } from "@tsed/common";
 import * as Express from "express";
 import { HTTPStatusCodes } from "../../../util/httpCode";
-import { InsightResponse } from "../../../interfaces/InterfaceFacade";
+import { InsightResponse, ContestType, AccessType, IContest } from "../../../interfaces/InterfaceFacade";
 import {Summary} from "@tsed/swagger";
 import { Groups } from "../../../models/Groups";
 import { GroupsService } from "../../../services/group/Groups.service";
+import ContestBuilderService from "../../../services/contest/ContestBuilder.service";
+import { ContestsService } from "../../../services/contest/Contests.service";
+import { Contests } from "../../../models/contests/Contests";
 
 
 @Controller("/groups")
 export class GroupsCtrl {
 
-    constructor(private groups: GroupsService) {}
+    constructor(private groups: GroupsService,
+                private contestBuilder: ContestBuilderService,
+                private contestService: ContestsService) {}
 
     @Get("/")
     @Summary("Get all groups that are public")
@@ -267,6 +272,84 @@ export class GroupsCtrl {
     }
 
     /**
+     * End-point to create contests for a group
+     * @param name name of the contest
+     * @param startDateYear start date year of the contest
+     * @param startDateMonth start date month of the contest
+     * @param startDateDay start date day of the contest
+     * @param endDateYear end date year of the contest
+     * @param endDateMonth end date month of the contest
+     * @param endDateDay end date day of the contest
+     * @param startTimeHour start time hour of the contest
+     * @param startTimeMinute start time minute of the contest
+     * @param endTimeHour end time hour of the contest
+     * @param endTimeMinute end time minute of the contest
+     * @param type individual or team contest
+     */
+    @Post("/:id/createcontest")
+    @Summary("Create a contest")
+    @Authenticated()
+    async createContest(@Required() @BodyParams("name") name: string,
+                 @Required() @BodyParams("startDateYear") startDateYear: number,
+                 @Required() @BodyParams("startDateMonth") startDateMonth: number,
+                 @Required() @BodyParams("startDateDay") startDateDay: number,
+                 @Required() @BodyParams("endDateYear") endDateYear: number,
+                 @Required() @BodyParams("endDateMonth") endDateMonth: number,
+                 @Required() @BodyParams("endDateDay") endDateDay: number,
+                 @BodyParams("startTimeHour") startTimeHour: number,
+                 @BodyParams("startTimeMinute") startTimeMinute: number,
+                 @BodyParams("endTimeHour") endTimeHour: number,
+                 @BodyParams("endTimeMinute") endTimeMinute: number,
+                 @Required() @BodyParams("type") type: string,
+                 @Required() @PathParams("id") groupID: string,
+                 @Req() request: Express.Request,
+                 @Res() response: Express.Response) {
+        
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+            let contestType: ContestType;
+            if (type.toUpperCase() == "TEAM") {
+                contestType = ContestType.TEAM;
+            }
+            else {
+                contestType = ContestType.INDIVIDUAL;
+            }
+            
+            let contest: IContest = {
+                name: name,
+                startDateYear: startDateYear,
+                startDateMonth: startDateMonth,
+                startDateDay: startDateDay,
+                endDateYear: endDateYear,
+                endDateMonth: endDateMonth,
+                endDateDay: endDateDay,
+                startTimeHour: startTimeHour,
+                startTimeMinute: startTimeMinute,
+                endTimeHour: endTimeHour,
+                endTimeMinute: endTimeMinute,
+                access: AccessType.PRIVATE,
+                owner: request.user._id
+            };
+            let contests: ContestsService = this.contestBuilder.createContest(contestType);
+
+            try {
+                result = await contests.createGroupContest(contest, groupID, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
      * Contests organized by this group
      * @param groupID 
      * @param request 
@@ -327,11 +410,11 @@ export class GroupsCtrl {
         });
     }
 
-    @Delete("/:id/members/:uid")
+    @Delete("/:id/members/")
     @Summary("Delete a user from the group")
     @Authenticated()
     async deleteGroupMember(@Required() @PathParams("id") groupID: string,
-                           @Required() @PathParams("uid") userID: string,
+                           @Required() @BodyParams("uid") userID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
         return new Promise<Groups>(async (resolve, reject) => {

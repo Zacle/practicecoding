@@ -6,10 +6,11 @@ import { Standings } from "../../models/contests/Standings";
 import { Submissions } from "../../models/contests/Submissions";
 import { Trackers } from "../../models/contests/Trackers";
 import { Users } from "../../models/Users";
+import { Problems } from "../../models/Problems";
 import { InsightResponse, IContest, AccessType, ContestType } from "../../interfaces/InterfaceFacade";
 import PlateformBuilding from "../plateformBuilder/PlateformBuilding.service";
 import { Plateform } from "../plateform/Plateform.service";
-
+import { Groups } from "../../models/Groups";
 
 @Service()
 export abstract class ContestsService {
@@ -19,13 +20,23 @@ export abstract class ContestsService {
                 @Inject(Standings) protected standings: MongooseModel<Standings>,
                 @Inject(Users) protected users: MongooseModel<Users>,
                 @Inject(Trackers) protected trackers: MongooseModel<Trackers>,
+                @Inject(Groups) protected groups: MongooseModel<Groups>,
                 protected plateformBuilder: PlateformBuilding) {}
 
     /**
      * Create a new Contest
      * @param contest
+     * @param id
      */
-    public abstract async create(contest: IContest): Promise<InsightResponse>;
+    public abstract async create(contest: IContest, id?: string): Promise<InsightResponse>;
+
+    /**
+     * Create a new group contest
+     * @param contest
+     * @param id
+     * @param groupID
+     */
+    public abstract async createGroupContest(contest: IContest, groupID: string, id?: string): Promise<InsightResponse>;
 
     /**
      * @description computes the duration of the contest
@@ -55,23 +66,63 @@ export abstract class ContestsService {
         let duration: string = "";
         if (days > 0) {
             if (days == 1)
-                duration += days + " day, ";
+                duration += days + " day";
             else
-                duration += days + " days, ";
+                duration += days + " days";
         }
         if (hours > 0) {
+            if (days > 0)
+                duration += ", ";
             if (hours == 1) 
-                duration += hours + " hour and ";
+                duration += hours + " hour";
             else
-                duration += hours + " hours and ";
+                duration +=  hours + " hours";
         }
-        if (minutes < 2)
-            duration += minutes + " minute";
-        else
-            duration += minutes + " minutes";
+        if (minutes > 0) {
+            if (days > 0 || hours > 0)
+                duration += " and ";
+            if (minutes < 2)
+                duration += minutes + " minute";
+            else
+                duration += minutes + " minutes";
+        }
 
         return duration;
 
+    }
+
+    /**
+     * @description Checks the validity of the dates
+     * @param startDate 
+     * @param endDate 
+     */
+    protected isValidDate(startDate: Date, endDate: Date): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            if (startDate.getTime() > endDate.getTime()) {
+                return resolve(false);
+            }
+            if (startDate.getTime() < Date.now()) {
+                return resolve(false);
+            }
+            return resolve(true);
+        });
+    }
+
+    /**
+     * @description determines if the contest standing should be updated
+     * @param startDate 
+     * @param endDate 
+     */
+    protected shouldUpdate(startDate: Date, endDate: Date): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            if (startDate.getTime() > Date.now()) {
+                return resolve(false);
+            }
+            if (endDate.getTime() < Date.now()) {
+                return resolve(false);
+            }
+            return resolve(true);
+        });
     }
 
     /**
@@ -198,7 +249,7 @@ export abstract class ContestsService {
             let contests: Users;
 
             try {
-                contests = await this.users.findById({username: username})
+                contests = await this.users.findOne({username: username})
                                            .populate("contests")
                                            .exec();
 
@@ -234,6 +285,15 @@ export abstract class ContestsService {
                                              .populate("owner")
                                              .exec();
 
+                if (!contest) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "Contest ID not found"
+                        }
+                    });
+                }
+
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
@@ -256,14 +316,14 @@ export abstract class ContestsService {
      * Update contest
      * @param Icontest 
      * @param contestID 
+     * @param access
      */
-    async updateContest(Icontest: IContest, contestID: string): Promise<InsightResponse> {
+    async updateContest(Icontest: IContest, contestID: string, access: boolean): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
             let startDate = new Date(Icontest.startDateYear, Icontest.startDateMonth - 1, Icontest.startDateDay, Icontest.startTimeHour, Icontest.startTimeMinute);
             let endDate = new Date(Icontest.endDateYear, Icontest.endDateMonth - 1, Icontest.endDateDay, Icontest.endTimeHour, Icontest.endTimeMinute);
-            let duration: string = this.duration(startDate, endDate);
 
             try {
                 const admin: boolean = await this.isAdmin(contestID, Icontest.owner);
@@ -276,10 +336,24 @@ export abstract class ContestsService {
                     });
                 }
                 contest = await this.contests.findById(contestID).exec();
-                contest.startDate = startDate;
-                contest.endDate = endDate;
-                contest.duration = duration;
-                contest.name = name;
+                let isValid: boolean = await this.isValidStartDate(startDate);
+                if (isValid) {
+                    contest.startDate = startDate;
+                }
+                else {
+                    startDate = contest.startDate;
+                }
+                isValid = await this.isValidEndDate(startDate, endDate);
+                if (isValid) {
+                    contest.endDate = endDate;
+                }
+                else {
+                    endDate = contest.endDate;
+                } 
+                contest.duration = this.duration(startDate, endDate);
+                if (access) {
+                    contest.access = Icontest.access;
+                }
 
                 const saveContest = new this.contests(contest);
                 await saveContest.save();
@@ -304,11 +378,38 @@ export abstract class ContestsService {
     }
 
     /**
+     * @description verify if the start date can be updated
+     * @param date 
+     */
+    private isValidStartDate(date: Date): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            if (date.getTime() < Date.now()) {
+                return resolve(false);
+            }
+            return resolve(true);
+        });
+    }
+
+    /**
+     * @description verify if the end date can be updated
+     * @param startDate 
+     * @param endDate 
+     */
+    private isValidEndDate(startDate: Date, endDate: Date): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            if (endDate.getTime() < startDate.getTime()) {
+                return resolve(false);
+            }
+            return resolve(true);
+        });
+    }
+
+    /**
      * Verify if the user is the contest owner
      * @param contestID 
      * @param userID 
      */
-    private async isAdmin(contestID: string, userID: string): Promise<boolean> {
+    protected async isAdmin(contestID: string, userID: string): Promise<boolean> {
         
         return new Promise<boolean>(async (resolve, reject) => {
             let contest: Contests;
@@ -462,11 +563,12 @@ export abstract class ContestsService {
      * @param problemID 
      * @param userID 
      */
-    async addSpecificProblem(contestID: string, problem: any, userID: string): Promise<InsightResponse> {
+    async addSpecificProblem(contestID: string, problem: Problems, userID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let plateform: Plateform;
             let result: InsightResponse;
+            let contest: Contests;
 
             try {
                 let admin = await this.isAdmin(contestID, userID);
@@ -478,15 +580,69 @@ export abstract class ContestsService {
                         }
                     });
                 }
+                contest = await this.contests.findById(contestID).exec();
+                let contestOver: boolean = await this.isContestOver(contest);
+                if (contestOver) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Contest is over"
+                        }
+                    });
+                }
+                let exists: boolean = await this.problemExists(contest, problem);
+                if (exists) {
+                    return reject({
+                        code: HTTPStatusCodes.CONFLICT,
+                        body: {
+                            name: "Problem already exist"
+                        }
+                    });
+                }
                 plateform = this.plateformBuilder.createPlateform(problem.plateform);
 
-                result = await plateform.addSpecificProblem(contestID, problem._id);
+                result = await plateform.addSpecificProblem(contestID, problem);
 
                 return resolve(result);
             }
             catch (err) {
                 result = err;
                 return reject(result);
+            }
+        });
+    }
+
+    /**
+     * verify if this problem already exists before adding it
+     * @param contest 
+     * @param problem 
+     */
+    private problemExists(contest: Contests, problem: Problems): Promise<boolean> {
+        return new Promise<boolean>((resolve, reject) => {
+            
+            for (let i = 0; i < contest.problems.length; i++) {
+                if (contest.problems[i] == problem._id)
+                    return resolve(true);
+            }
+            return resolve(false);
+        });
+    }
+
+    /**
+     * verify if the contest is over prior to modify problems
+     * @param date 
+     */
+    private isContestOver(contest: Contests): Promise<boolean> {
+        return new Promise<boolean>(async (resolve) => {
+            
+            try {
+                if (contest.endDate.getTime() < Date.now()) {
+                    resolve(true);
+                }
+                resolve(false);
+            }
+            catch (err) {
+                resolve(true);
             }
         });
     }
@@ -502,6 +658,7 @@ export abstract class ContestsService {
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let result: InsightResponse;
             let plateform: Plateform;
+            let contest: Contests;
 
             try {
                 let admin = await this.isAdmin(contestID, userID);
@@ -510,6 +667,16 @@ export abstract class ContestsService {
                         code: HTTPStatusCodes.UNAUTHORIZED,
                         body: {
                             name: "You're not authorized to add problems"
+                        }
+                    });
+                }
+                contest = await this.contests.findById(contestID).exec();
+                let contestOver: boolean = await this.isContestOver(contest);
+                if (contestOver) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Contest is over"
                         }
                     });
                 }
@@ -535,6 +702,7 @@ export abstract class ContestsService {
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let result: InsightResponse;
             let plateform: Plateform;
+            let contest: Contests;
 
             try {
                 let admin = await this.isAdmin(contestID, userID);
@@ -543,6 +711,16 @@ export abstract class ContestsService {
                         code: HTTPStatusCodes.UNAUTHORIZED,
                         body: {
                             name: "You're not authorized to add problems"
+                        }
+                    });
+                }
+                contest = await this.contests.findById(contestID).exec();
+                let contestOver: boolean = await this.isContestOver(contest);
+                if (contestOver) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Contest is over"
                         }
                     });
                 }
@@ -580,6 +758,15 @@ export abstract class ContestsService {
                     });
                 }
                 contest = await this.contests.findById(contestID).exec();
+                let contestOver: boolean = await this.isContestOver(contest);
+                if (contestOver) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Contest is over"
+                        }
+                    });
+                }
                 let saveContest = new this.contests(contest);
                 existing = await this.contests.findById(existingID).exec();
 
@@ -616,6 +803,7 @@ export abstract class ContestsService {
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let result: InsightResponse;
             let plateform: Plateform;
+            let contest: Contests;
 
             try {
                 let admin = await this.isAdmin(contestID, userID);
@@ -624,6 +812,16 @@ export abstract class ContestsService {
                         code: HTTPStatusCodes.UNAUTHORIZED,
                         body: {
                             name: "You're not authorized to add problems"
+                        }
+                    });
+                }
+                contest = await this.contests.findById(contestID).exec();
+                let contestOver: boolean = await this.isContestOver(contest);
+                if (contestOver) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Contest is over"
                         }
                     });
                 }
@@ -639,7 +837,7 @@ export abstract class ContestsService {
     }
 
     /**
-     * @description remove a problem to the contest
+     * @description remove a problem from the contest
      * @param contestID 
      * @param problemID 
      * @param userID 
@@ -659,14 +857,24 @@ export abstract class ContestsService {
                         }
                     });
                 }
-                contest = await this.contests.findByIdAndUpdate(
-                    contestID,
-                    {$pull: { problems: { _id: problemID } } }
-                ).exec();
+                contest = await this.contests.findById(contestID).exec();
+                let contestOver: boolean = await this.isContestOver(contest);
+                if (contestOver) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Contest is over"
+                        }
+                    });
+                }
+                let saveContest = new this.contests(contest);
+                saveContest.problems = saveContest.problems.filter((id: string) => id != problemID);
+                await saveContest.save();
+
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contest
+                        result: saveContest
                     }
                 });
             }

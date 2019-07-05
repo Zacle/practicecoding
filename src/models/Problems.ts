@@ -13,27 +13,22 @@ export class Problems {
     _id?: string;
 
     @Property()
-    @Required()
-    @Allow("")
     @Description("ID of the problem")
-    problemID: string;
+    problemID?: string;
 
     @Property()
     @Description("Contest ID of the problem")
-    contestID?: number;
+    contestID: number;
 
     @Property()
-    @Required()
     @Description("Name of the problem")
     name: string;
 
     @Property()
-    @Required()
     @Description("The plateform name")
     plateform: string;
 
     @Property()
-    @Required()
     @Description("The URI of the problem")
     link: string;
 

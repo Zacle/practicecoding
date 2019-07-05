@@ -5,11 +5,12 @@ import { Contests } from "../../models/contests/Contests";
 import { Standings } from "../../models/contests/Standings";
 import { Submissions } from "../../models/contests/Submissions";
 import { Trackers } from "../../models/contests/Trackers";
+import { Groups } from "../../models/Groups";
 import { InsightResponse, AccessType, IContest, ContestType } from "../../interfaces/InterfaceFacade";
 import { ContestsService } from "./Contests.service";
 import { Users } from "../../models/Users";
 import PlateformBuilding from "../../services/plateformBuilder/PlateformBuilding.service";
-import { Teams } from "src/models/Teams";
+import { Teams } from "../../models/Teams";
 import { Plateform } from "../plateform/Plateform.service";
 import { Problems } from "../../models/Problems";
 
@@ -23,22 +24,24 @@ export class TeamContestService extends ContestsService {
                 @Inject(Users) protected users: MongooseModel<Users>,
                 @Inject(Teams) protected teams: MongooseModel<Teams>,
                 @Inject(Trackers) protected trackers: MongooseModel<Trackers>,
+                @Inject(Groups) protected groups: MongooseModel<Groups>,
                 protected plateformBuilder: PlateformBuilding) {
 
-                super(contests, submissions, standings, users, trackers, plateformBuilder);
+                super(contests, submissions, standings, users, trackers, groups, plateformBuilder);
     }
 
     /**
      * Create a new Contest
      * @param contest
+     * @param userID
      */
-    public create(contest: IContest): Promise<InsightResponse> {
+    public create(contest: IContest, userID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
 
             let startDate = new Date(contest.startDateYear, contest.startDateMonth - 1, contest.startDateDay, contest.startTimeHour, contest.startTimeMinute);
             let endDate = new Date(contest.endDateYear, contest.endDateMonth - 1, contest.endDateDay, contest.endTimeHour, contest.endTimeMinute);
-            let duration: string = super.duration(startDate, endDate);
+            let duration: string = this.duration(startDate, endDate);
 
             let new_contest: Contests = {
                 name: contest.name,
@@ -57,6 +60,16 @@ export class TeamContestService extends ContestsService {
             
 
             try {
+                let isValid: boolean = await this.isValidDate(startDate, endDate);
+                if (!isValid) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Start date and End date are not valid"
+                        }
+                    });
+                }
+                let user: Users = await this.users.findById(userID).exec();
                 let createdContest = new this.contests(new_contest);
                 await createdContest.save();
 
@@ -70,6 +83,10 @@ export class TeamContestService extends ContestsService {
 
                 createdContest.standings = createStanding._id;
                 await createdContest.save();
+
+                let saveUser = new this.users(user);
+                saveUser.contests.push(createdContest._id);
+                await saveUser.save();
 
                 resolve({
                     code: HTTPStatusCodes.CREATED,
@@ -87,7 +104,90 @@ export class TeamContestService extends ContestsService {
                 });
             }
         });
-    }    
+    }
+    
+    /**
+     * Create a new group contest
+     * @param contest
+     * @param groupID
+     * @param userID
+     */
+    public createGroupContest(contest: IContest, groupID: string, userID: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+
+            let startDate = new Date(contest.startDateYear, contest.startDateMonth - 1, contest.startDateDay, contest.startTimeHour, contest.startTimeMinute);
+            let endDate = new Date(contest.endDateYear, contest.endDateMonth - 1, contest.endDateDay, contest.endTimeHour, contest.endTimeMinute);
+            let duration: string = this.duration(startDate, endDate);
+
+            let new_contest: Contests = {
+                name: contest.name,
+                startDate: startDate,
+                endDate: endDate,
+                duration: duration,
+                owner: contest.owner,
+                access: contest.access,
+                type: ContestType.TEAM,
+                problems: [],
+                users: [],
+                teams: [],
+                submissions: [],
+                standings: null
+            };
+            let group: Groups;
+
+            try {
+                let isValid: boolean = await this.isValidDate(startDate, endDate);
+                if (!isValid) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "Start date and End date are not valid"
+                        }
+                    });
+                }
+                let user: Users = await this.users.findById(userID).exec();
+                group = await this.groups.findById(groupID).exec();
+
+                let createdContest = new this.contests(new_contest);
+                await createdContest.save();
+
+                let standing: Standings = {
+                    trackers: [],
+                    contestID: createdContest._id
+                };
+
+                let createStanding = new this.standings(standing);
+                await createStanding.save();
+
+                createdContest.standings = createStanding._id;
+                await createdContest.save();
+
+                let saveGroup = new this.groups(group);
+                saveGroup.contests.push(createdContest._id);
+                await saveGroup.save();
+
+                let saveUser = new this.users(user);
+                saveUser.contests.push(createdContest._id);
+                await saveUser.save();
+
+                resolve({
+                    code: HTTPStatusCodes.CREATED,
+                    body: {
+                        result: createdContest
+                    }
+                });
+            }
+            catch (err) {
+                reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't create the contest"
+                    }
+                });
+            }
+        });
+    }
     
     /**
      * @description return all submissions of this contest
@@ -235,6 +335,7 @@ export class TeamContestService extends ContestsService {
             let contest: Contests;
             let team: Teams;
             let tracker: Trackers;
+            let standing: Standings;
 
             try {
                 contest = await this.contestExists(contestID);
@@ -243,6 +344,15 @@ export class TeamContestService extends ContestsService {
                         code: HTTPStatusCodes.NOT_FOUND,
                         body: {
                             name: "CONTEST ID Not Found"
+                        }
+                    });
+                }
+
+                if (contest.type != ContestType.TEAM) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "This is not a team contest"
                         }
                     });
                 }
@@ -257,8 +367,8 @@ export class TeamContestService extends ContestsService {
                         }
                     });
                 }
-                let date = new Date();
-                if (contest.endDate < date) {
+                
+                if (contest.endDate.getTime() < Date.now()) {
                     return reject({
                         code: HTTPStatusCodes.FORBIDDEN,
                         body: {
@@ -266,6 +376,17 @@ export class TeamContestService extends ContestsService {
                         }
                     });
                 }
+                let isRegistered: boolean = await this.isTeamAlreadyRegistered(team, contestID);
+                if (isRegistered) {
+                    return reject({
+                        code: HTTPStatusCodes.CONFLICT,
+                        body: {
+                            name: "Team already registered to the contest"
+                        }
+                    });
+                }
+                standing = await this.standings.findOne({contestID: contest._id}).exec();
+
                 tracker = {
                     country: null,
                     solvedCount: 0,
@@ -277,7 +398,12 @@ export class TeamContestService extends ContestsService {
                     contestID: contest._id
                 };
 
-                await this.trackers.create(tracker);
+                let createTracker = new this.trackers(tracker);
+                await createTracker.save();
+
+                let saveStanding = new this.standings(standing);
+                saveStanding.trackers.push(createTracker._id);
+                await saveStanding.save();
 
                 let saveContest = new this.contests(contest);
                 saveContest.teams.push(team._id);
@@ -342,6 +468,27 @@ export class TeamContestService extends ContestsService {
     }
 
     /**
+     * Verify if the team is already registered to the contest
+     * so that it cannot register more than once
+     * @param team 
+     * @param contestID 
+     */
+    private isTeamAlreadyRegistered(team: Teams, contestID: string): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            let contests: any[] = team.contests;
+            let isRegistered = false;
+
+            for (let i = 0; i < contests.length; i++) {
+                if (contests[i] == contestID) {
+                    isRegistered = true;
+                    break;
+                }
+            }
+            return resolve(isRegistered);
+        });
+    }
+
+    /**
      * @description unregister a user or a team from the contest
      * @param contestID 
      * @param teamID
@@ -351,6 +498,8 @@ export class TeamContestService extends ContestsService {
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
             let team: Teams;
+            let tracker: Trackers;
+            let standing: Standings;
 
             try {
                 contest = await this.contestExists(contestID);
@@ -359,6 +508,14 @@ export class TeamContestService extends ContestsService {
                         code: HTTPStatusCodes.NOT_FOUND,
                         body: {
                             name: "CONTEST ID Not Found"
+                        }
+                    });
+                }
+                if (contest.type != ContestType.TEAM) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "This is not a team contest"
                         }
                     });
                 }
@@ -371,18 +528,27 @@ export class TeamContestService extends ContestsService {
                         }
                     });
                 }
-                team = await this.teams.findByIdAndUpdate(teamID,
-                    {$pull: {contests: {_id: contestID}}}
-                    ).exec();
+                tracker = await this.trackers.findOneAndRemove({contestID: contestID, contestants: team._id}).exec();
 
-                contest = await this.contests.findByIdAndUpdate(contestID,
-                    {$pull: {teams: {_id: teamID}}}
-                    ).exec();
+                standing = await this.standings.findOne({contestID: contest._id}).exec();
+
+                let saveStanding = new this.standings(standing);
+                let saveTeam = new this.teams(team);
+                let saveContest = new this.contests(contest);
+
+                saveStanding.trackers = saveStanding.trackers.filter((track: string) => track != tracker._id);
+                await saveStanding.save();
+
+                saveTeam.contests = saveTeam.contests.filter((cont: string) => cont != contestID);
+                await saveTeam.save();
+
+                saveContest.teams = saveContest.teams.filter((us: string) => us != teamID);
+                await saveContest.save();
 
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contest
+                        result: saveContest
                     }
                 });
             }
@@ -417,6 +583,17 @@ export class TeamContestService extends ContestsService {
                                              })
                                              .populate("problems")
                                              .exec();
+
+                let shouldBeUpdated: boolean = await this.shouldUpdate(contest.startDate, contest.endDate);
+
+                if (!shouldBeUpdated) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_MODIFIED,
+                        body: {
+                            name: "Contest is either not started yet or ended"
+                        }
+                    });
+                }
                 await this.query(contest);
 
                 standing = await this.standings.findOne({contestID: contest._id})

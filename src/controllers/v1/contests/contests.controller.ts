@@ -14,13 +14,13 @@ import {
     Put
 } from "@tsed/common";
 import * as Express from "express";
-import { HTTPStatusCodes } from "../../../util/httpCode";
 import { InsightResponse, ContestType, AccessType, IContest } from "../../../interfaces/InterfaceFacade";
 import {Summary} from "@tsed/swagger";
 import { Submissions } from "../../../models/contests/Submissions";
 import { Contests } from "../../../models/contests/Contests";
 import ContestBuilderService from "../../../services/contest/ContestBuilder.service";
 import { ContestsService } from "../../../services/contest/Contests.service";
+import { Problems } from "../../../models/Problems";
 
 /**
  * REST end-point for contests
@@ -80,6 +80,9 @@ export class ContestsCtrl {
             if (access.toUpperCase() == "PRIVATE") {
                 accessType = AccessType.PRIVATE;
             }
+            else {
+                accessType = AccessType.PUBLIC;
+            }
             let contest: IContest = {
                 name: name,
                 startDateYear: startDateYear,
@@ -98,7 +101,7 @@ export class ContestsCtrl {
             let contests: ContestsService = this.contestBuilder.createContest(contestType);
 
             try {
-                result = await contests.create(contest);
+                result = await contests.create(contest, request.user._id);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);
@@ -271,6 +274,7 @@ export class ContestsCtrl {
      * @param contestID 
      */
     @Put("/:id")
+    @Authenticated()
     @Summary("Update contest info")
     async updateContest(@BodyParams("startDateYear") startDateYear: number,
                         @BodyParams("startDateMonth") startDateMonth: number,
@@ -292,11 +296,18 @@ export class ContestsCtrl {
             let result: InsightResponse;
             let contestType: ContestType;
             let accessType: AccessType;
-            if (access.toUpperCase() == "PRIVATE") {
-                accessType = AccessType.PRIVATE;
+            let isAccess = false;
+            if (access) {
+                isAccess = true;
+                if (access.toUpperCase() == "PRIVATE") {
+                    accessType = AccessType.PRIVATE;
+                }
+                else {
+                    accessType = AccessType.PUBLIC;
+                }
             }
             let contest: IContest = {
-                name: name,
+                name: "",
                 startDateYear: startDateYear,
                 startDateMonth: startDateMonth,
                 startDateDay: startDateDay,
@@ -312,7 +323,7 @@ export class ContestsCtrl {
             };
 
             try {
-                result = await this.contestService.updateContest(contest, contestID);
+                result = await this.contestService.updateContest(contest, contestID, isAccess);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);
@@ -511,7 +522,7 @@ export class ContestsCtrl {
     @Summary("Add problems to the contest")
     @Authenticated()
     async addSpecificProblems(@Required() @PathParams("id") contestID: string,
-                      @Required() @BodyParams("problem") problem: any,
+                      @Required() @BodyParams("problem") problem: Problems,
                       @Req() request: Express.Request,
                       @Res() response: Express.Response) {
 
@@ -795,12 +806,11 @@ export class ContestsCtrl {
      * @param request 
      * @param response 
      */
-    @Delete("/:id/unregisterUser/:rid")
-    @MergeParams()
+    @Delete("/:id/unregisterUser")
     @Summary("Delete a contest registrant")
     @Authenticated()
     async unregisterUser(@Required() @PathParams("id") contestID: string,
-                           @Required() @PathParams("userID") userID: string,
+                           @Required() @BodyParams("userID") userID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
 
@@ -833,12 +843,12 @@ export class ContestsCtrl {
      * @param request 
      * @param response 
      */
-    @Delete("/:id/unregisterTeam/:rid")
+    @Delete("/:id/unregisterTeam")
     @MergeParams()
     @Summary("Delete a contest team")
     @Authenticated()
-    async unregisterteam(@Required() @PathParams("id") contestID: string,
-                           @Required() @PathParams("teamID") teamID: string,
+    async unregisterTeam(@Required() @PathParams("id") contestID: string,
+                           @Required() @BodyParams("teamID") teamID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
 

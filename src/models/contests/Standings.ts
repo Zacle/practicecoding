@@ -12,7 +12,7 @@ export class Standings {
 
     @Ref(Trackers)
     @Property()
-    @Description("Track user progress druring the contest")
+    @Description("Track user progress during the contest")
     trackers: Ref<Trackers>[];
 
     @Ref("Contests")

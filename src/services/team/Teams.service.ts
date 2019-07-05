@@ -209,7 +209,9 @@ export class TeamsService {
             let team: Teams;
             
             try {
-                team = await this.teams.findById(id, "-__v").exec();
+                team = await this.teams.findById(id, "-__v")
+                                       .populate("admin")                        
+                                       .exec();
 
                 if (team) {
                     return resolve({

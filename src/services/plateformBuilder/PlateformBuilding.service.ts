@@ -13,6 +13,8 @@ export default class PlateformBuilding {
                 private all: AllPlateforms) {}
 
     public createPlateform(typeOfPlateform: string): Plateform {
+
+        console.log("PLATEFORM BUILDING CALLED");
         
         if (typeOfPlateform == "Codeforces")
             return this.codeforces;

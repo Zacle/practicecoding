@@ -12,11 +12,11 @@ import {
     MergeParams,
     QueryParams
 } from "@tsed/common";
-import { Plateform, Codeforces } from "../../../services/plateform/Plateform.service";
+import { Plateform, AllPlateforms } from "../../../services/plateform/Plateform.service";
 import PlateformBuilding from "../../../services/plateformBuilder/PlateformBuilding.service";
 import { Summary } from "@tsed/swagger";
 import * as Express from "express";
-import { HTTPStatusCodes } from "../../../util/httpCode";
+import { Problems } from "../../../models/Problems";
 import { InsightResponse } from "../../../interfaces/InterfaceFacade";
 import { BadRequest } from "ts-httpexceptions";
 
@@ -26,30 +26,67 @@ import { BadRequest } from "ts-httpexceptions";
 @Controller("/problems")
 export class ProblemsCtrl {
 
-    constructor(private plateformB: PlateformBuilding) {}
+    constructor(private plateformB: PlateformBuilding, private allPlateforms: AllPlateforms) {}
 
     @Post("/")
-    @Summary("Get all problems from Codeforces, Live Archive, Uva and save them in the database")
+    @Summary("save all problems from Codeforces, Live Archive, Uva and save them in the database")
     @Authenticated({role: 'admin'})
     async save(
         @Req() request: Express.Request,
         @Res() response: Express.Response,
         @Next() next: Express.NextFunction
-    ): Promise<void> {
+    ): Promise<Problems> {
 
-        let plat: Plateform = this.plateformB.createPlateform("all");
+        return new Promise<Problems>(async (resolve, reject) => {
+            let plat: Plateform = this.plateformB.createPlateform("all");
 
-        let res: InsightResponse;
+            let res: InsightResponse;
+    
+            try {
+                res = await plat.getListOfProblems();
+                response.status(res.code);
+                response.setHeader('Content-Type', 'application/json');
+                response.json(res.body.result);
+                resolve(res.body.result);
+            }
+            catch(err) {
+                res = err;
+                response.status(res.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(res.body.name);
+                reject(res.body.name);
+            }
+        });
+    }
 
-        try {
-            res = await plat.getListOfProblems();
-            response.status(res.code);
-            response.setHeader('Content-Type', 'application/json');
-            response.json(res.body.result);
-        }
-        catch(err) {
-            throw new BadRequest(err);
-        }
+    @Get("/")
+    @Summary("get all problems from Codeforces, Live Archive, Uva and save them in the database")
+    @Authenticated({role: 'admin'})
+    async getAllProblems(
+        @Req() request: Express.Request,
+        @Res() response: Express.Response,
+        @Next() next: Express.NextFunction
+    ): Promise<Problems> {
+
+        return new Promise<Problems>(async (resolve, reject) => {
+
+            let res: InsightResponse;
+    
+            try {
+                res = await this.allPlateforms.getAllProblems();
+                response.status(res.code);
+                response.setHeader('Content-Type', 'application/json');
+                response.json(res.body.result);
+                resolve(res.body.result);
+            }
+            catch(err) {
+                res = err;
+                response.status(res.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(res.body.name);
+                reject(res.body.name);
+            }
+        });
     }
 
     @Get("/:key")

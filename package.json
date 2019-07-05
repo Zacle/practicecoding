@@ -8,7 +8,7 @@
   },
   "author": "Zacle",
   "scripts": {
-    "start": "npm run serve",
+    "start": "npm run build && npm run serve",
     "build": "npm run build-sass && npm run build-ts && npm run tslint && npm run build-test && npm run copy-static-assets",
     "serve": "node dist/src/server.js",
     "watch-node": "nodemon dist/src/server.js",
