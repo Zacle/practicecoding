@@ -632,9 +632,7 @@ export class IndividualContestService extends ContestsService {
         return new Promise<void>(async (resolve, reject) => {
 
             try {
-                console.log('INSIDE QUERY PROBLEMS');
                 for (let i = 0; i < contest.problems.length; i++) {
-                    console.log("problem (", i, ") ", contest.problems[i]);
                     await this.queryUsers(contest, contest.problems[i]);
                 }
                 return resolve();
@@ -722,7 +720,6 @@ export class IndividualContestService extends ContestsService {
                         submission.problemLink = problem.link;
                         submission.user = user._id;
                         
-                        
                         tracker = await this.trackers.findOne({
                             contestant: user._id,
                             contestID: contest._id
@@ -740,11 +737,15 @@ export class IndividualContestService extends ContestsService {
                         for (let i = 0; i < saveTracker.problemsUnsolved.length; i++) {
                             let prblm: string = saveTracker.problemsUnsolved[i] + "";
                             if (prblm == (problem._id + "")) {
+                                console.log("INSIDE");
                                 shouldSave = false;
                             }
                         }
                         let createSubmission = new this.submissions(submission);
                         await createSubmission.save();
+                        let saveContest = new this.contests(contest);
+                        saveContest.submissions.push(createSubmission._id);
+                        await saveContest.save();
                         if (submission.verdict != "ACCEPTED") {
                             if (shouldSave) {
                                 saveTracker.problemsUnsolved.push(problem._id);

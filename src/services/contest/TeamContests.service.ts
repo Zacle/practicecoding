@@ -594,7 +594,7 @@ export class TeamContestService extends ContestsService {
                         }
                     });
                 }
-                await this.query(contest);
+                await this.queryProblems(contest);
 
                 standing = await this.standings.findOne({contestID: contest._id})
                                                .populate("trackers")
@@ -618,67 +618,164 @@ export class TeamContestService extends ContestsService {
     }
 
     /**
-     * @description iterate over each problem and each user to update the standing
+     * @description iterate over each problem of the contest
      * @param contest 
      */
-    private query(contest: Contests): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
+    private queryProblems(contest: Contests): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+
+            try {
+                for (let i = 0; i < contest.problems.length; i++) {
+                    console.log("problem (", i, ") ", contest.problems[i]);
+                    await this.queryTeams(contest, contest.problems[i]);
+                }
+                return resolve();
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description iterate over each team
+     * @param contest 
+     * @param problem 
+     */
+    private queryTeams(contest: Contests, problem: any): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            let team: Teams;
+
+            try {
+                for (let i = 0; i < contest.teams.length; i++) {
+                    await this.queryUsers(contest, problem, contest.teams[i]);
+                }
+                return resolve();
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description iterate over each user to see if they solved (or tried to solve) a problem 
+     * @param problem 
+     * @param contest
+     */
+    private queryUsers(contest: Contests, problem: any, team: any): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
             let plateform: Plateform;
+            const name: string = problem.plateform;
+            plateform = this.plateformBuilder.createPlateform(name);
+            let result: InsightResponse;
+            let statusFiltered: any[];
+            try {
+                for (let i = 0; i < team.members.length; i++) {
+                    let user: any = team.members[i];
+                    result = await plateform.updateContest(contest, user, problem);
+                    statusFiltered = result.body.result;
+                    await this.querySubmissions(contest, problem, statusFiltered, plateform, team);
+                }
+                return resolve();
+            }
+            catch (err) {
+                console.log("ERROR: ", err);
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description iterate over all user submissions during the contest and check the verdict
+     * @param contest 
+     * @param problem 
+     * @param status 
+     * @param team
+     */
+    private querySubmissions(contest: Contests, problem: any, status: any[], plateform: Plateform, team: any): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
+            try {
+                console.log('INSIDE QUERY SUBMISSIONS');
+                for (let i = 0; i < status.length; i++) {
+                    await this.getSubmission(contest, problem, status[i], plateform, team);
+                }
+                return resolve();
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * @description retrieve a specific submission from the specified platform
+     * @param contest 
+     * @param team 
+     * @param problem 
+     * @param sub 
+     */
+    private getSubmission(contest: Contests, problem: any, sub: any, platform: Plateform, team: any): Promise<void> {
+        return new Promise<void>(async (resolve, reject) => {
             let tracker: Trackers;
 
-            contest.problems.forEach((problem: Problems) => {
-                contest.teams.forEach((team: Teams) => {
-                    team.members.forEach(async (user: Users) => {
-                        const name: string = problem.name;
-                        plateform = this.plateformBuilder.createPlateform(name);
-                        let result: InsightResponse;
-                        let statusFiltered: any[];
-
-                        try {
-                            result = await plateform.updateContest(contest, user, problem);
-                            statusFiltered = result.body.result;
-                            statusFiltered.forEach(async (sub) => {
-                                let submission: Submissions = await plateform.getSubmission(sub);
-                                if (problem.problemID == submission.problemID) {
-                                    let new_sub: Submissions = await this.submissions.findOne(
-                                        {
-                                            problemID: submission.problemID,
-                                            OJ: submission.OJ,
-                                            submissionID: submission.submissionID
-                                        }
-                                    ).exec();
-                                    if (!new_sub) {
-                                        submission.problemLink = problem.link;
-                                        submission.team = team._id;
-                                        let createSubmission = new this.submissions(submission);
-                                        await createSubmission.save();
-                                        tracker = await this.trackers.findOne({
-                                            contestants: team._id,
-                                            contestID: contest._id
-                                        }).exec();
-                                        let saveTracker = new this.trackers(tracker);
-                                        if (submission.verdict != "ACCEPTED") {
-                                            saveTracker.problemsUnsolved.push(problem._id);
-                                        }
-                                        else {
-                                            let diff = (submission.submissionTime.getTime() - contest.startDate.getTime()) / 6000;
-                                            saveTracker.penalty += diff;
-                                            saveTracker.solvedCount += 1;
-                                            saveTracker.problemsSolved.push(problem._id);
-                                            saveTracker.problemsUnsolved = saveTracker.problemsUnsolved.filter((pr) => problem._id != pr);
-                                        }
-                                        await saveTracker.save();
-                                    }
-                                }
-                            });
+            try {
+                let submission: Submissions = await platform.getSubmission(sub);
+                if (problem.problemID == submission.problemID) {
+                    let new_sub: Submissions = await this.submissions.findOne(
+                        {
+                            problemID: submission.problemID,
+                            OJ: submission.OJ,
+                            submissionID: submission.submissionID
                         }
-                        catch(err) {
-                            reject(err);
+                    ).exec();
+                    if (!new_sub) {
+                        submission.problemLink = problem.link;
+                        submission.team = team._id;
+                        tracker = await this.trackers.findOne({
+                            contestants: team._id,
+                            contestID: contest._id
+                        }).exec();
+                        let saveTracker = new this.trackers(tracker);
+                        for (let i = 0; i < saveTracker.problemsSolved.length; i++) {
+                            let prblm: string = saveTracker.problemsSolved[i] + "";
+                            if (prblm == (problem._id + "")) {
+                                console.log("INSIDE");
+                                return resolve();
+                            }
                         }
-                    });
-                });
-            });
-            return resolve();
+                        let shouldSave: boolean = true;
+                        for (let i = 0; i < saveTracker.problemsUnsolved.length; i++) {
+                            let prblm: string = saveTracker.problemsUnsolved[i] + "";
+                            if (prblm == (problem._id + "")) {
+                                shouldSave = false;
+                            }
+                        }
+                        let createSubmission = new this.submissions(submission);
+                        await createSubmission.save();
+                        let saveContest = new this.contests(contest);
+                        saveContest.submissions.push(createSubmission._id);
+                        await saveContest.save();
+                        if (submission.verdict != "ACCEPTED") {
+                            if (shouldSave) {
+                                saveTracker.problemsUnsolved.push(problem._id);
+                            }
+                        }
+                        else {
+                            let diff = (submission.submissionTime.getTime() - contest.startDate.getTime()) / 6000;
+                            saveTracker.penalty += Math.round(diff);
+                            saveTracker.solvedCount += 1;
+                            saveTracker.problemsSolved.push(problem._id);
+                            saveTracker.problemsUnsolved = saveTracker.problemsUnsolved.filter((pr: string) => pr != problem._id);
+                        }
+                        await saveTracker.save();
+                    }
+                }
+                return resolve();
+            }
+            catch (err) {
+                return reject(err);
+            }
         });
     }
 }

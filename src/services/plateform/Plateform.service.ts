@@ -6,7 +6,6 @@ import Log from "../../Util";
 import { Problems } from "../../models/Problems";
 import { Contests } from "../../models/contests/Contests";
 import { Submissions } from "../../models/contests/Submissions";
-import { Trackers } from "../../models/contests/Trackers";
 import { Users } from "../../models/Users";
 import axios from "axios";
 import { HTTPStatusCodes } from "../../util/httpCode";
@@ -22,14 +21,11 @@ export abstract class Plateform implements PlateformFactory {
 
     constructor(@Inject(Problems) private problems: MongooseModel<Problems>,
                 @Inject(Contests) private contests: MongooseModel<Contests>,
-                @Inject(Submissions) private submissions: MongooseModel<Submissions>,
-                @Inject(Trackers) private trackers: MongooseModel<Trackers>) {
+                @Inject(Users) private users: MongooseModel<Users>) {
         Log.trace("Plateform::init() Updated");
     }
 
     abstract getPlateform(): string;
-
-    abstract getUserStatistic(): Promise<InsightResponse>;
 
     /**
      * Return all problems matching the given key
@@ -205,9 +201,8 @@ export class Codeforces extends Plateform {
      
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
                 @Inject(Contests) private contestsModel: MongooseModel<Contests>,
-                @Inject(Submissions) private submissionsModel: MongooseModel<Submissions>,
-                @Inject(Trackers) private trackersModel: MongooseModel<Trackers>) {
-        super(problemsModel, contestsModel, submissionsModel, trackersModel);
+                @Inject(Users) private usersModel: MongooseModel<Users>) {
+        super(problemsModel, contestsModel, usersModel);
         Log.trace("Codeforces::init() Updated");
     }
 
@@ -568,15 +563,9 @@ export class Codeforces extends Plateform {
             return "ACCEPTED";
         return verdict;
     }
-
-    getUserStatistic(): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});
-    }
     
     getPlateform(): string {
-        
         return "Codeforces";
-
     }
 }
 
@@ -585,9 +574,8 @@ export class Uva extends Plateform {
     
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
                 @Inject(Contests) private contestsModel: MongooseModel<Contests>,
-                @Inject(Submissions) private submissionsModel: MongooseModel<Submissions>,
-                @Inject(Trackers) private trackersModel: MongooseModel<Trackers>) {
-        super(problemsModel, contestsModel, submissionsModel, trackersModel);
+                @Inject(Users) private usersModel: MongooseModel<Users>) {
+        super(problemsModel, contestsModel, usersModel);
         Log.trace("Uva::init()");
     }
     
@@ -1031,10 +1019,6 @@ export class Uva extends Plateform {
                 return "FAILED";
         }
     }
-
-    getUserStatistic(): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});
-    }
     
     getPlateform(): string {
         
@@ -1048,9 +1032,8 @@ export class LiveArchive extends Plateform {
 
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
                 @Inject(Contests) private contestsModel: MongooseModel<Contests>,
-                @Inject(Submissions) private submissionsModel: MongooseModel<Submissions>,
-                @Inject(Trackers) private trackersModel: MongooseModel<Trackers>) {
-        super(problemsModel, contestsModel, submissionsModel, trackersModel);
+                @Inject(Users) private usersModel: MongooseModel<Users>) {
+        super(problemsModel, contestsModel, usersModel);
         Log.trace("LiveArchive::init()");
     }
 
@@ -1436,10 +1419,6 @@ export class LiveArchive extends Plateform {
                 return "FAILED";
         }
     }
-
-    getUserStatistic(): Promise<InsightResponse> {
-        return Promise.reject({code: -1, body: null});
-    }
     
     getPlateform(): string {
         
@@ -1459,12 +1438,11 @@ export class AllPlateforms extends Plateform {
     
     constructor(@Inject(Problems) private problemsModel: MongooseModel<Problems>,
                 @Inject(Contests) private contestsModel: MongooseModel<Contests>,
-                @Inject(Submissions) private submissionsModel: MongooseModel<Submissions>,
-                @Inject(Trackers) private trackersModel: MongooseModel<Trackers>,
+                @Inject(Users) private usersModel: MongooseModel<Users>,
                 private codeforces: Codeforces,
                 private livearchive: LiveArchive,
                 private uva: Uva) {
-        super(problemsModel, contestsModel, submissionsModel, trackersModel);
+        super(problemsModel, contestsModel, usersModel);
         Log.trace("AllPlateforms::init()");
     }
     
@@ -1712,10 +1690,6 @@ export class AllPlateforms extends Plateform {
     updateContest(contest: Contests, user: Users): Promise<InsightResponse> {
         throw new Error("Method not implemented.");
     } 
-
-    getUserStatistic(): Promise<InsightResponse> {
-        return null;
-    }
     
     getPlateform(): string {
         return null;
