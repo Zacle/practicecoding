@@ -2,10 +2,9 @@ import { Property } from "@tsed/common";
 import { Model, Ref, Unique } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
 import { Users } from "./Users";
-import { Submissions } from "./contests/Submissions";
 import { Contests } from "./contests/Contests";
-import { Teams } from "./Teams";
 import { AccessType } from "../interfaces/InterfaceFacade";
+import { GroupMembers } from "./GroupMembers";
 
 @Model()
 export class Groups {
@@ -13,10 +12,10 @@ export class Groups {
     @Property()
     _id?: string;
 
-    @Ref("Users")
+    @Ref("GroupMembers")
     @Property()
-    @Description("Membres of the group")
-    members: Ref<Users>[];
+    @Description("Members of the group")
+    members: Ref<GroupMembers>[];
 
     @Property()
     @Description("Public or Private group")

@@ -1,17 +1,17 @@
 import { Inject , Service } from "@tsed/common";
 import { MongooseModel } from "@tsed/mongoose";
 import { HTTPStatusCodes } from "../../util/httpCode";
-import { API_ERRORS } from "../../util/app.error";
 import { Users } from "../../models/Users";
-import { Teams } from "../../models/Teams";
 import { Groups } from "../../models/Groups";
 import { InsightResponse, AccessType } from "../../interfaces/InterfaceFacade";
+import { GroupMembers } from "../../models/GroupMembers";
 
 @Service()
 export class GroupsService {
 
     constructor(@Inject(Groups) private groups: MongooseModel<Groups>,
-                @Inject(Users) private users: MongooseModel<Users>) {}
+                @Inject(Users) private users: MongooseModel<Users>,
+                @Inject(GroupMembers) private groupMembers: MongooseModel<GroupMembers>) {}
 
     /**
      * Create a new group and a user as the admin
@@ -60,7 +60,7 @@ export class GroupsService {
     
                 if (result) {
                     let ans: InsightResponse;
-                    ans = await this.addGroupMember(result._id, userID);
+                    ans = await this.addGroupMember(result._id, userID, "Admin");
                     return resolve(ans);
                 }
                 return reject({
@@ -467,7 +467,12 @@ export class GroupsService {
 
             try {
                 members = await this.groups.findById(id)
-                                            .populate("members")
+                                            .populate({
+                                                path: "members",
+                                                populate: {
+                                                    path: "user"
+                                                }
+                                            })
                                             .exec();
                 
                 return resolve({
@@ -526,7 +531,7 @@ export class GroupsService {
      * @param groupID group id to query
      * @param userID user to add
      */
-    async addGroupMember(groupID: string, userID: string): Promise<InsightResponse> {
+    async addGroupMember(groupID: string, userID: string, membership: string = "Participant"): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
 
@@ -556,8 +561,17 @@ export class GroupsService {
                     });
                 }
 
+                let groupMember: GroupMembers = {
+                    user: user._id,
+                    joined: new Date(),
+                    membershipType: membership
+                };
+
+                let saveGroupMember = new this.groupMembers(groupMember);
+                await saveGroupMember.save();
+
                 user.groups.push(groupID);
-                group.members.push(userID);
+                group.members.push(saveGroupMember._id);
 
                 const saveUser = new this.users(user);
                 await saveUser.save();
@@ -594,6 +608,7 @@ export class GroupsService {
 
             let user: Users;
             let group: Groups;
+            let groupMember: GroupMembers;
 
             try {
                 user = await this.users.findById(userID, "-__v").exec();
@@ -618,9 +633,11 @@ export class GroupsService {
                     });
                 }
 
+                groupMember = await this.groupMembers.findOneAndRemove({user: user._id}).exec();
+
                 let userArray: any[] = user.groups.filter((id) => id.toString() != groupID.toString());
                 user.groups = [...userArray];
-                let groupArray: any[] = group.members.filter((id) => id.toString() != userID.toString());
+                let groupArray: any[] = group.members.filter((member: GroupMembers) => member._id.toString() != userID.toString());
                 group.members = [...groupArray];
 
                 const saveUser = new this.users(user);
