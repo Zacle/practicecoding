@@ -204,7 +204,7 @@ export class ContestsCtrl {
     @Get("/my")
     @Summary("Contests attended by the user")
     @Authenticated()
-    async getContests(@Req() request: Express.Request, @Res() response: Express.Response, @QueryParams("username") username: string) {
+    async getContests(@Req() request: Express.Request, @Res() response: Express.Response, @BodyParams("username") username: string) {
         return new Promise<Contests>(async (resolve, reject) => {
             let result: InsightResponse;
 

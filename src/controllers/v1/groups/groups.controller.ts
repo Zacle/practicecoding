@@ -59,13 +59,14 @@ export class GroupsCtrl {
     @Get("/my")
     @Summary("Get all groups that contain the user")
     @Authenticated()
-    async getGroups(@Req() request: Express.Request, @Res() response: Express.Response) {
+    async getGroups(@Req() request: Express.Request, @Res() response: Express.Response,
+                    @Required() @BodyParams("username") username: string) {
         return new Promise<Groups>(async (resolve, reject) => {
 
             let result: InsightResponse;
 
             try {
-                result = await this.groups.getGroups(request.user._id);
+                result = await this.groups.getGroups(username);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);

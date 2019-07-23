@@ -95,17 +95,18 @@ export class TeamsService {
 
     /**
      * Return all teams that contain the user
-     * @param userID
+     * @param username
      */
-    async getTeams(userID: any): Promise<InsightResponse> {
+    async getTeams(username: any): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
 
             let team: Users;
 
             try {
-                team = await this.users.findById(userID, "-__v")
+                team = await this.users.findOne({username: username}, "-__v")
                                         .populate("teams")
+                                        .populate("admin")
                                         .exec();
 
                 return resolve({

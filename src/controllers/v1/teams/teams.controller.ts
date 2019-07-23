@@ -11,7 +11,8 @@ import {
     Required,
     MergeParams,
     Delete,
-    Put
+    Put,
+    QueryParams
 } from "@tsed/common";
 import * as Express from "express";
 import { HTTPStatusCodes } from "../../../util/httpCode";
@@ -55,13 +56,14 @@ export class TeamsCtrl {
     @Get("/my")
     @Summary("Get all teams that contain the user")
     @Authenticated()
-    async getTeams(@Req() request: Express.Request, @Res() response: Express.Response) {
+    async getTeams(@Req() request: Express.Request, @Res() response: Express.Response,
+                   @Required() @QueryParams("username") username: string) {
         return new Promise<Teams>(async (resolve, reject) => {
 
             let result: InsightResponse;
 
             try {
-                result = await this.teams.getTeams(request.user._id);
+                result = await this.teams.getTeams(username);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);
@@ -232,38 +234,6 @@ export class TeamsCtrl {
         });    
     }
 
-    /**
-     * Contests attended by this team
-     * @param teamID 
-     * @param request 
-     * @param response 
-     */
-    @Get("/:id/contests")
-    @Summary("Get team contests")
-    @Authenticated()
-    async getTeamContests(@Required() @PathParams("id") teamID: string,
-                          @Req() request: Express.Request,
-                          @Res() response: Express.Response) {
-        return new Promise<Teams>(async (resolve, reject) => {
-            let result: InsightResponse;
-
-            try {
-                result = await this.teams.getTeamContests(teamID);
-                response.status(result.code);
-                response.setHeader("Content-Type", "application/json");
-                response.json(result.body.result);
-                resolve(result.body.result);
-            }
-            catch(err) {
-                result = err;
-                response.status(result.code);
-                response.setHeader("Content-Type", "application/json");
-                response.json(result.body.name);
-                reject(result.body.name);
-            }
-        });
-    }
-
     @Post("/:id/members")
     @Summary("Add a user to the team")
     @Authenticated()
@@ -291,12 +261,12 @@ export class TeamsCtrl {
         });
     }
 
-    @Delete("/:id/members/:uid")
+    @Delete("/:id/members")
     @MergeParams()
     @Summary("Delete a user from the team")
     @Authenticated()
     async deleteTeamMember(@Required() @PathParams("id") teamID: string,
-                           @Required() @PathParams("uid") userID: string,
+                           @Required() @BodyParams("uid") userID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
         return new Promise<Teams>(async (resolve, reject) => {

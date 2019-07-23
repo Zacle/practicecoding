@@ -107,16 +107,16 @@ export class GroupsService {
 
     /**
      * Return all groups that contain the user
-     * @param userID
+     * @param username
      */
-    async getGroups(userID: any): Promise<InsightResponse> {
+    async getGroups(username: any): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
 
             let group: Users;
 
             try {
-                group = await this.users.findById(userID, "-__v")
+                group = await this.users.findOne({username: username}, "-__v")
                                         .populate("groups")
                                         .exec();
 
