@@ -241,22 +241,110 @@ export abstract class ContestsService {
 
     /**
      * @param username
-     * @returns all contests attended by the user 
+     * @returns all coming contests registered by the user 
      */
-    async getContests(username: string): Promise<InsightResponse> {
+    async getComingContests(username: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contests: Users;
+            let comingContests: any[] = [];
 
             try {
                 contests = await this.users.findOne({username: username})
                                            .populate("contests")
                                            .exec();
 
+                let date = new Date();
+                for (let i = 0; i < contests.contests.length; i++) {
+                    let contest: any = contests.contests[i];
+                    if (contest.startDate > date) {
+                        comingContests.push(contest);
+                    }
+                }
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contests.contests
+                        result: comingContests
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't get all contests attended by the user"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @param username
+     * @returns all running contests registered by the user 
+     */
+    async getRunningContests(username: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contests: Users;
+            let runningContests: any[] = [];
+
+            try {
+                contests = await this.users.findOne({username: username})
+                                           .populate("contests")
+                                           .exec();
+
+                let date = new Date();
+                for (let i = 0; i < contests.contests.length; i++) {
+                    let contest: any = contests.contests[i];
+                    if (contest.startDate < date && contest.endDate > date) {
+                        runningContests.push(contest);
+                    }
+                }
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: runningContests
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't get all contests attended by the user"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @param username
+     * @returns all past contests attended by the user 
+     */
+    async getContests(username: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contests: Users;
+            let pastContests: any[] = [];
+
+            try {
+                contests = await this.users.findOne({username: username})
+                                           .populate("contests")
+                                           .exec();
+
+                let date = new Date();
+                for (let i = 0; i < contests.contests.length; i++) {
+                    let contest: any = contests.contests[i];
+                    if (contest.endDate < date) {
+                        pastContests.push(contest);
+                    }
+                }
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: pastContests
                     }
                 });
             }

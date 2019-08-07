@@ -24,15 +24,15 @@ export class Trackers {
     @Description("Penalty of user submissions")
     penalty: number;
 
-    @Ref(Problems)
+    
     @Property()
     @Description("Problems solved by the user during the contest")
-    problemsSolved: Ref<Problems>[];
+    solved: number[];
 
-    @Ref(Problems)
+    
     @Property()
     @Description("Problems not solved by the user during the contest")
-    problemsUnsolved: Ref<Problems>[];
+    unSolved: number[];
 
     @Ref("Users")
     @Property()

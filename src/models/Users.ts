@@ -25,6 +25,10 @@ export class Users {
     password: string;
 
     @Property()
+    @Description("Codeforces Handle")
+    joined?: Date = new Date();
+
+    @Property()
     @Description("Reset token for the password")
     @Default("")
     passwordResetToken?: string;

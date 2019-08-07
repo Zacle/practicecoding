@@ -146,23 +146,34 @@ export class UsersService {
                 result = await this.users.findOne({ username: username }, '-__v').exec();
                 
                 if (!result) {
-                    return Promise.reject({
+                    return reject({
                         code: API_ERRORS.USER_NOT_FOUND.status,
                         body: {
                             name: API_ERRORS.USER_NOT_FOUND.message
                         }
                     });
                 }
+
+                let user: any = {
+                    _id: result._id,
+                    fullname: result.fullname,
+                    codeforces: result.codeforces,
+                    uva: result.uva,
+                    livearchive: result.livearchive,
+                    username: result.username,
+                    joined: result.joined,
+                    country: result.country
+                };
         
-                return Promise.resolve({
+                return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: result
+                        result: user
                     }
                 });
             }
             catch (err) {
-                return Promise.reject({
+                return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
                         name: "An Error occurred while trying to retrieve user by its username"
@@ -173,39 +184,88 @@ export class UsersService {
     }
 
     /**
+     * Verify if the username is already taken
+     * @param username username to look for in the database
+     * @returns {Promise<boolean>}
+     */
+    async usernameExists(username: string): Promise<boolean> {
+        return new Promise<boolean>(async (resolve, reject) => {
+            let result: Users;
+
+            try {
+                result = await this.users.findOne({ username: username }, '-__v').exec();
+                
+                if (!result) {
+                    return resolve(false);
+                }
+        
+                return resolve(true);
+            }
+            catch (err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
      * Verify if the user already exist with this email
      * @param email email to verify
      * @returns {Promise<InsightResponse>}
      */
     async findByEmail(email: string): Promise<InsightResponse> {
-        let result: Users;
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let result: Users;
 
-        try {
-            this.validateEmail(email.toLowerCase());
+            try {
 
-            result = await this.users.findOne({ email: email.toLowerCase() }, '-__v').exec();
+                result = await this.users.findOne({ email: email.toLowerCase() }, '-__v').exec();
 
-            if (result) {
-                return Promise.reject({
-                    code: API_ERRORS.USER_ALREADY_EXISTS.status,
+                if (result) {
+                    return reject({
+                        code: API_ERRORS.USER_ALREADY_EXISTS.status,
+                        body: {
+                            name: API_ERRORS.USER_ALREADY_EXISTS.message
+                        }
+                    });
+                }
+                return resolve({
+                    code: HTTPStatusCodes.OK,
                     body: {
-                        name: API_ERRORS.USER_ALREADY_EXISTS.message
+                        result: result
                     }
                 });
             }
-        }
-        catch (err) {
-            return Promise.reject({
-                code: HTTPStatusCodes.BAD_REQUEST,
-                body: {
-                    name: "An Error occurred while trying to retrieve user by its email"
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "An Error occurred while trying to retrieve user by its email"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Verify if the user already exist with this email
+     * @param email email to verify
+     * @returns {Promise<boolean>}
+     */
+    async emailExists(email: string): Promise<boolean> {
+        return new Promise<boolean>(async (resolve, reject) => {
+            let result: Users;
+
+            try {
+
+                result = await this.users.findOne({ email: email.toLowerCase() }, '-__v').exec();
+
+                if (result) {
+                    return resolve(true);
                 }
-            });
-        }
-        return Promise.resolve({
-            code: HTTPStatusCodes.OK,
-            body: {
-                result: result
+                return resolve(false);
+            }
+            catch (err) {
+                return reject(err);
             }
         });
     }
@@ -217,9 +277,7 @@ export class UsersService {
      */
     private validateEmail(email: string) {
         const regEmail = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        if (!(email && regEmail.test(email))) {
-            throw new BadRequest("Email is invalid");
-        }
+        return regEmail.test(email);
     }
 
     /**
@@ -232,12 +290,19 @@ export class UsersService {
 
         return new Promise<InsightResponse>(async (resolve, reject) => {
             try {
-                this.validateEmail(email.toLowerCase());
+                if (!this.validateEmail(email.toLowerCase())) {
+                    return reject({
+                        code: HTTPStatusCodes.BAD_REQUEST,
+                        body: {
+                            name: "Email invalid"
+                        }
+                    });
+                }
                 
                 user = await this.users.findOne({email: email.toLowerCase()}, '-__v').exec();
         
                 if (!user) {
-                    reject({
+                    return reject({
                         code: API_ERRORS.USER_NOT_FOUND.status,
                         body: {
                             name: API_ERRORS.USER_NOT_FOUND.message
@@ -247,7 +312,7 @@ export class UsersService {
                 
                 await this.comparePassword(user.password, password, (err: Error, isMatch: boolean) => {
                     if (err) {
-                        reject({
+                        return reject({
                             code: API_ERRORS.USER_WRONG_CREDENTIALS.status,
                             body: {
                                 name: API_ERRORS.USER_WRONG_CREDENTIALS.message
@@ -255,14 +320,14 @@ export class UsersService {
                         });
                     }
                     if(isMatch) {
-                        resolve({
+                        return resolve({
                             code: HTTPStatusCodes.OK,
                             body: {
                                 result: user
                             }
                         });
                     }
-                    reject({
+                    return reject({
                         code: API_ERRORS.USER_WRONG_CREDENTIALS.status,
                         body: {
                             name: API_ERRORS.USER_WRONG_CREDENTIALS.message
@@ -299,55 +364,87 @@ export class UsersService {
      * @returns {Promise<InsightResponse>}
      */
     async create(user: IUser): Promise<InsightResponse> {
-        let res: Users;
-        let data: Users = {
-            email: user.email.toLowerCase(),
-            password: user.password,
-            username: user.username,
-            fullname: user.fullname,
-            country: user.country,
-            codeforces: user.codeforces,
-            uva: user.uva,
-            livearchive: user.livearchive,
-            admin: user.admin,
-            teams: [],
-            groups: [],
-            contests: []
-        };
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let res: Users;
+            let data: Users = {
+                email: user.email.toLowerCase(),
+                password: user.password,
+                username: user.username,
+                fullname: user.fullname,
+                country: user.country,
+                codeforces: user.codeforces,
+                joined: new Date(),
+                uva: user.uva,
+                livearchive: user.livearchive,
+                admin: user.admin,
+                teams: [],
+                groups: [],
+                contests: []
+            };
 
-        try {
-            const hashed = await new Promise<any>((resolve, reject) => {
-                bcrypt.genSalt(10, (err, salt) => {
-                    if (err) { 
-                        reject(err); 
-                    }
-                    bcrypt.hash(user.password, salt, undefined, async (err: mongoose.Error, hash) => {
-                        if (err) { 
-                            reject(err);
+            try {
+                if (!this.validateEmail(user.email.toLowerCase())) {
+                    return reject({
+                        code: HTTPStatusCodes.BAD_REQUEST,
+                        body: {
+                            name: "Email invalid"
                         }
-                        resolve(hash);
+                    });
+                }
+
+                const emailExist = await this.emailExists(user.email.toLowerCase());
+                if (emailExist) {
+                    return reject({
+                        code: HTTPStatusCodes.FOUND,
+                        body: {
+                            name: "Email already exists"
+                        }
+                    });
+                }
+                const usernameExist = await this.usernameExists(user.username);
+                if (usernameExist) {
+                    return reject({
+                        code: HTTPStatusCodes.FOUND,
+                        body: {
+                            name: "Username already exists"
+                        }
+                    });
+                }
+                
+                const hashed = await new Promise<any>((resolve, reject) => {
+                    bcrypt.genSalt(10, (err, salt) => {
+                        if (err) { 
+                            reject(err); 
+                        }
+                        bcrypt.hash(user.password, salt, undefined, async (err: mongoose.Error, hash) => {
+                            if (err) { 
+                                reject(err);
+                            }
+                            resolve(hash);
+                        });
                     });
                 });
-            });
-            data.password = hashed;
-            await this.users.create(data);
+                data.password = hashed;
+                await this.users.create(data);
 
-            res = await this.users.findOne({
-                        email: user.email
-                    }, "-__v").exec();
-        }
-        catch(err) {
-            return Promise.reject({
-                code: HTTPStatusCodes.BAD_REQUEST,
-                body: {
-                    name: "An Error occurred while trying to create a new user"
-                }
-            });
-        }
-        return Promise.resolve({
-            code: HTTPStatusCodes.OK,
-            body: {
-                result: res
+                res = await this.users.findOne({
+                            email: user.email
+                        }, "-__v").exec();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: res
+                    }
+                });
+            }
+            catch(err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "An Error occurred while trying to create a new user"
+                    }
+                });
             }
         });
     }
@@ -448,8 +545,70 @@ export class UsersService {
         return Promise.reject(false);
     }
 
-    async updateEmail(token: string, email: string): Promise<InsightResponse> {
-        return Promise.reject({code: HTTPStatusCodes.NOT_IMPLEMENTED, body: null});
+    /**
+     * Update user's email
+     * @param oldEmail 
+     * @param newEmail 
+     * @param userID
+     */
+    async updateEmail(oldEmail: string, newEmail: string, userID: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let isEmailExists: Users;
+
+            try {
+                isEmailExists = await this.users.findById(userID).exec();
+                if (!isEmailExists) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "User not found"
+                        }
+                    });
+                }
+                if (isEmailExists.email !== oldEmail) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "Please enter your current email"
+                        }
+                    });
+                }
+                if (!this.validateEmail(newEmail.toLowerCase())) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "New email format is not valid"
+                        }
+                    });
+                }
+                let newEmailExists: boolean = await this.emailExists(newEmail.toLowerCase());
+                if (newEmailExists) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "New email is already taken"
+                        }
+                    });
+                }
+                let saveUser = new this.users(isEmailExists);
+                saveUser.email = newEmail;
+                await saveUser.save();
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: "Email updated"
+                    }
+                });
+            }
+            catch(err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't update email. Try again later!"
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -483,89 +642,96 @@ export class UsersService {
      */
     async updatePasswordToken(users: MongooseModel<Users>, request: Express.Request, token: string, password: string): Promise<InsightResponse> {
         
-        let res: Users;
-        async.waterfall([
-            async function resetPassword(done: Function) {
-                let user: Users;
-                let updt: Users;
-                try {
-                    user = await users.findOne({ passwordResetToken: token })
-                                    .where("passwordResetExpires")
-                                    .gt(Date.now())
-                                    .exec();
-                    if (!user) {
-                        return Promise.reject({
-                            code: HTTPStatusCodes.NOT_FOUND,
-                            body: {
-                                name: "Password reset token is invalid or has expired."
+        return new Promise<InsightResponse>((resolve, reject) => {
+            let res: Users;
+            try {
+                async.waterfall([
+                    async function resetPassword(done: Function) {
+                        let user: Users;
+                        let updt: Users;
+                        try {
+                            user = await users.findOne({ passwordResetToken: token })
+                                            .where("passwordResetExpires")
+                                            .gt(Date.now())
+                                            .exec();
+                            if (!user) {
+                                return reject({
+                                    code: HTTPStatusCodes.NOT_FOUND,
+                                    body: {
+                                        name: "Password reset token is invalid or has expired."
+                                    }
+                                });
                             }
-                        });
-                    }
-                    const hashed = await new Promise<any>((resolve, reject) => {
-                        bcrypt.genSalt(10, (err, salt) => {
-                            if (err) { 
-                                reject(err); 
-                            }
-                            bcrypt.hash(password, salt, undefined, async (err: mongoose.Error, hash) => {
-                                if (err) { 
-                                    reject(err);
-                                }
-                                user.password = hash;
-                                user.passwordResetToken = undefined;
-                                user.passwordResetExpires = undefined;
-                                updt = await users.findByIdAndUpdate(user._id, user, {new: true, select: "-__v"}).exec();
-                                resolve(updt);
+                            const hashed = await new Promise<any>((resolve, reject) => {
+                                bcrypt.genSalt(10, (err, salt) => {
+                                    if (err) { 
+                                        reject(err); 
+                                    }
+                                    bcrypt.hash(password, salt, undefined, async (err: mongoose.Error, hash) => {
+                                        if (err) { 
+                                            reject(err);
+                                        }
+                                        let saveUser = new users(user);
+                                        saveUser.password = hash;
+                                        saveUser.passwordResetToken = undefined;
+                                        saveUser.passwordResetExpires = undefined;
+                                        await saveUser.save();
+                                        resolve(saveUser);
+                                    });
+                                });
                             });
+                            done(null, hashed);
+                        }
+                        catch (err) {
+                            return done(err);
+                        }
+                    },
+                    function sendForgotPasswordEmail(user: Users, done: Function) {
+                        res = user;
+                        const transporter = nodemailer.createTransport({
+                            service: "SendGrid",
+                            auth: {
+                                user: process.env.SENDGRID_USER,
+                                pass: process.env.SENDGRID_PASSWORD
+                            }
                         });
-                    });
-                    done(null, hashed);
-                }
-                catch (err) {
-                    return done(err);
-                }
-            },
-            function sendForgotPasswordEmail(user: Users, done: Function) {
-                res = user;
-                const transporter = nodemailer.createTransport({
-                    service: "SendGrid",
-                    auth: {
-                        user: process.env.SENDGRID_USER,
-                        pass: process.env.SENDGRID_PASSWORD
+                        const mailOptions = {
+                            to: user.email,
+                            from: "zacharienziuki@gmail.com",
+                            subject: "Your password has been changed",
+                            text: `Hello,\n\nThis is a confirmation that the password for your account ${user.email} has just been changed.\n`
+                        };
+                        transporter.sendMail(mailOptions, (err) => {
+                            done(err, user);
+                        });
+                    }
+                ], (err, user: Users) => {
+                    if (err) {
+                        return reject({
+                            code: HTTPStatusCodes.NOT_MODIFIED,
+                            body: {
+                                name: "Couldn't modify password"
+                            }
+                        });
+                    }
+                    else {
+                        res = user;
+                        return resolve({
+                            code: HTTPStatusCodes.OK,
+                            body: {
+                                result: user
+                            }
+                        });
                     }
                 });
-                const mailOptions = {
-                    to: user.email,
-                    from: "practicecodingoj@gmail.com",
-                    subject: "Your password has been changed",
-                    text: `Hello,\n\nThis is a confirmation that the password for your account ${user.email} has just been changed.\n`
-                };
-                transporter.sendMail(mailOptions, (err) => {
-                    done(err, user);
-                });
             }
-        ], (err, user: Users) => {
-            if (err) {
-                return Promise.reject({
-                    code: HTTPStatusCodes.NOT_MODIFIED,
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: "Couldn't modify password"
+                        name: "Couldn't reset your password. Try again later!"
                     }
                 });
-            }
-            else {
-                res = user;
-                return Promise.resolve({
-                    code: HTTPStatusCodes.OK,
-                    body: {
-                        result: user
-                    }
-                });
-            }
-        });
-        return Promise.resolve({
-            code: HTTPStatusCodes.OK,
-            body: {
-                result: res
             }
         });
     }
@@ -579,67 +745,87 @@ export class UsersService {
      */
     async forgotPassword(users: MongooseModel<Users>, request: Express.Request, email: string): Promise<InsightResponse> {
         
-        async.waterfall([
-            function createRandomToken(done: Function) {
-                crypto.randomBytes(16, (err, buf) => {
-                  const token = buf.toString("hex");
-                  done(err, token);
-                });
-            },
-            async function setRandomToken(token: any, done: Function) {
-                let user: Users;
-                let updt: Users;
-                try {
-                    user = await users.findOne({ email: email.toLowerCase() }, '-__v').exec();
-                    if (!user) {
-                        throw new NotFound("Account with that email address does not exist.");
-                    }
-                    user.passwordResetToken = token;
-                    user.passwordResetExpires = Date.now() + 3600000; // 1 hour
-                    updt = await users.findByIdAndUpdate(user._id, user, {new: true, select: "-__v"}).exec();
-                    done(null, token, updt);
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            const API = 'http://localhost:3000';
+            let isValidEmail: boolean;
+            try {
+                isValidEmail = await this.emailExists(email.toLowerCase());
+                if (!isValidEmail) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "This email doesn't exist"
+                        }
+                    });
                 }
-                catch (err) {
-                    return done(err);
-                }
-            },
-            function sendForgotPasswordEmail(token: any, user: Users, done: Function) {
-                const transporter = nodemailer.createTransport({
-                    service: "SendGrid",
-                    auth: {
-                        user: process.env.SENDGRID_USER,
-                        pass: process.env.SENDGRID_PASSWORD
+
+                async.waterfall([
+                    function createRandomToken(done: Function) {
+                        crypto.randomBytes(16, (err, buf) => {
+                          const token = buf.toString("hex");
+                          done(err, token);
+                        });
+                    },
+                    async function setRandomToken(token: any, done: Function) {
+                        let user: Users;
+                        try {
+                            user = await users.findOne({ email: email.toLowerCase() }, '-__v').exec();
+                            let saveUser = new users(user);
+                            saveUser.passwordResetToken = token;
+                            saveUser.passwordResetExpires = Date.now() + 7200000; // 3 hours
+                            await saveUser.save();
+                            done(null, token, saveUser);
+                        }
+                        catch (err) {
+                            return done(err);
+                        }
+                    },
+                    function sendForgotPasswordEmail(token: any, user: Users, done: Function) {
+                        const transporter = nodemailer.createTransport({
+                            service: "SendGrid",
+                            auth: {
+                                user: process.env.SENDGRID_USER,
+                                pass: process.env.SENDGRID_PASSWORD
+                            }
+                        });
+                        const mailOptions = {
+                            to: user.email,
+                            from: "zacharienziuki@gmail.com",
+                            subject: "Reset your password on Practicecodingoj",
+                            text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
+                              Please click on the following link, or paste this into your browser to complete the process:\n\n
+                              ${API}/resetPassword/${token}\n\n
+                              If you did not request this, please ignore this email and your password will remain unchanged.\n`
+                        };
+                        transporter.sendMail(mailOptions, (err, info) => {
+                            done(err, info);
+                        });
                     }
-                });
-                const mailOptions = {
-                    to: user.email,
-                    from: "zacharienziuki@gmail.com",
-                    subject: "Reset your password on Practicecodingoj",
-                    text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
-                      Please click on the following link, or paste this into your browser to complete the process:\n\n
-                      http://${request.headers.host}/users/reset/${token}\n\n
-                      If you did not request this, please ignore this email and your password will remain unchanged.\n`
-                };
-                transporter.sendMail(mailOptions, (err, info) => {
-                    done(err, info);
+                ], (err: Error, info) => {
+                    if (err) {
+                        return reject({
+                            code: HTTPStatusCodes.EXPECTATION_FAILED,
+                            body: {
+                                name: "Couldn't send an email! Try again later."
+                            }
+                        });
+                    }
+                    console.log("Email Sent: ", info);
+                    return resolve({
+                        code: HTTPStatusCodes.OK,
+                        body: {
+                            result: "Email sent."
+                        }
+                    });
                 });
             }
-        ], (err: Error, info) => {
-            if (err) {
-                throw err;
-            }
-            console.log("Email Sent: ", info);
-            return Promise.resolve({
-                code: HTTPStatusCodes.OK,
-                body: {
-                    result: "Email sent."
-                }
-            });
-        });
-        return Promise.resolve({
-            code: HTTPStatusCodes.OK,
-            body: {
-                result: "Email sent."
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't send an email! Try again later."
+                    }
+                });
             }
         });
     }

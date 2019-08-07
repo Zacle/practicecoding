@@ -114,19 +114,19 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
      */
     async signup(user: IUser): Promise<InsightResponse> {
 
-        let exists: InsightResponse;
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let exists: InsightResponse;
 
-        try {
-            exists = await this.usersService.findByEmail(user.email);
-        }
-        catch(err) {
-            console.log("EXISTS");
-            throw new BadRequest("Email already exists");
-        }
-        
-        console.log("DOESN'T EXIST");
-        // Create new User
-        return await this.usersService.create(user);
+            try {
+                exists = await this.usersService.create(user);
+
+                return resolve(exists);
+            }
+            catch(err) {
+                exists = err;
+                return reject(exists);
+            }
+        });
     }
 
     public initializeLogin() {
@@ -151,14 +151,17 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
      * @returns {Promise<InsightResponse>}
      */
     async login(email: string, password: string): Promise<InsightResponse> {
-        let user: InsightResponse;
-        try {
-            user = await this.usersService.findByCredential(email, password);
-        }
-        catch (err) {
-            throw new NotFound("User not found");
-        }
-        return user;
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let user: InsightResponse;
+            try {
+                user = await this.usersService.findByCredential(email, password);
+                return resolve(user);
+            }
+            catch (err) {
+                user = err;
+                return reject(user);
+            }
+        });
     }
 
     // JWT authentication
@@ -181,16 +184,16 @@ export class PassportService implements BeforeRoutesInit, AfterRoutesInit {
      * @returns {Promise<InsightResponse>}
      */
     async find(id: string): Promise<InsightResponse> {
-        let user: InsightResponse;
-        console.log("USER IDDDD", id);
-        
-        try {
-            user = await this.usersService.findById(id);
-        }
-        catch(err) {
-            Promise.reject(err);
-        }
-
-        return user;
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let user: InsightResponse;
+            try {
+                user = await this.usersService.findById(id);
+                return resolve(user);
+            }
+            catch(err) {
+                user = err;
+                return reject(user);
+            }
+        });
     }
 }

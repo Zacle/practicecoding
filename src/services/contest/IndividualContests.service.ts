@@ -76,12 +76,17 @@ export class IndividualContestService extends ContestsService {
                     country: user.country,
                     solvedCount: 0,
                     penalty: 0,
-                    problemsSolved: [],
-                    problemsUnsolved: [],
+                    solved: [],
+                    unSolved: [],
                     contestant: user._id,
                     contestants: null,
                     contestID: createdContest._id
                 };
+
+                for (let i = 0; i < 151; i++) {
+                    tracker.solved.push(0);
+                    tracker.unSolved.push(0);
+                }
 
                 let createTracker = new this.trackers(tracker);
                 await createTracker.save();
@@ -166,8 +171,29 @@ export class IndividualContestService extends ContestsService {
                 createdContest.users.push(user._id);
                 await createdContest.save();
 
+                let tracker: Trackers;
+
+                tracker = {
+                    country: user.country,
+                    solvedCount: 0,
+                    penalty: 0,
+                    solved: [],
+                    unSolved: [],
+                    contestant: user._id,
+                    contestants: null,
+                    contestID: createdContest._id
+                };
+
+                for (let i = 0; i < 151; i++) {
+                    tracker.solved.push(0);
+                    tracker.unSolved.push(0);
+                }
+
+                let createTracker = new this.trackers(tracker);
+                await createTracker.save();
+
                 let standing: Standings = {
-                    trackers: [],
+                    trackers: [createTracker],
                     contestID: createdContest._id
                 };
 
@@ -296,12 +322,7 @@ export class IndividualContestService extends ContestsService {
                 standing = await this.standings.findById(contest.standings)
                                                .populate({
                                                    path: "trackers",
-                                                   populate: [{
-                                                       path: "problemsSolved"
-                                                   },
-                                                   {
-                                                       path: "problemsUnsolved"
-                                                   },
+                                                   populate: [
                                                    {
                                                        path: "contestant"
                                                    }]
@@ -397,12 +418,17 @@ export class IndividualContestService extends ContestsService {
                     country: user.country,
                     solvedCount: 0,
                     penalty: 0,
-                    problemsSolved: [],
-                    problemsUnsolved: [],
+                    solved: [],
+                    unSolved: [],
                     contestant: user._id,
                     contestants: null,
                     contestID: contest._id
                 };
+
+                for (let i = 0; i < 151; i++) {
+                    tracker.solved.push(0);
+                    tracker.unSolved.push(0);
+                }
 
                 let createTracker = new this.trackers(tracker);
                 await createTracker.save();
@@ -603,15 +629,7 @@ export class IndividualContestService extends ContestsService {
 
                 await this.queryProblems(contest);
 
-                standing = await this.standings.findById(contest.standings)
-                                               .populate("trackers")
-                                               .exec();
-                return resolve({
-                    code: HTTPStatusCodes.OK,
-                    body: {
-                        result: standing
-                    }
-                });
+                return this.getStanding(contestID, 1);
             }
             catch(err) {
                 return reject({
@@ -633,7 +651,7 @@ export class IndividualContestService extends ContestsService {
 
             try {
                 for (let i = 0; i < contest.problems.length; i++) {
-                    await this.queryUsers(contest, contest.problems[i]);
+                    await this.queryUsers(contest, contest.problems[i], i);
                 }
                 return resolve();
             }
@@ -648,7 +666,7 @@ export class IndividualContestService extends ContestsService {
      * @param problem 
      * @param contest
      */
-    private queryUsers(contest: Contests, problem: any): Promise<void> {
+    private queryUsers(contest: Contests, problem: any, problemIndex: number): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             let plateform: Plateform;
             const name: string = problem.plateform;
@@ -662,7 +680,7 @@ export class IndividualContestService extends ContestsService {
                     result = await plateform.updateContest(contest, user, problem);
                     console.log("user (", i, ") ", result);
                     statusFiltered = result.body.result;
-                    await this.querySubmissions(contest, problem, user, statusFiltered, plateform);
+                    await this.querySubmissions(contest, problem, user, statusFiltered, plateform, problemIndex);
                 }
                 return resolve();
             }
@@ -680,12 +698,12 @@ export class IndividualContestService extends ContestsService {
      * @param user 
      * @param status 
      */
-    private querySubmissions(contest: Contests, problem: any, user: any, status: any[], plateform: Plateform): Promise<void> {
+    private querySubmissions(contest: Contests, problem: any, user: any, status: any[], plateform: Plateform, problemIndex: number): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             try {
                 console.log('INSIDE QUERY SUBMISSIONS');
                 for (let i = 0; i < status.length; i++) {
-                    await this.getSubmission(contest, user, problem, status[i], plateform);
+                    await this.getSubmission(contest, user, problem, status[i], plateform, problemIndex);
                 }
                 return resolve();
             }
@@ -702,7 +720,7 @@ export class IndividualContestService extends ContestsService {
      * @param problem 
      * @param sub 
      */
-    private getSubmission(contest: Contests, user: any, problem: any, sub: any, platform: Plateform): Promise<void> {
+    private getSubmission(contest: Contests, user: any, problem: any, sub: any, platform: Plateform, problemIndex: number): Promise<void> {
         return new Promise<void>(async (resolve, reject) => {
             let tracker: Trackers;
 
@@ -725,21 +743,8 @@ export class IndividualContestService extends ContestsService {
                             contestID: contest._id
                         }).exec();
                         let saveTracker = new this.trackers(tracker);
-                        for (let i = 0; i < saveTracker.problemsSolved.length; i++) {
-                            let prblm: string = saveTracker.problemsSolved[i] + "";
-                            console.log("SOLVED AND UNSOLVED: ", prblm, " ", problem._id);
-                            if (prblm == (problem._id + "")) {
-                                console.log("INSIDE");
-                                return resolve();
-                            }
-                        }
-                        let shouldSave: boolean = true;
-                        for (let i = 0; i < saveTracker.problemsUnsolved.length; i++) {
-                            let prblm: string = saveTracker.problemsUnsolved[i] + "";
-                            if (prblm == (problem._id + "")) {
-                                console.log("INSIDE");
-                                shouldSave = false;
-                            }
+                        if (saveTracker.solved[problemIndex] != 0) {
+                            return resolve();
                         }
                         let createSubmission = new this.submissions(submission);
                         await createSubmission.save();
@@ -747,16 +752,13 @@ export class IndividualContestService extends ContestsService {
                         saveContest.submissions.push(createSubmission._id);
                         await saveContest.save();
                         if (submission.verdict != "ACCEPTED") {
-                            if (shouldSave) {
-                                saveTracker.problemsUnsolved.push(problem._id);
-                            }
+                            saveTracker.unSolved[problemIndex] += 1;
                         }
                         else {
                             let diff = (submission.submissionTime.getTime() - contest.startDate.getTime()) / 6000;
                             saveTracker.penalty += Math.round(diff);
                             saveTracker.solvedCount += 1;
-                            saveTracker.problemsSolved.push(problem._id);
-                            saveTracker.problemsUnsolved = saveTracker.problemsUnsolved.filter((pr: string) => pr != problem._id);
+                            saveTracker.solved[problemIndex] = 1;
                         }
                         await saveTracker.save();
                     }

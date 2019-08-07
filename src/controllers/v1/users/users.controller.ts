@@ -39,12 +39,13 @@ export class UsersCtrl {
         return new Promise<Users>((resolve, reject) => {
             Passport.authenticate("login", (err, res: InsightResponse) => {
                 if (err) {
-                    response.status(API_ERRORS.UNAUTHORIZED.status);
+                    res = err;
+                    response.status(res.code);
                     response.setHeader("Content-Type", "application/json");
                     response.json({
                         success: false,
                         status: "Login Unsuccessfull!",
-                        err: "Couldn't log in user"
+                        err: res.body.name
                     });
                     reject(err);
                 }
@@ -52,12 +53,12 @@ export class UsersCtrl {
                     console.log("RESULT: ", res);
                     const user: any = res.body;
                     if (res && user.name) {
-                        response.status(API_ERRORS.USER_NOT_FOUND.status);
+                        response.status(res.code);
                         response.setHeader("Content-Type", "application/json");                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
                         response.json({
                             success: false,
                             status: "Login Unsuccessfull!",
-                            err: "Couldn't log in the user"
+                            err: user.name
                         });
                         reject(!!err);
                     }
@@ -120,12 +121,13 @@ export class UsersCtrl {
         return new Promise<Users>((resolve, reject) => {
             Passport.authenticate("signup", (err, res: InsightResponse) => {
                 if (err) {
-                    response.status(API_ERRORS.USER_ALREADY_EXISTS.status);
+                    res = err;
+                    response.status(res.code);
                     response.setHeader("Content-Type", "application/json");
                     response.json({
                         success: false,
-                        status: "Signup Unsuccessfull!",
-                        err: "Could not signup user"
+                        status: "Login Unsuccessfull!",
+                        err: res.body.name
                     });
                     reject(err);
                 }
@@ -139,36 +141,19 @@ export class UsersCtrl {
                         response.json({
                             success: false,
                             status: "Login Unsuccessfull!",
-                            err: "Couldn't log in the user"
+                            err: user.name
                         });
                         reject(!!err);
                     }
                     
                     else if (res && user.result) {
-                        request.login(user.result, { session: false },(err) => {
-                            console.log("RESULTTTT: ", user.result);
-                            if (err) {
-                                response.status(API_ERRORS.UNAUTHORIZED.status);
-                                response.setHeader("Content-Type", "application/json");
-                                response.json({
-                                    success: false,
-                                    status: "Signup Unsuccessfull!",
-                                    err: "Could not signup user"
-                                });
-                                reject(err);
-                            }
-    
-                            let token = PassportService.getToken(user.result);
-                            response.status(HTTPStatusCodes.OK);
-                            response.setHeader("Content-Type", "application/json");
-                            response.json({
-                                success: true,
-                                status: "Signup Successfull!",
-                                token: token,
-                                user: request.user
-                            });
-                            resolve(user.result);
+                        response.status(HTTPStatusCodes.OK);
+                        response.setHeader("Content-Type", "application/json");
+                        response.json({
+                            success: true,
+                            status: "Signup Successfull!"
                         });
+                        resolve(user.result);
                     }
                 }
             })(request, response, () => {});
@@ -335,35 +320,30 @@ export class UsersCtrl {
      * @param request
      * @param response
      */
-    @Get("/account/resetEmail/:token")
+    @Post("/account/resetEmail")
     @Summary("Update user email")
-    async getUpdateEmail(@Required() @PathParams("token") token: string,
-                      @Req() request: Express.Request,
-                      @Res() response: Express.Response) {
-        
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            "token": token
-        });
-    }
-
-    /**
-     * Validate token to reset email
-     * @param email
-     * @param request
-     * @param response
-     */
-    @Post("/account/resetEmail/:token")
-    @Summary("Update user email")
-    async postUpdateEmail(@Required() @PathParams("token") token: string,
+    @Authenticated()
+    async postUpdateEmail(@Required() @BodyParams("oldEmail") oldEmail: string,
+                          @Required() @BodyParams("newEmail") newEmail: string,
                           @Req() request: Express.Request,
                           @Res() response: Express.Response) {
         
-        response.status(HTTPStatusCodes.NOT_IMPLEMENTED);
-        response.setHeader("Content-Type", "application/json");
-        response.json({
-            "token": token
+        return new Promise<any>(async (resolve, reject) => {
+            let result: InsightResponse;
+            try {
+                result = await this.usersServices.updateEmail(oldEmail, newEmail, request.user._id);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
         });
     }
 
@@ -416,49 +396,17 @@ export class UsersCtrl {
         return new Promise<Users>(async (resolve, reject) => {
             try {
                 result = await this.usersServices.updatePasswordToken(this.users, request, token, password);
-                const user: any = result.body;
-                if (result && user.name) {
-                    response.status(API_ERRORS.USER_NOT_FOUND.status);
-                    response.setHeader("Content-Type", "application/json");                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                    response.json({
-                        success: false,
-                        status: `Couldn't update password with the token: ${token}`
-                    });
-                    reject(`Couldn't update password with the token: ${token}`);
-                }
-                else if (result && user.result) {
-                    request.login(user.result, { session: false }, (err) => {
-                        if (err) {
-                            response.status(API_ERRORS.UNAUTHORIZED.status);
-                            response.setHeader("Content-Type", "application/json");
-                            response.json({
-                                success: false,
-                                status: "Login Unsuccessfull!",
-                                err: err
-                            });
-                            reject(err);
-                        }
-                        let token = PassportService.getToken(user.result);
-                        response.status(HTTPStatusCodes.OK);
-                        response.setHeader("Content-Type", "application/json");
-                        response.json({
-                            success: true,
-                            status: "Login Successfull!",
-                            token: token,
-                            user: request.user
-                        });
-                        resolve(user.result);
-                    });
-                }
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
             }
-            catch (err) {
-                response.status(API_ERRORS.USER_NOT_FOUND.status);
-                response.setHeader("Content-Type", "application/json");                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
-                response.json({
-                    success: false,
-                    status: `Couldn't update password with the token: ${token}`
-                });
-                reject(`Couldn't update password with the token: ${token}`);
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
             }
         });
     }
@@ -481,19 +429,14 @@ export class UsersCtrl {
                 result = await this.usersServices.forgotPassword(this.users, request, email);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
-                response.json({
-                    success: true,
-                    status: `Reset token sent to ${email}`,
-                });
+                response.json(result.body.result);
                 resolve(result.body.result);
             }
             catch (err) {
-                response.status(HTTPStatusCodes.BAD_REQUEST);
+                result = err;
+                response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
-                response.json({
-                    success: false,
-                    status: `Couldn't send the reset token to ${email}`,
-                });
+                response.json(result.body.name);
                 reject(err);
             }
         });

@@ -96,7 +96,7 @@ export class ProblemsCtrl {
         @Res() response: Express.Response,
         @Next() next: Express.NextFunction,
         @PathParams("key") @Required() key: string,
-        @QueryParams("plateform") @Required() plateform: string
+        @BodyParams("plateform") @Required() plateform: string
     ): Promise<void> {
 
         let plat: Plateform = this.plateformB.createPlateform(plateform);

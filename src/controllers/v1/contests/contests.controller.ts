@@ -201,8 +201,56 @@ export class ContestsCtrl {
         });
     }
 
-    @Get("/my")
-    @Summary("Contests attended by the user")
+    @Get("/mycoming")
+    @Summary("Coming contests registered by the user")
+    @Authenticated()
+    async getComingContests(@Req() request: Express.Request, @Res() response: Express.Response, @BodyParams("username") username: string) {
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.getComingContests(username);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    @Get("/myrunning")
+    @Summary("Running contests registered by the user")
+    @Authenticated()
+    async getRunningContests(@Req() request: Express.Request, @Res() response: Express.Response, @BodyParams("username") username: string) {
+        return new Promise<Contests>(async (resolve, reject) => {
+            let result: InsightResponse;
+
+            try {
+                result = await this.contestService.getRunningContests(username);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    @Get("/mypast")
+    @Summary("Past contests attended by the user")
     @Authenticated()
     async getContests(@Req() request: Express.Request, @Res() response: Express.Response, @BodyParams("username") username: string) {
         return new Promise<Contests>(async (resolve, reject) => {
@@ -810,7 +858,7 @@ export class ContestsCtrl {
     @Summary("Delete a contest registrant")
     @Authenticated()
     async unregisterUser(@Required() @PathParams("id") contestID: string,
-                           @Required() @BodyParams("userID") userID: string,
+                           @Required() @QueryParams("userID") userID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
 
@@ -848,7 +896,7 @@ export class ContestsCtrl {
     @Summary("Delete a contest team")
     @Authenticated()
     async unregisterTeam(@Required() @PathParams("id") contestID: string,
-                           @Required() @BodyParams("teamID") teamID: string,
+                           @Required() @QueryParams("teamID") teamID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
 

@@ -15,8 +15,8 @@ import path from "path";
 import mongoose from "mongoose";
 import passport from "passport";
 import expressValidator from "express-validator";
-import bluebird from "bluebird";
 import { MONGODB_URI, SESSION_SECRET } from "./util/secrets";
+import cors from 'cors';
 
 const MongoStore = mongo(session);
 
@@ -80,7 +80,7 @@ app.use(
       `${rootDir}/services/**/**.service.ts`,
       `${rootDir}/middlewares/**/**.ts`
   ],
-  httpPort: process.env.PORT || 3000,
+  httpPort: process.env.PORT || 3001,
   httpsPort: 3443,
   acceptMimes: ['application/json'],
   swagger: {
@@ -120,6 +120,7 @@ export class Server extends ServerLoader {
               autoReconnect: true
             })
           }))
+          .use(cors())
           .use(flash())
           .use(lusca.xframe("SAMEORIGIN"))
           .use(lusca.xssProtection(true));
