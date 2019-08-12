@@ -91,53 +91,69 @@ export class ProblemsCtrl {
 
     @Get("/:key")
     @Summary("Select all problems matching the key")
-    async get(
+    @Authenticated()
+    get(
         @Req() request: Express.Request,
         @Res() response: Express.Response,
         @Next() next: Express.NextFunction,
         @PathParams("key") @Required() key: string,
-        @BodyParams("plateform") @Required() plateform: string
-    ): Promise<void> {
+        @QueryParams("plateform") plateform: string
+    ): Promise<any> {
 
-        let plat: Plateform = this.plateformB.createPlateform(plateform);
+        return new Promise<any>(async (resolve, reject) => {
+            let plat: Plateform = this.plateformB.createPlateform(plateform);
 
-        let res: InsightResponse;
+            let res: InsightResponse;
 
-        try {
-            res = await plat.getProblems(key);
-            response.status(res.code);
-            response.setHeader('Content-Type', 'application/json');
-            response.json(res.body.result);
-        }
-        catch(err) {
-            throw new BadRequest(err);
-        }
+            try {
+                res = await plat.getProblems(key);
+                response.status(res.code);
+                response.setHeader('Content-Type', 'application/json');
+                response.json(res.body.result);
+                resolve(res.body.result);
+            }
+            catch(err) {
+                res = err;
+                response.status(res.code);
+                response.setHeader('Content-Type', 'application/json');
+                response.json(res.body.name);
+                resolve(res.body.name);
+            }
+        });
 
     }
 
-    @Get("/p/filter/:difficulty")
+    @Get("/p/filter")
     @Summary("Filter all problems by difficulty")
-    async filter(
+    @Authenticated()
+    filter(
         @Req() request: Express.Request,
         @Res() response: Express.Response,
-        @Next() next: Express.NextFunction,
-        @PathParams("difficulty") @Required() difficulty: string,
-        @QueryParams("plateform") @Required() plateform: string
-    ): Promise<void> {
+        @QueryParams("page") page: number = 1,
+        @QueryParams("difficulty") @Required() difficulty: string,
+        @QueryParams("plateform") plateform: string
+    ): Promise<any> {
 
-        let plat: Plateform = this.plateformB.createPlateform(plateform);
+        return new Promise<any>(async (resolve, reject) => {
+            let plat: Plateform = this.plateformB.createPlateform(plateform);
 
-        let res: InsightResponse;
+            let res: InsightResponse;
 
-        try {
-            res = await plat.getProblemsFiltered(difficulty);
-            response.status(res.code);
-            response.setHeader('Content-Type', 'application/json');
-            response.json(res.body.result);
-        }
-        catch(err) {
-            throw new BadRequest(err);
-        }
+            try {
+                res = await plat.getProblemsFiltered(difficulty, page);
+                response.status(res.code);
+                response.setHeader('Content-Type', 'application/json');
+                response.json(res.body.result);
+                resolve(res.body.result);
+            }
+            catch(err) {
+                res = err;
+                response.status(res.code);
+                response.setHeader('Content-Type', 'application/json');
+                response.json(res.body.name);
+                resolve(res.body.name);
+            }
+        });
 
     }
 }

@@ -43,9 +43,10 @@ export abstract class Plateform implements PlateformFactory {
     /**
      * Return all problems of the given difficulty
      * @param level 
+     * @param page
      * @returns {Promise<InsightResponse>}
      */
-    abstract getProblemsFiltered(level: string): Promise<InsightResponse>;
+    abstract getProblemsFiltered(level: string, page: number): Promise<InsightResponse>;
 
     /**
      * @description add a specific problem to the contest
@@ -211,35 +212,35 @@ export class Codeforces extends Plateform {
      * @param key 
      * @return {Promise<InsightResponse>}
      */
-    async getProblems(key: string): Promise<InsightResponse> {
-        let problems: any[] = [];
+    getProblems(key: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let problems: any[] = [];
 
-        try {
-            problems = await this.problemsModel.find({
-                                "plateform": this.getPlateform(),
-                                "name": {
-                                    "$regex": key,
-                                    "$options": "i"
-                                }
-                            }).limit(10).exec();
-        }
-        catch(err) {
-            return  Promise.reject({
-                        code: HTTPStatusCodes.BAD_REQUEST,
-                        body: {
-                            name: "Can't get problems from Codeforces"
-                        }
-                    });
-        }
+            try {
+                problems = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "name": {
+                                        "$regex": key,
+                                        "$options": "i"
+                                    }
+                                }).limit(10).exec();
 
-        console.log("RESULTTTTT: ", problems.length);
-
-        return {
-            code: HTTPStatusCodes.OK,
-            body : {
-                result: problems
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body : {
+                        result: problems
+                    }
+                });
             }
-        };
+            catch(err) {
+                return  reject({
+                            code: HTTPStatusCodes.BAD_REQUEST,
+                            body: {
+                                name: "Can't get problems from Codeforces"
+                            }
+                        });
+            }
+        });
     }
 
     /**
@@ -355,33 +356,49 @@ export class Codeforces extends Plateform {
      * @param level 
      * @returns {Promise<InsightResponse>}
      */
-    async getProblemsFiltered(level: string): Promise<InsightResponse> {
+    getProblemsFiltered(level: string, page: number): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let total: number;
+            let problems: any[] = [];
+            const size = 10;
 
-        let problems: any[] = [];
+            try {
+                total = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "difficulty": level
+                                }).count().exec();
 
-        try {
-            problems = await this.problemsModel.find({
-                                "plateform": this.getPlateform(),
-                                "difficulty": level
-                            }).exec();
-        }
-        catch(err) {
-            return  Promise.reject({
-                        code: HTTPStatusCodes.BAD_REQUEST,
-                        body: {
-                            name: "Can't get problems from Codeforces"
+                problems = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "difficulty": level
+                                })
+                                .limit(size)
+                                .skip(size * (page - 1))
+                                .exec();
+
+                
+                console.log("RESULTTTTT: ", problems.length);
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body : {
+                        result: {
+                            problems: problems,
+                            total: total,
+                            per_page: size
                         }
-                    });
-        }
-
-        console.log("RESULTTTTT: ", problems.length);
-
-        return {
-            code: HTTPStatusCodes.OK,
-            body : {
-                result: problems
+                    }
+                });
             }
-        };
+            catch(err) {
+                return  reject({
+                            code: HTTPStatusCodes.BAD_REQUEST,
+                            body: {
+                                name: "Can't get problems from Codeforces"
+                            }
+                        });
+            }
+        });
     }
 
     /**
@@ -584,35 +601,35 @@ export class Uva extends Plateform {
      * @param key 
      * @return {Promise<InsightResponse>}
      */
-    async getProblems(key: string): Promise<InsightResponse> {
-        let problems: any[] = [];
+    getProblems(key: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let problems: any[] = [];
 
-        try {
-            problems = await this.problemsModel.find({
-                                "plateform": this.getPlateform(),
-                                "name": {
-                                    "$regex": key,
-                                    "$options": "i"
-                                }
-                            }).limit(10).exec();
-        }
-        catch(err) {
-            return  Promise.reject({
-                        code: HTTPStatusCodes.BAD_REQUEST,
-                        body: {
-                            name: "Can't get problems from Codeforces"
-                        }
-                    });
-        }
+            try {
+                problems = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "name": {
+                                        "$regex": key,
+                                        "$options": "i"
+                                    }
+                                }).limit(10).exec();
 
-        console.log("RESULTTTTT: ", problems.length);
-
-        return {
-            code: HTTPStatusCodes.OK,
-            body : {
-                result: problems
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body : {
+                        result: problems
+                    }
+                });
             }
-        };
+            catch(err) {
+                return  reject({
+                            code: HTTPStatusCodes.BAD_REQUEST,
+                            body: {
+                                name: "Can't get problems from Uva"
+                            }
+                        });
+            }
+        });
     }
     
     private getDifficulty(accepted: number, total: number): string {
@@ -727,33 +744,49 @@ export class Uva extends Plateform {
      * @param level 
      * @returns {Promise<InsightResponse>}
      */
-    async getProblemsFiltered(level: string): Promise<InsightResponse> {
+    getProblemsFiltered(level: string, page: number): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let total: number;
+            let problems: any[] = [];
+            const size = 10;
 
-        let problems: any[] = [];
+            try {
+                total = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "difficulty": level
+                                }).count().exec();
 
-        try {
-            problems = await this.problemsModel.find({
-                                "plateform": this.getPlateform(),
-                                "difficulty": level
-                            }).exec();
-        }
-        catch(err) {
-            return  Promise.reject({
-                        code: HTTPStatusCodes.BAD_REQUEST,
-                        body: {
-                            name: "Can't get problems from Uva"
+                problems = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "difficulty": level
+                                })
+                                .limit(size)
+                                .skip(size * (page - 1))
+                                .exec();
+
+                
+                console.log("RESULTTTTT: ", problems.length);
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body : {
+                        result: {
+                            problems: problems,
+                            total: total,
+                            per_page: size
                         }
-                    });
-        }
-
-        console.log("RESULTTTTT: ", problems.length);
-
-        return {
-            code: HTTPStatusCodes.OK,
-            body : {
-                result: problems
+                    }
+                });
             }
-        };
+            catch(err) {
+                return  reject({
+                            code: HTTPStatusCodes.BAD_REQUEST,
+                            body: {
+                                name: "Can't get problems from Uva"
+                            }
+                        });
+            }
+        });
     }
 
     /**
@@ -1042,35 +1075,35 @@ export class LiveArchive extends Plateform {
      * @param key 
      * @return {Promise<InsightResponse>}
      */
-    async getProblems(key: string): Promise<InsightResponse> {
-        let problems: any[] = [];
+    getProblems(key: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let problems: any[] = [];
 
-        try {
-            problems = await this.problemsModel.find({
-                                "plateform": this.getPlateform(),
-                                "name": {
-                                    "$regex": key,
-                                    "$options": "i"
-                                }
-                            }).limit(10).exec();
-        }
-        catch(err) {
-            return  Promise.reject({
-                        code: HTTPStatusCodes.BAD_REQUEST,
-                        body: {
-                            name: "Can't get problems from Live Archive"
-                        }
-                    });
-        }
+            try {
+                problems = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "name": {
+                                        "$regex": key,
+                                        "$options": "i"
+                                    }
+                                }).limit(10).exec();
 
-        console.log("RESULTTTTT: ", problems.length);
-
-        return {
-            code: HTTPStatusCodes.OK,
-            body : {
-                result: problems
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body : {
+                        result: problems
+                    }
+                });
             }
-        };
+            catch(err) {
+                return  reject({
+                            code: HTTPStatusCodes.BAD_REQUEST,
+                            body: {
+                                name: "Can't get problems from Live Archive"
+                            }
+                        });
+            }
+        });
     }
     
     private getDifficulty(accepted: number, total: number): string {
@@ -1185,33 +1218,49 @@ export class LiveArchive extends Plateform {
      * @param level 
      * @returns {Promise<InsightResponse>}
      */
-    async getProblemsFiltered(level: string): Promise<InsightResponse> {
+    getProblemsFiltered(level: string, page: number): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let total: number;
+            let problems: any[] = [];
+            const size = 10;
 
-        let problems: any[] = [];
+            try {
+                total = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "difficulty": level
+                                }).count().exec();
 
-        try {
-            problems = await this.problemsModel.find({
-                                "plateform": this.getPlateform(),
-                                "difficulty": level
-                            }).exec();
-        }
-        catch(err) {
-            return  Promise.reject({
-                        code: HTTPStatusCodes.BAD_REQUEST,
-                        body: {
-                            name: "Can't get problems from Live Archive"
+                problems = await this.problemsModel.find({
+                                    "plateform": this.getPlateform(),
+                                    "difficulty": level
+                                })
+                                .limit(size)
+                                .skip(size * (page - 1))
+                                .exec();
+
+                
+                console.log("RESULTTTTT: ", problems.length);
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body : {
+                        result: {
+                            problems: problems,
+                            total: total,
+                            per_page: size
                         }
-                    });
-        }
-
-        console.log("RESULTTTTT: ", problems.length);
-
-        return {
-            code: HTTPStatusCodes.OK,
-            body : {
-                result: problems
+                    }
+                });
             }
-        };
+            catch(err) {
+                return  reject({
+                            code: HTTPStatusCodes.BAD_REQUEST,
+                            body: {
+                                name: "Can't get problems from Live Archive"
+                            }
+                        });
+            }
+        });
     }
 
     /**
@@ -1451,38 +1500,41 @@ export class AllPlateforms extends Plateform {
      * @param key 
      * @return {Promise<InsightResponse>}
      */
-    async getProblems(key: string): Promise<InsightResponse> {
-        let codeforcesProblems: InsightResponse;
-        let uvaProblems: InsightResponse;
-        let livearchiveProblems: InsightResponse;
-        let res: any[] = [];
+    getProblems(key: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let codeforcesProblems: InsightResponse;
+            let uvaProblems: InsightResponse;
+            let livearchiveProblems: InsightResponse;
+            let res: any[] = [];
 
-        try {
-            codeforcesProblems = await this.codeforces.getProblems(key);
-            livearchiveProblems = await this.livearchive.getProblems(key);
-            uvaProblems = await this.uva.getProblems(key);
+            try {
+                codeforcesProblems = await this.codeforces.getProblems(key);
+                livearchiveProblems = await this.livearchive.getProblems(key);
+                uvaProblems = await this.uva.getProblems(key);
 
-            res.push(codeforcesProblems.body.result);
-            res.push(livearchiveProblems.body.result);
-            res.push(uvaProblems.body.result);
-            res = this.shuflle(res);
-        }
-        catch(err) {
-            console.log("ERRRRRORRR: ", err);
-            return Promise.reject({
-                code: HTTPStatusCodes.BAD_REQUEST,
-                body: {
-                    name: "Can't get problems"
-                }
-            });
-        }
+                res = res.concat(codeforcesProblems.body.result);
+                res = res.concat(livearchiveProblems.body.result);
+                res = res.concat(uvaProblems.body.result);
+                console.log("ADDED UVA RESULTTTTT: ", res.length);
+                res = this.shuflle(res);
 
-        return {
-            code: HTTPStatusCodes.OK,
-            body : {
-                result: res
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body : {
+                        result: res
+                    }
+                });
             }
-        };
+            catch(err) {
+                console.log("ERRRRRORRR: ", err);
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Can't get problems"
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -1538,40 +1590,49 @@ export class AllPlateforms extends Plateform {
      * @param level 
      * @returns {Promise<InsightResponse>}
      */
-    async getProblemsFiltered(level: string): Promise<InsightResponse> {
-        let codeforcesProblems: InsightResponse;
-        let uvaProblems: InsightResponse;
-        let livearchiveProblems: InsightResponse;
-        let res: any[] = [];
+    async getProblemsFiltered(level: string, page: number): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let codeforcesProblems: InsightResponse;
+            let uvaProblems: InsightResponse;
+            let livearchiveProblems: InsightResponse;
+            let res: any[] = [];
+            const size = 30;
+            let total = 0;
 
-        try {
-            console.log("ALL PLATEFORMS CALLED");
-            codeforcesProblems = await this.codeforces.getProblemsFiltered(level);
-            uvaProblems = await this.uva.getProblemsFiltered(level);
-            livearchiveProblems = await this.livearchive.getProblemsFiltered(level);
-            
+            try {
+                codeforcesProblems = await this.codeforces.getProblemsFiltered(level, page);
+                uvaProblems = await this.uva.getProblemsFiltered(level, page);
+                livearchiveProblems = await this.livearchive.getProblemsFiltered(level, page);
+                
 
-            res.push(codeforcesProblems.body.result);
-            res.push(livearchiveProblems.body.result);
-            res.push(uvaProblems.body.result);
+                res = res.concat(codeforcesProblems.body.result.problems);
+                res = res.concat(livearchiveProblems.body.result.problems);
+                res = res.concat(uvaProblems.body.result.problems);
+                res = this.shuflle(res);
 
-        }
-        catch(err) {
-            console.log("ERRRRRORRR: ", err);
-            return Promise.reject({
-                code: HTTPStatusCodes.BAD_REQUEST,
-                body: {
-                    name: "Can't get problems"
-                }
-            });
-        }
+                total = codeforcesProblems.body.result.total + uvaProblems.body.result.total + livearchiveProblems.body.result.total;
 
-        return {
-            code: HTTPStatusCodes.OK,
-            body : {
-                result: res
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body : {
+                        result: {
+                            problems: res,
+                            total: total,
+                            per_page: size
+                        }
+                    }
+                });
             }
-        };
+            catch(err) {
+                console.log("ERRRRRORRR: ", err);
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Can't get problems"
+                    }
+                });
+            }
+        });
     }
 
     getAllProblems(): Promise<InsightResponse> {

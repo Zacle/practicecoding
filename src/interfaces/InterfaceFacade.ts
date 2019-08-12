@@ -62,7 +62,7 @@ export interface UserStatistic {
 export interface PlateformFactory {
     getProblems(key: string): Promise<InsightResponse>;
     getListOfProblems(): Promise<InsightResponse>;
-    getProblemsFiltered(level: string): Promise<InsightResponse>;
+    getProblemsFiltered(level: string, page: number): Promise<InsightResponse>;
 }
 
 /*
