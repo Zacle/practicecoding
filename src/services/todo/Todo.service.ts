@@ -23,6 +23,17 @@ export class TodosService {
                 problemID: problemID
             };
             try {
+                let todoExists = await this.todos.findOne({problemID: problemID}).exec();
+
+                if (todoExists) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_ACCEPTABLE,
+                        body: {
+                            name: "This problem is already in your todo list"
+                        }
+                    });
+                }
+
                 let saveTodo = new this.todos(todo);
                 await saveTodo.save();
 
@@ -34,6 +45,7 @@ export class TodosService {
                 });
             }
             catch(err) {
+                console.log("TODO ERROR: ", err);
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
@@ -53,7 +65,7 @@ export class TodosService {
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let todo: Todos;
             try {
-                todo = await this.todos.findOneAndRemove({problemID: problemID, userID: userID}).exec();
+                todo = await this.todos.findOneAndRemove({problemID: problemID, user: userID}).exec();
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
@@ -80,8 +92,8 @@ export class TodosService {
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let todo: Todos[];
             try {
-                todo = await this.todos.find({userID: userID}).populate("problemID").exec();
-
+                todo = await this.todos.find({user: userID}).populate("problemID").exec();
+                
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {

@@ -6,7 +6,8 @@ import {
     Post,
     Req,
     Res,
-    Delete
+    Delete,
+    QueryParams
 } from "@tsed/common";
 import { Summary } from "@tsed/swagger";
 import * as Express from "express";
@@ -51,6 +52,7 @@ export class TodosCtrl {
         return new Promise<any>(async (resolve, reject) => {
             let res: InsightResponse;
 
+
             try {
                 res = await this.todos.add(problemID, request.user._id);
                 response.status(res.code);
@@ -72,7 +74,7 @@ export class TodosCtrl {
     @Authenticated()
     delete(@Req() request: Express.Request, 
          @Res() response: Express.Response,
-         @BodyParams("problemID") problemID: string): Promise<any> {
+         @QueryParams("problemID") problemID: string): Promise<any> {
         return new Promise<any>(async (resolve, reject) => {
             let res: InsightResponse;
 
