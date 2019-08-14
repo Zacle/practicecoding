@@ -173,16 +173,16 @@ export class UsersCtrl {
         response.redirect("/");
     }
 
-    @Get("/:id")
-    @Summary("get a user by its id")
-    async getByID(@Required() @PathParams("id") id: string,
+    @Get("/:username")
+    @Summary("Select all users that match the username")
+    async getByID(@Required() @PathParams("username") id: string,
                   @Req() request: Express.Request,
                   @Res() response: Express.Response) {
         return new Promise<Users>(async (resolve, reject) => {
             let result: InsightResponse;
 
             try {
-                result = await this.usersServices.findById(id);
+                result = await this.usersServices.findMatchingUsername(id);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);

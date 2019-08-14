@@ -105,8 +105,12 @@ export class TeamsService {
 
             try {
                 team = await this.users.findOne({username: username}, "-__v")
-                                        .populate("teams")
-                                        .populate("admin")
+                                        .populate({
+                                            path: "teams",
+                                            populate: {
+                                                path: "admin"
+                                            }
+                                        })
                                         .exec();
 
                 return resolve({
@@ -120,7 +124,7 @@ export class TeamsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
+                        name: "Couldn't get your team"
                     }
                 });
             }
@@ -211,7 +215,8 @@ export class TeamsService {
             
             try {
                 team = await this.teams.findById(id, "-__v")
-                                       .populate("admin")                        
+                                       .populate("admin")
+                                       .populate("members")
                                        .exec();
 
                 if (team) {
@@ -234,47 +239,7 @@ export class TeamsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
-                    }
-                });
-            }
-        });
-    }
-
-    /**
-     * Return a team identified by name
-     * @param name the team name to return
-     */
-    async getTeamName(name: string): Promise<InsightResponse> {
-        
-        return new Promise<InsightResponse>(async (resolve, reject) => {
-            
-            let team: Teams;
-            
-            try {
-                team = await this.teams.findOne({ name: name }, "-__v").exec();
-
-                if (team) {
-                    return resolve({
-                        code: HTTPStatusCodes.OK,
-                        body: {
-                            result: team
-                        }
-                    });
-                }
-
-                return reject({
-                    code: HTTPStatusCodes.NOT_FOUND,
-                    body: {
-                        name: "Team name not found"
-                    }
-                });
-            }
-            catch(err) {
-                return reject({
-                    code: HTTPStatusCodes.BAD_REQUEST,
-                    body: {
-                        name: err
+                        name: "Couldn't get the team"
                     }
                 });
             }
@@ -482,6 +447,16 @@ export class TeamsService {
                     });
                 }
 
+                let isInTheTeam: boolean = await this.isUserAlreadyInTheTeam(user, teamID);
+                if (isInTheTeam) {
+                    return reject({
+                        code: HTTPStatusCodes.CONFLICT,
+                        body: {
+                            name: "User is already in the team"
+                        }
+                    });
+                }
+
                 user.teams.push(teamID);
                 team.members.push(userID);
 
@@ -490,6 +465,8 @@ export class TeamsService {
 
                 const saveTeam = new this.teams(team);
                 await saveTeam.save();
+
+                team = await this.teams.findById(teamID, "-__v").populate("admin").populate("members").exec();
 
                 return resolve({
                     code: HTTPStatusCodes.OK,
@@ -506,6 +483,27 @@ export class TeamsService {
                     }
                 });
             }
+        });
+    }
+
+    /**
+     * Verify if the user is already in the team
+     * so that he(she) cannot be added more than once
+     * @param user 
+     * @param contestID 
+     */
+    private isUserAlreadyInTheTeam(user: Users, teamID: string): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            let contests: any[] = user.teams;
+            let isRegistered = false;
+
+            for (let i = 0; i < contests.length; i++) {
+                if (contests[i] == teamID) {
+                    isRegistered = true;
+                    break;
+                }
+            }
+            return resolve(isRegistered);
         });
     }
 
@@ -556,6 +554,8 @@ export class TeamsService {
                 const saveTeam = new this.teams(team);
                 await saveTeam.save();
 
+                team = await this.teams.findById(teamID, "-__v").populate("admin").populate("members").exec();
+
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
@@ -570,33 +570,6 @@ export class TeamsService {
                         name: err
                     }
                 });
-            }
-        });
-    }
-
-    /**
-     * Verify if a user is a member of this team
-     * @param teamID 
-     * @param userID 
-     */
-    async isMember(teamID: string, userID: string): Promise<boolean> {
-
-        return new Promise<boolean>(async (resolve, reject) => {
-
-            let team: Teams;
-
-            try {
-                team = await this.teams.findById(teamID, "-__v").exec();
-
-                for (let i = 0; i < team.members.length; i++) {
-                    if (team.members[i].toString() == userID) {
-                        return resolve(true);
-                    }
-                }
-                return reject(false);
-            }
-            catch (err) {
-                return reject(false);
             }
         });
     }

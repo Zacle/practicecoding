@@ -55,7 +55,6 @@ export class TeamsCtrl {
 
     @Get("/my")
     @Summary("Get all teams that contain the user")
-    @Authenticated()
     async getTeams(@Req() request: Express.Request, @Res() response: Express.Response,
                    @Required() @QueryParams("username") username: string) {
         return new Promise<Teams>(async (resolve, reject) => {
@@ -132,7 +131,6 @@ export class TeamsCtrl {
 
     @Get("/:id")
     @Summary("Get a specific team")
-    @Authenticated()
     async getTeam(@Required() @PathParams("id") teamID: string,
                   @Req() request: Express.Request,
                   @Res() response: Express.Response) {
@@ -141,32 +139,6 @@ export class TeamsCtrl {
 
             try {
                 result = await this.teams.getTeam(teamID);
-                response.status(result.code);
-                response.setHeader("Content-Type", "application/json");
-                response.json(result.body.result);
-                resolve(result.body.result);
-            }
-            catch(err) {
-                result = err;
-                response.status(result.code);
-                response.setHeader("Content-Type", "application/json");
-                response.json(result.body.name);
-                reject(result.body.name);
-            }
-        });
-    }
-
-    @Get("/by/:name")
-    @Summary("Get a specific team by name")
-    @Authenticated()
-    async getTeamName(@Required() @PathParams("name") name: string,
-                  @Req() request: Express.Request,
-                  @Res() response: Express.Response) {
-        return new Promise<Teams>(async (resolve, reject) => {
-            let result: InsightResponse;
-
-            try {
-                result = await this.teams.getTeamName(name);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);
@@ -266,7 +238,7 @@ export class TeamsCtrl {
     @Summary("Delete a user from the team")
     @Authenticated()
     async deleteTeamMember(@Required() @PathParams("id") teamID: string,
-                           @Required() @BodyParams("uid") userID: string,
+                           @Required() @QueryParams("uid") userID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
         return new Promise<Teams>(async (resolve, reject) => {
@@ -285,37 +257,6 @@ export class TeamsCtrl {
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.name);
                 reject(result.body.name);
-            }
-        });
-    }
-
-    @Post("/:id/verify")
-    @Summary("verify if the user is a member of this team")
-    @Authenticated()
-    async isMember(@Required() @PathParams("id") teamID: string,
-                    @Required() @BodyParams("uid") userID: string,
-                    @Req() request: Express.Request,
-                    @Res() response: Express.Response) {
-        return new Promise<boolean>(async (resolve, reject) => {
-            let result: boolean;
-
-            try {
-                result = await this.teams.isMember(teamID, userID);
-                response.status(HTTPStatusCodes.OK);
-                response.setHeader("Content-Type", "application/json");
-                response.json({
-                    isMember: result
-                });
-                resolve(result);
-            }
-            catch(err) {
-                result = err;
-                response.status(HTTPStatusCodes.UNAUTHORIZED);
-                response.setHeader("Content-Type", "application/json");
-                response.json({
-                    isMember: result
-                });
-                reject(result);
             }
         });
     }

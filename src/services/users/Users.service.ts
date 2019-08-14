@@ -4,7 +4,6 @@ import { HTTPStatusCodes } from "../../util/httpCode";
 import { API_ERRORS } from "../../util/app.error";
 import { Users } from "../../models/Users";
 import { InsightResponse, IUser } from "../../interfaces/InterfaceFacade";
-import { BadRequest, NotFound } from "ts-httpexceptions";
 import bcrypt from "bcrypt-nodejs";
 import mongoose from "mongoose";
 import * as Express from "express";
@@ -127,6 +126,40 @@ export class UsersService {
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
                         name: "An Error occurred while trying to retrieve user by its id"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Return all users that match the username
+     * @param username 
+     */
+    findMatchingUsername(username: string): Promise<InsightResponse> {
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let users: Users[];
+
+            try {
+                users = await this.users.find({
+                    "username": {
+                        "$regex": username,
+                        "$options": "i"
+                    }
+                }).limit(10).exec();
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: users
+                    }
+                });
+            }
+            catch(err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't get users"
                     }
                 });
             }
