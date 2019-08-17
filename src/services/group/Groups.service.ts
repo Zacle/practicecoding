@@ -117,7 +117,12 @@ export class GroupsService {
 
             try {
                 group = await this.users.findOne({username: username}, "-__v")
-                                        .populate("groups")
+                                        .populate({
+                                            path: "groups",
+                                            populate: {
+                                                path: "admin"
+                                            }
+                                        })
                                         .exec();
 
                 return resolve({
@@ -149,20 +154,12 @@ export class GroupsService {
 
             try {
                 group = await this.groups.find({ access: AccessType.PUBLIC }, "-__v")
+                                        .populate("admin")
                                         .exec();
-
-                if (!group) {
-                    return reject({
-                        code: HTTPStatusCodes.ACCEPTED,
-                        body: {
-                            name: []
-                        }
-                    });
-                }
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: group || []
+                        result: group
                     }
                 });
             }
@@ -237,12 +234,13 @@ export class GroupsService {
             
             let IDs: any[] = [...group.members];
             try {
-                await IDs.forEach(async id => {
+                for (let i = 0; i < IDs.length; i++) {
+                    const id = IDs[i];
                     user = await this.users.findByIdAndUpdate(
                         id,
                         {$pull: {groups: {_id: id}}}
                     ).exec();
-                });
+                }
                 group = await this.groups.findByIdAndRemove(group._id);
                 resolve(group);
             }
@@ -328,7 +326,17 @@ export class GroupsService {
             let group: Groups;
             
             try {
-                group = await this.groups.findById(id, "-__v").exec();
+                group = await this.groups.findById(id, "-__v")
+                                         .populate([{
+                                             path: "members",
+                                             populate: {
+                                                 path: "user"
+                                             }
+                                         },
+                                         {
+                                             path: "admin"
+                                         }])
+                                         .exec();
 
                 if (group) {
                     return resolve({
@@ -350,7 +358,7 @@ export class GroupsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
+                        name: "Couldn't get group ID"
                     }
                 });
             }
@@ -390,7 +398,7 @@ export class GroupsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
+                        name: "Couldn't get group name"
                     }
                 });
             }
@@ -401,8 +409,10 @@ export class GroupsService {
      * Update group access type
      * @param groupID 
      * @param access 
+     * @param userID
+     * @param description
      */
-    async updateGroup(groupID: string, access: string, userID: string): Promise<InsightResponse> {
+    async updateGroup(groupID: string, access: string, userID: string, description: string): Promise<InsightResponse> {
         return new Promise<InsightResponse>(async (resolve, reject) => {
 
             let group: Groups;
@@ -435,6 +445,7 @@ export class GroupsService {
                     accessType = AccessType.PRIVATE;
                 }
                 group.access = accessType;
+                group.description = description;
                 const saveGroup = new this.groups(group);
                 await saveGroup.save();
 
@@ -467,18 +478,19 @@ export class GroupsService {
 
             try {
                 members = await this.groups.findById(id)
-                                            .populate({
+                                            .populate([{
                                                 path: "members",
                                                 populate: {
                                                     path: "user"
                                                 }
-                                            })
+                                            },
+                                            "admin"])
                                             .exec();
                 
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: members.members
+                        result: members
                     }
                 });
             }
@@ -486,7 +498,7 @@ export class GroupsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
+                        name: "Couldn't get group members"
                     }
                 });
             }
@@ -550,13 +562,31 @@ export class GroupsService {
                     });
                 }
 
-                group = await this.groups.findById(groupID, "-__v").exec();
+                group = await this.groups.findById(groupID)
+                                            .populate([{
+                                                path: "members",
+                                                populate: {
+                                                    path: "user"
+                                                }
+                                            },
+                                            "admin"])
+                                            .exec();
 
                 if (!group) {
                     return reject({
                         code: HTTPStatusCodes.NOT_FOUND,
                         body: {
                             name: "Group ID doesn't exist"
+                        }
+                    });
+                }
+
+                let isInTheGroup: boolean = await this.isUserAlreadyInTheGroup(user, groupID);
+                if (isInTheGroup) {
+                    return reject({
+                        code: HTTPStatusCodes.CONFLICT,
+                        body: {
+                            name: "User is already in the group"
                         }
                     });
                 }
@@ -579,6 +609,16 @@ export class GroupsService {
                 const saveGroup = new this.groups(group);
                 await saveGroup.save();
 
+                group = await this.groups.findById(groupID)
+                                            .populate([{
+                                                path: "members",
+                                                populate: {
+                                                    path: "user"
+                                                }
+                                            },
+                                            "admin"])
+                                            .exec();
+
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
@@ -590,10 +630,31 @@ export class GroupsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
+                        name: "Couldn't add user to the group"
                     }
                 });
             }
+        });
+    }
+
+    /**
+     * Verify if the user is already in the group
+     * so that he(she) cannot be added more than once
+     * @param user 
+     * @param groupID
+     */
+    private isUserAlreadyInTheGroup(user: Users, groupID: string): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            let groups: any[] = user.groups;
+            let isRegistered = false;
+
+            for (let i = 0; i < groups.length; i++) {
+                if (groups[i] == groupID) {
+                    isRegistered = true;
+                    break;
+                }
+            }
+            return resolve(isRegistered);
         });
     }
 
@@ -622,7 +683,15 @@ export class GroupsService {
                     });
                 }
 
-                group = await this.groups.findById(groupID, "-__v").exec();
+                group = await this.groups.findById(groupID)
+                                            .populate([{
+                                                path: "members",
+                                                populate: {
+                                                    path: "user"
+                                                }
+                                            },
+                                            "admin"])
+                                            .exec();
 
                 if (!group) {
                     return reject({
@@ -633,18 +702,28 @@ export class GroupsService {
                     });
                 }
 
-                groupMember = await this.groupMembers.findOneAndRemove({user: user._id}).exec();
-
-                let userArray: any[] = user.groups.filter((id) => id.toString() != groupID.toString());
-                user.groups = [...userArray];
-                let groupArray: any[] = group.members.filter((member: GroupMembers) => member._id.toString() != userID.toString());
-                group.members = [...groupArray];
-
                 const saveUser = new this.users(user);
+                let userArray: any[] = saveUser.groups.filter((id) => id != groupID);
+                saveUser.groups = [...userArray];
                 await saveUser.save();
+
+                let groupArray: any[] = group.members.filter((member: any) => member.user.username != user.username);
+                group.members = [...groupArray];
 
                 const saveGroup = new this.groups(group);
                 await saveGroup.save();
+
+                groupMember = await this.groupMembers.findOneAndRemove({user: user._id}).exec();
+
+                group = await this.groups.findById(groupID)
+                                            .populate([{
+                                                path: "members",
+                                                populate: {
+                                                    path: "user"
+                                                }
+                                            },
+                                            "admin"])
+                                            .exec();
 
                 return resolve({
                     code: HTTPStatusCodes.OK,
@@ -654,10 +733,11 @@ export class GroupsService {
                 });
             }
             catch (err) {
+                console.log("DELETE ERROR: ", err);
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
+                        name: "Couldn't delete this user"
                     }
                 });
             }

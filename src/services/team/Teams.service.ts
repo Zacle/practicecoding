@@ -490,15 +490,15 @@ export class TeamsService {
      * Verify if the user is already in the team
      * so that he(she) cannot be added more than once
      * @param user 
-     * @param contestID 
+     * @param teamID 
      */
     private isUserAlreadyInTheTeam(user: Users, teamID: string): Promise<boolean> {
         return new Promise<boolean>((resolve) => {
-            let contests: any[] = user.teams;
+            let teams: any[] = user.teams;
             let isRegistered = false;
 
-            for (let i = 0; i < contests.length; i++) {
-                if (contests[i] == teamID) {
+            for (let i = 0; i < teams.length; i++) {
+                if (teams[i] == teamID) {
                     isRegistered = true;
                     break;
                 }

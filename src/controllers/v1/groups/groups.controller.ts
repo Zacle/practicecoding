@@ -11,7 +11,8 @@ import {
     Required,
     MergeParams,
     Delete,
-    Put
+    Put,
+    QueryParams
 } from "@tsed/common";
 import * as Express from "express";
 import { HTTPStatusCodes } from "../../../util/httpCode";
@@ -33,7 +34,6 @@ export class GroupsCtrl {
 
     @Get("/")
     @Summary("Get all groups that are public")
-    @Authenticated({role: 'admin'})
     async getAllGroups(@Req() request: Express.Request, @Res() response: Express.Response) {
         return new Promise<Groups>(async (resolve, reject) => {
 
@@ -43,7 +43,7 @@ export class GroupsCtrl {
                 result = await this.groups.getAllGroups();
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
-                response.json(result.body);
+                response.json(result.body.result);
                 resolve();
             }
             catch(err) {
@@ -58,9 +58,8 @@ export class GroupsCtrl {
 
     @Get("/my")
     @Summary("Get all groups that contain the user")
-    @Authenticated()
     async getGroups(@Req() request: Express.Request, @Res() response: Express.Response,
-                    @Required() @BodyParams("username") username: string) {
+                    @Required() @QueryParams("username") username: string) {
         return new Promise<Groups>(async (resolve, reject) => {
 
             let result: InsightResponse;
@@ -86,7 +85,7 @@ export class GroupsCtrl {
     @Summary("Add a new group")
     @Authenticated()
     async addGroup(@Required() @BodyParams("name") name: string,
-                   @Required() @BodyParams("access") access: string,
+                   @BodyParams("access") access: string = "PUBLIC",
                    @BodyParams("description") description: string,
                    @Req() request: Express.Request,
                    @Res() response: Express.Response) {
@@ -194,6 +193,7 @@ export class GroupsCtrl {
     @Summary("Update a specific group")
     @Authenticated()
     async updateGroup(@Required() @PathParams("id") groupID: string,
+                      @BodyParams("description") description: string,
                       @BodyParams("access") access: string,
                       @Req() request: Express.Request,
                       @Res() response: Express.Response) {
@@ -202,7 +202,7 @@ export class GroupsCtrl {
             let result: InsightResponse;
 
             try {
-                result = await this.groups.updateGroup(groupID, access.toUpperCase(), request.user._id);
+                result = await this.groups.updateGroup(groupID, access.toUpperCase(), request.user._id, description);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);
@@ -415,7 +415,7 @@ export class GroupsCtrl {
     @Summary("Delete a user from the group")
     @Authenticated()
     async deleteGroupMember(@Required() @PathParams("id") groupID: string,
-                           @Required() @BodyParams("uid") userID: string,
+                           @Required() @QueryParams("uid") userID: string,
                            @Req() request: Express.Request,
                            @Res() response: Express.Response) {
         return new Promise<Groups>(async (resolve, reject) => {
