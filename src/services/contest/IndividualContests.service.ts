@@ -54,9 +54,18 @@ export class IndividualContestService extends ContestsService {
                 submissions: [],
                 standings: null
             };
-            
 
             try {
+                let exist: boolean = await this.exists(contest.name);
+
+                if (exist) {
+                    return reject({
+                        code: HTTPStatusCodes.CONFLICT,
+                        body: {
+                            name: "Contest name already exists"
+                        }
+                    });
+                }
                 let isValid: boolean = await this.isValidDate(startDate, endDate);
                 if (!isValid) {
                     return reject({
@@ -65,6 +74,12 @@ export class IndividualContestService extends ContestsService {
                             name: "Start date and End date are not valid"
                         }
                     });
+                }
+                let solved: number[] = [];
+                let unSolved: number[] = [];
+                for (let i = 0; i < 151; i++) {
+                    solved.push(0);
+                    unSolved.push(0);
                 }
                 let user: Users = await this.users.findById(userID).exec();
                 let createdContest = new this.contests(new_contest);
@@ -76,19 +91,14 @@ export class IndividualContestService extends ContestsService {
                     country: user.country,
                     solvedCount: 0,
                     penalty: 0,
-                    solved: [],
-                    unSolved: [],
+                    solved: solved,
+                    unSolved: unSolved,
                     contestant: user._id,
                     contestants: null,
                     contestID: createdContest._id
                 };
-
-                for (let i = 0; i < 151; i++) {
-                    tracker.solved.push(0);
-                    tracker.unSolved.push(0);
-                }
-
                 let createTracker = new this.trackers(tracker);
+
                 await createTracker.save();
 
                 let standing: Standings = {
@@ -114,10 +124,11 @@ export class IndividualContestService extends ContestsService {
                 });
             }
             catch (err) {
+                console.log("ERROR: ", err);
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
+                        name: "Couldn't create the contest"
                     }
                 });
             }

@@ -1,4 +1,4 @@
-import { Property } from "@tsed/common";
+import { Property, PropertyType } from "@tsed/common";
 import { Model, Ref } from "@tsed/mongoose";
 import { Description } from "@tsed/swagger";
 import { Users } from "../Users";
@@ -26,11 +26,13 @@ export class Trackers {
 
     
     @Property()
+    @PropertyType(Array)
     @Description("Problems solved by the user during the contest")
     solved: number[];
 
     
     @Property()
+    @PropertyType(Array)
     @Description("Problems not solved by the user during the contest")
     unSolved: number[];
 

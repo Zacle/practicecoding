@@ -31,6 +31,29 @@ export abstract class ContestsService {
     public abstract async create(contest: IContest, id?: string): Promise<InsightResponse>;
 
     /**
+     * Verify if a contest with this name already exist
+     * @param name 
+     */
+    protected exists(name: string): Promise<boolean> {
+
+        let result: any;
+
+        return new Promise<boolean>(async (resolve, reject) => {
+            try {
+                result = await this.contests.findOne({name: name}).exec();
+
+                if (result) {
+                    return resolve(true);
+                }
+
+                return resolve(false);
+            }
+            catch(err) {
+                return reject(err);
+            }
+        });
+    }
+    /**
      * Create a new group contest
      * @param contest
      * @param id
@@ -154,7 +177,7 @@ export abstract class ContestsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: "Couldn't get all public contest"
+                        name: "Couldn't get all public contest coming"
                     }
                 });
             }
@@ -208,8 +231,17 @@ export abstract class ContestsService {
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contests: Contests[];
             const size = 10;
+            let total: number;
 
             try {
+                total = await this.contests.find({
+                                        endDate: {
+                                            "$lt": new Date()
+                                        },
+                                        access: AccessType.PUBLIC
+                                    })
+                                    .count()
+                                    .exec();
                 contests = await this.contests.find({
                                         endDate: {
                                             "$lt": new Date()
@@ -224,7 +256,11 @@ export abstract class ContestsService {
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contests
+                        result: {
+                            contests: contests,
+                            total: total,
+                            per_page: size
+                        }
                     }
                 });
             }
@@ -251,16 +287,23 @@ export abstract class ContestsService {
 
             try {
                 contests = await this.users.findOne({username: username})
-                                           .populate("contests")
+                                           .populate({
+                                               path: "contests",
+                                               populate: {
+                                                   path: "owner"
+                                               }
+                                           })
                                            .exec();
 
-                let date = new Date();
+                console.log("USERS COMING CONTEST: ", contests.contests);
                 for (let i = 0; i < contests.contests.length; i++) {
                     let contest: any = contests.contests[i];
-                    if (contest.startDate > date) {
+                    const date: Date = new Date(contest.startDate);
+                    if (date.getTime() > Date.now()) {
                         comingContests.push(contest);
                     }
                 }
+                console.log("USERS COMING CONTEST: ", comingContests);
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
@@ -291,16 +334,25 @@ export abstract class ContestsService {
 
             try {
                 contests = await this.users.findOne({username: username})
-                                           .populate("contests")
+                                           .populate({
+                                               path: "contests",
+                                               populate: {
+                                                   path: "owner"
+                                               }
+                                           })
                                            .exec();
 
-                let date = new Date();
+                console.log("USERS RUNNING CONTEST: ", contests.contests);
+
                 for (let i = 0; i < contests.contests.length; i++) {
                     let contest: any = contests.contests[i];
-                    if (contest.startDate < date && contest.endDate > date) {
+                    const date1: Date = new Date(contest.startDate);
+                    const date2: Date = new Date(contest.endDate);
+                    if (date1.getTime() < Date.now() && date2.getTime() > Date.now()) {
                         runningContests.push(contest);
                     }
                 }
+                console.log("USERS RUNNING CONTEST: ", runningContests);
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
@@ -331,16 +383,24 @@ export abstract class ContestsService {
 
             try {
                 contests = await this.users.findOne({username: username})
-                                           .populate("contests")
+                                           .populate({
+                                               path: "contests",
+                                               populate: {
+                                                   path: "owner"
+                                               }
+                                           })
                                            .exec();
 
-                let date = new Date();
+                console.log("USERS PAST CONTEST: ", contests.contests);
+
                 for (let i = 0; i < contests.contests.length; i++) {
                     let contest: any = contests.contests[i];
-                    if (contest.endDate < date) {
+                    const date: Date = new Date(contest.endDate);
+                    if (date.getTime() < Date.now()) {
                         pastContests.push(contest);
                     }
                 }
+                console.log("USERS PAST CONTEST: ", pastContests);
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {

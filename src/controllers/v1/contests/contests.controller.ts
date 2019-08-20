@@ -98,6 +98,7 @@ export class ContestsCtrl {
                 access: accessType,
                 owner: request.user._id
             };
+            
             let contests: ContestsService = this.contestBuilder.createContest(contestType);
 
             try {
@@ -180,7 +181,7 @@ export class ContestsCtrl {
      */
     @Get("/past")
     @Summary("Get some past public contests")
-    async getSomePastContests(@Req() request: Express.Request, @Res() response: Express.Response, @QueryParams("page") page: number) {
+    async getSomePastContests(@Req() request: Express.Request, @Res() response: Express.Response, @QueryParams("page") page: number = 1) {
         return new Promise<Contests>(async (resolve, reject) => {
             let result: InsightResponse;
 
@@ -203,8 +204,7 @@ export class ContestsCtrl {
 
     @Get("/mycoming")
     @Summary("Coming contests registered by the user")
-    @Authenticated()
-    async getComingContests(@Req() request: Express.Request, @Res() response: Express.Response, @BodyParams("username") username: string) {
+    async getComingContests(@Req() request: Express.Request, @Res() response: Express.Response, @QueryParams("username") username: string) {
         return new Promise<Contests>(async (resolve, reject) => {
             let result: InsightResponse;
 
@@ -227,8 +227,7 @@ export class ContestsCtrl {
 
     @Get("/myrunning")
     @Summary("Running contests registered by the user")
-    @Authenticated()
-    async getRunningContests(@Req() request: Express.Request, @Res() response: Express.Response, @BodyParams("username") username: string) {
+    async getRunningContests(@Req() request: Express.Request, @Res() response: Express.Response, @QueryParams("username") username: string) {
         return new Promise<Contests>(async (resolve, reject) => {
             let result: InsightResponse;
 
@@ -251,8 +250,7 @@ export class ContestsCtrl {
 
     @Get("/mypast")
     @Summary("Past contests attended by the user")
-    @Authenticated()
-    async getContests(@Req() request: Express.Request, @Res() response: Express.Response, @BodyParams("username") username: string) {
+    async getContests(@Req() request: Express.Request, @Res() response: Express.Response, @QueryParams("username") username: string) {
         return new Promise<Contests>(async (resolve, reject) => {
             let result: InsightResponse;
 
