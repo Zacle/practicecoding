@@ -648,7 +648,7 @@ export abstract class ContestsService {
      * @param contestID 
      * @param page
      */
-    abstract async getSubmissions(contestID: string, page: number): Promise<InsightResponse>;
+    abstract async getSubmissions(contestID: string): Promise<InsightResponse>;
 
     /**
      * @description get all problems of this contest

@@ -245,11 +245,12 @@ export class IndividualContestService extends ContestsService {
      * @param contestID 
      * @param page
      */
-    getSubmissions(contestID: string, page: number): Promise<InsightResponse> {
+    getSubmissions(contestID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
             const size = 15;
+            let total: number;
 
             try {
                 contest = await this.contests.findById(contestID)
@@ -259,13 +260,12 @@ export class IndividualContestService extends ContestsService {
                                                      path: "user"
                                                  }
                                              })
-                                             .limit(size)
-                                             .skip(size * (page - 1))
                                              .exec();
+                                
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contest.submissions
+                        result: contest
                     }
                 });
             }

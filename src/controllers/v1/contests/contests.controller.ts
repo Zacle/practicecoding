@@ -415,7 +415,6 @@ export class ContestsCtrl {
     @Get("/:id/submissions")
     @Summary("Get contest submissions")
     async getContestSubmissions(@Required() @PathParams("id") contestID: string,
-                                @QueryParams("page") page: number,
                                 @Req() request: Express.Request,
                                 @Res() response : Express.Response) {
 
@@ -426,7 +425,7 @@ export class ContestsCtrl {
             try {
                 result = await this.contestService.getContestType(contestID);
                 contest = this.contestBuilder.createContest(result.body.result);
-                result = await contest.getSubmissions(contestID, page);
+                result = await contest.getSubmissions(contestID);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);
