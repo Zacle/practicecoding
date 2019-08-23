@@ -662,6 +662,7 @@ export abstract class ContestsService {
             try {
                 contest = await this.contests.findById(contestID)
                                              .populate("problems")
+                                             .populate("owner")
                                              .exec();
 
                 if (!contest) {
@@ -676,7 +677,7 @@ export abstract class ContestsService {
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contest.problems
+                        result: contest
                     }
                 });
             }
@@ -694,9 +695,8 @@ export abstract class ContestsService {
     /**
      * @description get all registrants of this contest
      * @param contestID 
-     * @param page
      */
-    abstract async getRegistrants(contestID: string, page: number): Promise<InsightResponse>;
+    abstract async getRegistrants(contestID: string): Promise<InsightResponse>;
 
     /**
      * @description get standing of the contest

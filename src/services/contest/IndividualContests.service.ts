@@ -285,23 +285,21 @@ export class IndividualContestService extends ContestsService {
      * @param contestID 
      * @param page
      */
-    getRegistrants(contestID: string, page: number): Promise<InsightResponse> {
+    getRegistrants(contestID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
-            const size = 15;
 
             try {
                 contest = await this.contests.findById(contestID)
                                              .populate("users")
-                                             .limit(size)
-                                             .skip(size * (page - 1))
+                                             .populate("owner")
                                              .exec();
 
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contest.users
+                        result: contest
                     }
                 });
             }

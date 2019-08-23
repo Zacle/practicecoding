@@ -232,30 +232,30 @@ export class TeamContestService extends ContestsService {
     /**
      * @description get all registrants of this contest
      * @param contestID 
-     * @param page
      */
-    getRegistrants(contestID: string, page: number): Promise<InsightResponse> {
+    getRegistrants(contestID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
-            const size = 15;
 
             try {
                 contest = await this.contests.findById(contestID)
                                              .populate({
                                                 path: "teams",
-                                                populate: {
+                                                populate: [{
                                                     path: "members"
-                                                }
+                                                },
+                                                {
+                                                    path: "admin"
+                                                }]
                                              })
-                                             .limit(size)
-                                             .skip(size * (page - 1))
+                                             .populate("owner")
                                              .exec();
 
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contest.teams
+                        result: contest
                     }
                 });
             }
