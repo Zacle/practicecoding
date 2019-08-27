@@ -53,7 +53,7 @@ export abstract class Plateform implements PlateformFactory {
      * @param contestID 
      * @param problem
      */
-    abstract addSpecificProblem(contestID: string, problem: Problems): Promise<InsightResponse>;
+    abstract addSpecificProblem(contestID: string, problem: any): Promise<InsightResponse>;
 
     /**
      * @description update the contest standing
@@ -406,7 +406,7 @@ export class Codeforces extends Plateform {
      * @param contestID 
      * @param problem
      */
-    addSpecificProblem(contestID: string, problem: Problems): Promise<InsightResponse> {
+    addSpecificProblem(contestID: string, problem: any): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
@@ -461,6 +461,14 @@ export class Codeforces extends Plateform {
             try {
                 contest = await this.contestsModel.findById(contestID).exec();
                 codeforces = await this.problemsModel.find({contestID: codeforceID, plateform: this.getPlateform()}).exec();
+                if (codeforces.length == 0) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "Sorry!. This contest is not yet added on Practice Coding OJ"
+                        }
+                    });
+                }
                 let saveContest = new this.contestsModel(contest);
                 codeforces.forEach((problem: Problems) => {
                     saveContest.problems.push(problem._id);
@@ -533,7 +541,7 @@ export class Codeforces extends Plateform {
                 }
                 status = result.result;
                 statusFiltered = status.filter((submission) => {
-                    return submission.creationTimeSeconds >= startSecond;
+                    return submission.creationTimeSeconds >= startSecond && submission.verdict != "TESTING";
                 });
                 return resolve({
                     code: HTTPStatusCodes.OK,
@@ -795,7 +803,7 @@ export class Uva extends Plateform {
      * @param problem 
      * @param userID 
      */
-    addSpecificProblem(contestID: string, problem: Problems): Promise<InsightResponse> {
+    addSpecificProblem(contestID: string, problem: any): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
@@ -950,7 +958,7 @@ export class Uva extends Plateform {
                 }
                 statusFiltered = status[convertedToString].subs.filter((submission: any[]) => {
                     console.log("SUBMISSION: ", submission);
-                    return submission[4] >= startSecond;
+                    return submission[4] >= startSecond && this.getVerdict(submission[2]) != "IN_QUEUE";
                 });
                 return resolve({
                     code: HTTPStatusCodes.OK,
@@ -1268,7 +1276,7 @@ export class LiveArchive extends Plateform {
      * @param contestID 
      * @param problem 
      */
-    addSpecificProblem(contestID: string, problem: Problems): Promise<InsightResponse> {
+    addSpecificProblem(contestID: string, problem: any): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
@@ -1366,7 +1374,7 @@ export class LiveArchive extends Plateform {
                     });
                 }
                 statusFiltered = status[convertedToString].subs.filter((submission: any[]) => {
-                    return submission[4] >= startSecond;
+                    return submission[4] >= startSecond && this.getVerdict(submission[2]) != "IN_QUEUE";
                 });
                 return resolve({
                     code: HTTPStatusCodes.OK,

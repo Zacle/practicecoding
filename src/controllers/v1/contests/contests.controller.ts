@@ -510,7 +510,7 @@ export class ContestsCtrl {
             try {
                 result = await this.contestService.getContestType(contestID);
                 contest = this.contestBuilder.createContest(result.body.result);
-                result = await contest.getStanding(contestID, page);
+                result = await contest.getStanding(contestID);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);
@@ -566,7 +566,7 @@ export class ContestsCtrl {
     @Summary("Add problems to the contest")
     @Authenticated()
     async addSpecificProblems(@Required() @PathParams("id") contestID: string,
-                      @Required() @BodyParams("problem") problem: Problems,
+                      @Required() @BodyParams("problem") problem: any,
                       @Req() request: Express.Request,
                       @Res() response: Express.Response) {
 
@@ -735,7 +735,7 @@ export class ContestsCtrl {
     /**
      * Register a user to the contest
      * @param contestID 
-     * @param userID 
+     * @param username 
      * @param request 
      * @param response 
      */
@@ -743,7 +743,7 @@ export class ContestsCtrl {
     @Summary("Register a user to the contest")
     @Authenticated()
     async registerUser(@Required() @PathParams("id") contestID: string,
-                   @BodyParams("userID") userID: string,
+                   @BodyParams("username") username: string,
                    @Req() request: Express.Request,
                    @Res() response: Express.Response) {
 
@@ -753,7 +753,7 @@ export class ContestsCtrl {
             contest = this.contestBuilder.createContest(ContestType.INDIVIDUAL);
 
             try {
-                result = await contest.register(contestID, userID);
+                result = await contest.register(contestID, username);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);

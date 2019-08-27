@@ -29,6 +29,10 @@ export class Users {
     joined?: Date = new Date();
 
     @Property()
+    @Description("Wheter the account is activated or not")
+    activated: boolean;
+
+    @Property()
     @Description("Reset token for the password")
     @Default("")
     passwordResetToken?: string;

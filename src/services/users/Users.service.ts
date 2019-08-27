@@ -353,6 +353,12 @@ export class UsersService {
                         });
                     }
                     if(isMatch) {
+                        if (!user.activated) {
+                            return reject({
+                                code: HTTPStatusCodes.FORBIDDEN,
+                                name: "You must activate your account first. Check your email"
+                            });
+                        }
                         return resolve({
                             code: HTTPStatusCodes.OK,
                             body: {
@@ -406,6 +412,7 @@ export class UsersService {
                 fullname: user.fullname,
                 country: user.country,
                 codeforces: user.codeforces,
+                activated: false,
                 joined: new Date(),
                 uva: user.uva,
                 livearchive: user.livearchive,
@@ -497,9 +504,9 @@ export class UsersService {
                 let user: Users = result.body.result;
                 user.fullname = profile.fullname || user.fullname;
                 user.country = profile.country || user.country;
-                user.codeforces = profile.codeforces || user.codeforces;
-                user.livearchive = profile.livearchive || user.livearchive;
-                user.uva = profile.uva || user.uva;
+                user.codeforces = profile.codeforces || "";
+                user.livearchive = profile.livearchive || "";
+                user.uva = profile.uva || "";
                 updt = await this.users.findByIdAndUpdate(user._id, user, {new: true, select: "-__v"}).exec();
             
                 resolve({
@@ -777,6 +784,100 @@ export class UsersService {
      * @param next Express next
      */
     async forgotPassword(users: MongooseModel<Users>, request: Express.Request, email: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            const API = 'http://localhost:3000';
+            let isValidEmail: boolean;
+            try {
+                isValidEmail = await this.emailExists(email.toLowerCase());
+                if (!isValidEmail) {
+                    return reject({
+                        code: HTTPStatusCodes.NOT_FOUND,
+                        body: {
+                            name: "This email doesn't exist"
+                        }
+                    });
+                }
+
+                async.waterfall([
+                    function createRandomToken(done: Function) {
+                        crypto.randomBytes(16, (err, buf) => {
+                          const token = buf.toString("hex");
+                          done(err, token);
+                        });
+                    },
+                    async function setRandomToken(token: any, done: Function) {
+                        let user: Users;
+                        try {
+                            user = await users.findOne({ email: email.toLowerCase() }, '-__v').exec();
+                            let saveUser = new users(user);
+                            saveUser.passwordResetToken = token;
+                            saveUser.passwordResetExpires = Date.now() + 7200000; // 3 hours
+                            await saveUser.save();
+                            done(null, token, saveUser);
+                        }
+                        catch (err) {
+                            return done(err);
+                        }
+                    },
+                    function sendForgotPasswordEmail(token: any, user: Users, done: Function) {
+                        const transporter = nodemailer.createTransport({
+                            service: "SendGrid",
+                            auth: {
+                                user: process.env.SENDGRID_USER,
+                                pass: process.env.SENDGRID_PASSWORD
+                            }
+                        });
+                        const mailOptions = {
+                            to: user.email,
+                            from: "zacharienziuki@gmail.com",
+                            subject: "Reset your password on Practicecodingoj",
+                            text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
+                              Please click on the following link, or paste this into your browser to complete the process:\n\n
+                              ${API}/resetPassword/${token}\n\n
+                              If you did not request this, please ignore this email and your password will remain unchanged.\n`
+                        };
+                        transporter.sendMail(mailOptions, (err, info) => {
+                            done(err, info);
+                        });
+                    }
+                ], (err: Error, info) => {
+                    if (err) {
+                        return reject({
+                            code: HTTPStatusCodes.EXPECTATION_FAILED,
+                            body: {
+                                name: "Couldn't send an email! Try again later."
+                            }
+                        });
+                    }
+                    console.log("Email Sent: ", info);
+                    return resolve({
+                        code: HTTPStatusCodes.OK,
+                        body: {
+                            result: "Email sent."
+                        }
+                    });
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't send an email! Try again later."
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * Create a random token and send user an email with an activation link
+     * @param users users model
+     * @param request Express request
+     * @param response Express response
+     * @param next Express next
+     */
+    async sendActivationLink(users: MongooseModel<Users>, request: Express.Request, email: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             const API = 'http://localhost:3000';

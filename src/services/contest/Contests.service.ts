@@ -701,9 +701,8 @@ export abstract class ContestsService {
     /**
      * @description get standing of the contest
      * @param contestID 
-     * @param page
      */
-    abstract async getStanding(contestID: string, page: number):Promise<InsightResponse>;
+    abstract async getStanding(contestID: string):Promise<InsightResponse>;
 
     /**
      * @description add a specific problem to the contest
@@ -711,7 +710,7 @@ export abstract class ContestsService {
      * @param problemID 
      * @param userID 
      */
-    async addSpecificProblem(contestID: string, problem: Problems, userID: string): Promise<InsightResponse> {
+    async addSpecificProblem(contestID: string, problem: any, userID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let plateform: Plateform;
@@ -1040,9 +1039,9 @@ export abstract class ContestsService {
     /**
      * @description register a user or a team to the contest
      * @param contestID 
-     * @param userID
+     * @param username
      */
-    abstract async register(contestID: string, userID: string): Promise<InsightResponse>;
+    abstract async register(contestID: string, username: string): Promise<InsightResponse>;
 
     /**
      * @description unregister a user or a team from the contest

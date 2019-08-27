@@ -260,6 +260,7 @@ export class IndividualContestService extends ContestsService {
                                                      path: "user"
                                                  }
                                              })
+                                             .populate("owner")
                                              .exec();
                                 
                 return resolve({
@@ -317,17 +318,15 @@ export class IndividualContestService extends ContestsService {
     /**
      * @description get standing of the contest
      * @param contestID 
-     * @param page
      */
-    getStanding(contestID: string, page: number): Promise<InsightResponse> {
+    getStanding(contestID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let standing: Standings;
             let contest: Contests;
-            const size = 15;
 
             try {
-                contest = await this.contests.findById(contestID).exec();
+                contest = await this.contests.findById(contestID).populate("problems").exec();
                 standing = await this.standings.findById(contest.standings)
                                                .populate({
                                                    path: "trackers",
@@ -336,14 +335,22 @@ export class IndividualContestService extends ContestsService {
                                                        path: "contestant"
                                                    }]
                                                })
-                                               .limit(size)
-                                               .skip(size * (page - 1))
+                                               .populate({
+                                                    path: "contestID",
+                                                    populate: [
+                                                    {
+                                                        path: "owner"
+                                                    }]
+                                                })
                                                .exec();
 
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: standing
+                        result: {
+                            standing: standing,
+                            problems: contest.problems
+                        }
                     }
                 });
 
@@ -363,9 +370,9 @@ export class IndividualContestService extends ContestsService {
     /**
      * @description register a user to the contest
      * @param contestID 
-     * @param userID
+     * @param username
      */
-    register(contestID: string, userID: string): Promise<InsightResponse> {
+    register(contestID: string, username: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
@@ -392,13 +399,13 @@ export class IndividualContestService extends ContestsService {
                     });
                 }
 
-                user = await this.userExists(userID);
+                user = await this.userExists(username);
 
                 if (!user) {
                     return reject({
                         code: HTTPStatusCodes.NOT_FOUND,
                         body: {
-                            name: "USER ID Not Found"
+                            name: "Username Not Found"
                         }
                     });
                 }
@@ -421,23 +428,25 @@ export class IndividualContestService extends ContestsService {
                     });
                 }
 
+                let solved: number[] = [];
+                let unSolved: number[] = [];
+                for (let i = 0; i < 151; i++) {
+                    solved.push(0);
+                    unSolved.push(0);
+                }
+
                 standing = await this.standings.findOne({contestID: contest._id}).exec();
 
                 tracker = {
                     country: user.country,
                     solvedCount: 0,
                     penalty: 0,
-                    solved: [],
-                    unSolved: [],
+                    solved: solved,
+                    unSolved: unSolved,
                     contestant: user._id,
                     contestants: null,
                     contestID: contest._id
                 };
-
-                for (let i = 0; i < 151; i++) {
-                    tracker.solved.push(0);
-                    tracker.unSolved.push(0);
-                }
 
                 let createTracker = new this.trackers(tracker);
                 await createTracker.save();
@@ -491,15 +500,33 @@ export class IndividualContestService extends ContestsService {
     }
 
     /**
-     * Verify if the user with this ID exists
-     * @param userID 
+     * Verify if the user with this username exists
+     * @param username 
      */
-    private userExists(userID: string): Promise<Users> {
+    private userExists(username: string): Promise<Users> {
         return new Promise<Users>(async (resolve, reject) => {
             let user: Users;
 
             try {
-                user = await this.users.findById(userID).exec();
+                user = await this.users.findOne({username: username}).exec();
+                return resolve(user);
+            }
+            catch(err) {
+                return reject(err);
+            }
+        });
+    }
+
+    /**
+     * Verify if the user with this id exists
+     * @param id 
+     */
+    private IDExists(id: string): Promise<Users> {
+        return new Promise<Users>(async (resolve, reject) => {
+            let user: Users;
+
+            try {
+                user = await this.users.findById(id).exec();
                 return resolve(user);
             }
             catch(err) {
@@ -561,7 +588,7 @@ export class IndividualContestService extends ContestsService {
                         }
                     });
                 }
-                user = await this.userExists(userID);
+                user = await this.IDExists(userID);
 
                 if (!user) {
                     return reject({
@@ -617,7 +644,7 @@ export class IndividualContestService extends ContestsService {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
-            let standing: Standings;
+            let result: InsightResponse;
 
             try {
                 contest = await this.contests.findById(contestID)
@@ -625,20 +652,11 @@ export class IndividualContestService extends ContestsService {
                                              .populate("problems")
                                              .exec();
 
-                let shouldBeUpdated: boolean = await this.shouldUpdate(contest.startDate, contest.endDate);
-
-                if (!shouldBeUpdated) {
-                    return reject({
-                        code: HTTPStatusCodes.NOT_MODIFIED,
-                        body: {
-                            name: "Contest is either not started yet or ended"
-                        }
-                    });
-                }
-
                 await this.queryProblems(contest);
 
-                return this.getStanding(contestID, 1);
+                result = await this.getStanding(contestID);
+
+                return resolve(result);
             }
             catch(err) {
                 return reject({
@@ -660,6 +678,7 @@ export class IndividualContestService extends ContestsService {
 
             try {
                 for (let i = 0; i < contest.problems.length; i++) {
+                    console.log("PROBLEM: " + `(${i})`);
                     await this.queryUsers(contest, contest.problems[i], i);
                 }
                 return resolve();
@@ -687,7 +706,6 @@ export class IndividualContestService extends ContestsService {
                 for (let i = 0; i < contest.users.length; i++) {
                     let user: any = contest.users[i];
                     result = await plateform.updateContest(contest, user, problem);
-                    console.log("user (", i, ") ", result);
                     statusFiltered = result.body.result;
                     await this.querySubmissions(contest, problem, user, statusFiltered, plateform, problemIndex);
                 }
@@ -757,19 +775,33 @@ export class IndividualContestService extends ContestsService {
                         }
                         let createSubmission = new this.submissions(submission);
                         await createSubmission.save();
+
                         let saveContest = new this.contests(contest);
                         saveContest.submissions.push(createSubmission._id);
                         await saveContest.save();
+
+                        let solved = saveTracker.solved[problemIndex];
+                        let unSolved = saveTracker.unSolved[problemIndex];
+                        let penalty = saveTracker.penalty;
+                        let solvedCount = saveTracker.solvedCount;
+
                         if (submission.verdict != "ACCEPTED") {
-                            saveTracker.unSolved[problemIndex] += 1;
+                            unSolved += 1;
                         }
                         else {
                             let diff = (submission.submissionTime.getTime() - contest.startDate.getTime()) / 6000;
-                            saveTracker.penalty += Math.round(diff);
-                            saveTracker.solvedCount += 1;
-                            saveTracker.solved[problemIndex] = 1;
+                            penalty += Math.round(diff);
+                            solvedCount += 1;
+                            solved = 1;
                         }
-                        await saveTracker.save();
+
+                        await this.trackers.update({_id: saveTracker._id}, { $set: {
+                            [`solved.${problemIndex}`]: solved,
+                            [`unSolved.${problemIndex}`]: unSolved,
+                            penalty: penalty,
+                            solvedCount: solvedCount
+                        }});
+                        return resolve();
                     }
                 }
                 return resolve();

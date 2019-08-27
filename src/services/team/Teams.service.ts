@@ -132,6 +132,53 @@ export class TeamsService {
     }
 
     /**
+     * Return all teams that contain the user and he(her) is the admin
+     * @param username
+     */
+    async getMyTeams(username: any): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+
+            let team: Users;
+            let myTeams: Teams[] = [];
+
+            try {
+                team = await this.users.findOne({username: username}, "-__v")
+                                        .populate({
+                                            path: "teams",
+                                            populate: {
+                                                path: "admin"
+                                            }
+                                        })
+                                        .exec();
+
+                    for (let i = 0; i < team.teams.length; i++) {
+                        let current: any = team.teams[i];
+                        if (current.admin.username == username) {
+                            myTeams.push(current);
+                        }
+                    }
+
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: myTeams
+                    }
+                });
+            }
+            catch (err) {
+                console.log("ERROR: ", err);
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't get your team"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
      * Return all teams of the web app
      */
     async getAllTeams(): Promise<InsightResponse> {

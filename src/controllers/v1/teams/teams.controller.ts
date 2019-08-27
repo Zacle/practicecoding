@@ -78,6 +78,33 @@ export class TeamsCtrl {
         });
     }
 
+    @Get("/myown")
+    @Summary("Get all teams that contain the user")
+    @Authenticated()
+    async getMyTeams(@Req() request: Express.Request, @Res() response: Express.Response,
+                   @Required() @QueryParams("username") username: string) {
+        return new Promise<Teams>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.teams.getMyTeams(username);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                console.log("ERROR: ", err);
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
     @Post("/")
     @Summary("Add a new team")
     @Authenticated()

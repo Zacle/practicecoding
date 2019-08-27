@@ -26,13 +26,13 @@ export class Trackers {
 
     
     @Property()
-    @PropertyType(Array)
+    @PropertyType(Number)
     @Description("Problems solved by the user during the contest")
     solved: number[];
 
     
     @Property()
-    @PropertyType(Array)
+    @PropertyType(Number)
     @Description("Problems not solved by the user during the contest")
     unSolved: number[];
 

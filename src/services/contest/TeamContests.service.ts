@@ -210,6 +210,7 @@ export class TeamContestService extends ContestsService {
                                                      }
                                                  }
                                              })
+                                             .populate("owner")
                                              .exec();
                 return resolve({
                     code: HTTPStatusCodes.OK,
@@ -273,17 +274,15 @@ export class TeamContestService extends ContestsService {
     /**
      * @description get standing of the contest
      * @param contestID 
-     * @param page
      */
-    getStanding(contestID: string, page: number): Promise<InsightResponse> {
+    getStanding(contestID: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let standing: Standings;
             let contest: Contests;
-            const size = 15;
 
             try {
-                contest = await this.contests.findById(contestID).exec();
+                contest = await this.contests.findById(contestID).populate("problems").exec();
                 standing = await this.standings.findById(contest.standings)
                                                .populate({
                                                    path: "trackers",
@@ -292,14 +291,22 @@ export class TeamContestService extends ContestsService {
                                                        path: "contestants"
                                                    }]
                                                })
-                                               .limit(size)
-                                               .skip(size * (page - 1))
+                                               .populate({
+                                                    path: "contestID",
+                                                    populate: [
+                                                    {
+                                                        path: "owner"
+                                                    }]
+                                                })
                                                .exec();
 
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: standing
+                        result: {
+                            standing: standing,
+                            problems: contest.problems
+                        }
                     }
                 });
 
@@ -377,23 +384,26 @@ export class TeamContestService extends ContestsService {
                         }
                     });
                 }
+
+                let solved: number[] = [];
+                let unSolved: number[] = [];
+                for (let i = 0; i < 151; i++) {
+                    solved.push(0);
+                    unSolved.push(0);
+                }
+
                 standing = await this.standings.findOne({contestID: contest._id}).exec();
 
                 tracker = {
                     country: null,
                     solvedCount: 0,
                     penalty: 0,
-                    solved: [],
-                    unSolved: [],
+                    solved: solved,
+                    unSolved: unSolved,
                     contestant: null,
                     contestants: team._id,
                     contestID: contest._id
                 };
-
-                for (let i = 0; i < 151; i++) {
-                    tracker.solved.push(0);
-                    tracker.unSolved.push(0);
-                }
 
                 let createTracker = new this.trackers(tracker);
                 await createTracker.save();
@@ -568,7 +578,7 @@ export class TeamContestService extends ContestsService {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contest: Contests;
-            let standing: Standings;
+            let result: InsightResponse;
 
             try {
                 contest = await this.contests.findById(contestID)
@@ -581,19 +591,12 @@ export class TeamContestService extends ContestsService {
                                              .populate("problems")
                                              .exec();
 
-                let shouldBeUpdated: boolean = await this.shouldUpdate(contest.startDate, contest.endDate);
-
-                if (!shouldBeUpdated) {
-                    return reject({
-                        code: HTTPStatusCodes.NOT_MODIFIED,
-                        body: {
-                            name: "Contest is either not started yet or ended"
-                        }
-                    });
-                }
+                
                 await this.queryProblems(contest);
 
-                return this.getStanding(contestID, 1);
+                result = await this.getStanding(contestID);
+
+                return resolve(result);
             }
             catch(err) {
                 return reject({
@@ -615,7 +618,7 @@ export class TeamContestService extends ContestsService {
 
             try {
                 for (let i = 0; i < contest.problems.length; i++) {
-                    console.log("problem (", i, ") ", contest.problems[i]);
+                    console.log("problem (", i, ") ");
                     await this.queryTeams(contest, contest.problems[i], i);
                 }
                 return resolve();
@@ -734,17 +737,28 @@ export class TeamContestService extends ContestsService {
                         let saveContest = new this.contests(contest);
                         saveContest.submissions.push(createSubmission._id);
                         await saveContest.save();
+
+                        let solved = saveTracker.solved[problemIndex];
+                        let unSolved = saveTracker.unSolved[problemIndex];
+                        let penalty = saveTracker.penalty;
+                        let solvedCount = saveTracker.solvedCount;
+
                         if (submission.verdict != "ACCEPTED") {
-                            saveTracker.unSolved[problemIndex] += 1;
+                            unSolved += 1;
                         }
                         else {
                             let diff = (submission.submissionTime.getTime() - contest.startDate.getTime()) / 6000;
-                            saveTracker.penalty += Math.round(diff);
-                            saveTracker.solvedCount += 1;
-                            saveTracker.solvedCount += 1;
-                            saveTracker.solved[problemIndex] = 1;
+                            penalty += Math.round(diff);
+                            solvedCount += 1;
+                            solved = 1;
                         }
-                        await saveTracker.save();
+                        await this.trackers.update({_id: saveTracker._id}, { $set: {
+                            [`solved.${problemIndex}`]: solved,
+                            [`unSolved.${problemIndex}`]: unSolved,
+                            penalty: penalty,
+                            solvedCount: solvedCount
+                        }});
+                        return resolve();
                     }
                 }
                 return resolve();
