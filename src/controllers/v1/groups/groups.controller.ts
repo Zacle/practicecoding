@@ -351,15 +351,15 @@ export class GroupsCtrl {
     }
 
     /**
-     * Contests organized by this group
+     * Coming Contests of this group
      * @param groupID 
      * @param request 
      * @param response 
      */
-    @Get("/:id/contests")
+    @Get("/:id/comingcontests")
     @Summary("Get group contests")
     @Authenticated()
-    async getGroupContests(@Required() @PathParams("id") groupID: string,
+    async getGroupComingContests(@Required() @PathParams("id") groupID: string,
                           @Req() request: Express.Request,
                           @Res() response: Express.Response) {
         return new Promise<Groups>(async (resolve, reject) => {
@@ -367,7 +367,73 @@ export class GroupsCtrl {
             let result: InsightResponse;
 
             try {
-                result = await this.groups.getGroupContests(groupID);
+                result = await this.groups.getComingContests(groupID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
+     * Running Contests of this group
+     * @param groupID 
+     * @param request 
+     * @param response 
+     */
+    @Get("/:id/runningcontests")
+    @Summary("Get group contests")
+    @Authenticated()
+    async getGroupRunningContests(@Required() @PathParams("id") groupID: string,
+                          @Req() request: Express.Request,
+                          @Res() response: Express.Response) {
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.getRunningContests(groupID);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
+    /**
+     * Past Contests of this group
+     * @param groupID 
+     * @param request 
+     * @param response 
+     */
+    @Get("/:id/pastcontests")
+    @Summary("Get group contests")
+    @Authenticated()
+    async getGroupPastContests(@Required() @PathParams("id") groupID: string,
+                          @Req() request: Express.Request,
+                          @Res() response: Express.Response) {
+        return new Promise<Groups>(async (resolve, reject) => {
+
+            let result: InsightResponse;
+
+            try {
+                result = await this.groups.getContests(groupID);
                 response.status(result.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(result.body.result);

@@ -33,6 +33,11 @@ export class Users {
     activated: boolean;
 
     @Property()
+    @Description("Token to validate email")
+    @Default("")
+    emailValidationToken?: string;
+
+    @Property()
     @Description("Reset token for the password")
     @Default("")
     passwordResetToken?: string;

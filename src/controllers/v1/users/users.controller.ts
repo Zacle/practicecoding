@@ -121,14 +121,11 @@ export class UsersCtrl {
         return new Promise<Users>((resolve, reject) => {
             Passport.authenticate("signup", (err, res: InsightResponse) => {
                 if (err) {
+                    console.log("ERROR SIGNUP ", err);
                     res = err;
                     response.status(res.code);
                     response.setHeader("Content-Type", "application/json");
-                    response.json({
-                        success: false,
-                        status: "Login Unsuccessfull!",
-                        err: res.body.name
-                    });
+                    response.json(res.body.name);
                     reject(err);
                 }
     
@@ -149,10 +146,7 @@ export class UsersCtrl {
                     else if (res && user.result) {
                         response.status(HTTPStatusCodes.OK);
                         response.setHeader("Content-Type", "application/json");
-                        response.json({
-                            success: true,
-                            status: "Signup Successfull!"
-                        });
+                        response.json(user.result);
                         resolve(user.result);
                     }
                 }
@@ -347,6 +341,28 @@ export class UsersCtrl {
         });
     }
 
+    @Get("/activate/:token")
+    @Summary("Validate token to create a new account")
+    getValidationToken(@PathParams("token") token: string, @Res() response: Express.Response) {
+        return new Promise<any>(async (resolve, reject) => {
+            let result: InsightResponse;
+            try {
+                result = await this.usersServices.validateEmailToken(token);
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.result);
+                resolve(result.body.result);
+            }
+            catch(err) {
+                result = err;
+                response.status(result.code);
+                response.setHeader("Content-Type", "application/json");
+                response.json(result.body.name);
+                reject(result.body.name);
+            }
+        });
+    }
+
     /**
      * Validate token to reset password
      * @param token
@@ -355,7 +371,7 @@ export class UsersCtrl {
      */
     @Get("/reset/:token")
     @Summary("Validate token to reset password in case of forgotten")
-    async getResetToken(@Required() @PathParams("token") token: string,
+    async getResetToken(@PathParams("token") token: string,
                         @Req() request: Express.Request,
                         @Res() response: Express.Response) {
 

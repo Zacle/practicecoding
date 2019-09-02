@@ -176,7 +176,7 @@ export class UsersService {
             let result: Users;
 
             try {
-                result = await this.users.findOne({ username: username }, '-__v').exec();
+                result = await this.users.findOne({ username: username, activated: true }, '-__v').exec();
                 
                 if (!result) {
                     return reject({
@@ -226,7 +226,7 @@ export class UsersService {
             let result: Users;
 
             try {
-                result = await this.users.findOne({ username: username }, '-__v').exec();
+                result = await this.users.findOne({ username: username, activated: true }, '-__v').exec();
                 
                 if (!result) {
                     return resolve(false);
@@ -290,7 +290,7 @@ export class UsersService {
 
             try {
 
-                result = await this.users.findOne({ email: email.toLowerCase() }, '-__v').exec();
+                result = await this.users.findOne({ email: email.toLowerCase(), activated: true }, '-__v').exec();
 
                 if (result) {
                     return resolve(true);
@@ -356,7 +356,9 @@ export class UsersService {
                         if (!user.activated) {
                             return reject({
                                 code: HTTPStatusCodes.FORBIDDEN,
-                                name: "You must activate your account first. Check your email"
+                                body: {
+                                    name: "You must activate your account first. Check your email"
+                                }
                             });
                         }
                         return resolve({
@@ -421,6 +423,7 @@ export class UsersService {
                 groups: [],
                 contests: []
             };
+            let response: InsightResponse;
 
             try {
                 if (!this.validateEmail(user.email.toLowerCase())) {
@@ -464,21 +467,24 @@ export class UsersService {
                         });
                     });
                 });
-                data.password = hashed;
-                await this.users.create(data);
-
                 res = await this.users.findOne({
                             email: user.email
                         }, "-__v").exec();
 
-                return resolve({
-                    code: HTTPStatusCodes.OK,
-                    body: {
-                        result: res
-                    }
-                });
+                if (!res) {
+                    data.password = hashed;
+                    await this.users.create(data);
+                }
+
+                response = await this.sendActivationLink(this.users, data.email);
+                
+                return resolve(response);
             }
             catch(err) {
+                console.log("CREATE ERROR: ", err);
+                if (err.body.name) {
+                    return reject(err);
+                }
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
@@ -581,8 +587,45 @@ export class UsersService {
         });
     }
 
-    async verifyEmailToken(token: string): Promise<Boolean> {
-        return Promise.reject(false);
+    /**
+     * Validate the token sent to the user to create a new account
+     * @param token 
+     */
+    async validateEmailToken(token: string): Promise<InsightResponse> {
+        return new Promise <InsightResponse>(async (resolve, reject) => {
+            let user: Users;
+
+            try {
+                user = await this.users.findOne({emailValidationToken: token}).exec();
+                
+                if (user) {
+                    let saveUser = new this.users(user);
+                    saveUser.activated = true;
+                    await saveUser.save();
+
+                    return resolve({
+                        code: HTTPStatusCodes.OK,
+                        body: {
+                            result: "Valid token"
+                        }
+                    });
+                }
+                return reject({
+                    name: HTTPStatusCodes.NOT_FOUND,
+                    body: {
+                        name: "Validation token not found"
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    name: HTTPStatusCodes.NOT_FOUND,
+                    body: {
+                        name: "Validation token error"
+                    }
+                });
+            }
+        });
     }
 
     /**
@@ -831,7 +874,7 @@ export class UsersService {
                         const mailOptions = {
                             to: user.email,
                             from: "zacharienziuki@gmail.com",
-                            subject: "Reset your password on Practicecodingoj",
+                            subject: "Reset your password on Practice Coding OJ",
                             text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
                               Please click on the following link, or paste this into your browser to complete the process:\n\n
                               ${API}/resetPassword/${token}\n\n
@@ -846,7 +889,7 @@ export class UsersService {
                         return reject({
                             code: HTTPStatusCodes.EXPECTATION_FAILED,
                             body: {
-                                name: "Couldn't send an email! Try again later."
+                                name: "Couldn't send an email! Make sure it is a valid email and try again."
                             }
                         });
                     }
@@ -863,7 +906,7 @@ export class UsersService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: "Couldn't send an email! Try again later."
+                        name: "Couldn't send an email! Make sure it is a valid email and try again."
                     }
                 });
             }
@@ -877,27 +920,17 @@ export class UsersService {
      * @param response Express response
      * @param next Express next
      */
-    async sendActivationLink(users: MongooseModel<Users>, request: Express.Request, email: string): Promise<InsightResponse> {
+    async sendActivationLink(users: MongooseModel<Users>, email: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             const API = 'http://localhost:3000';
-            let isValidEmail: boolean;
             try {
-                isValidEmail = await this.emailExists(email.toLowerCase());
-                if (!isValidEmail) {
-                    return reject({
-                        code: HTTPStatusCodes.NOT_FOUND,
-                        body: {
-                            name: "This email doesn't exist"
-                        }
-                    });
-                }
 
                 async.waterfall([
                     function createRandomToken(done: Function) {
                         crypto.randomBytes(16, (err, buf) => {
-                          const token = buf.toString("hex");
-                          done(err, token);
+                            const token = buf.toString("hex");
+                            done(err, token);
                         });
                     },
                     async function setRandomToken(token: any, done: Function) {
@@ -905,8 +938,7 @@ export class UsersService {
                         try {
                             user = await users.findOne({ email: email.toLowerCase() }, '-__v').exec();
                             let saveUser = new users(user);
-                            saveUser.passwordResetToken = token;
-                            saveUser.passwordResetExpires = Date.now() + 7200000; // 3 hours
+                            saveUser.emailValidationToken = token;
                             await saveUser.save();
                             done(null, token, saveUser);
                         }
@@ -914,7 +946,7 @@ export class UsersService {
                             return done(err);
                         }
                     },
-                    function sendForgotPasswordEmail(token: any, user: Users, done: Function) {
+                    function sendValidationEmail(token: any, user: Users, done: Function) {
                         const transporter = nodemailer.createTransport({
                             service: "SendGrid",
                             auth: {
@@ -925,11 +957,11 @@ export class UsersService {
                         const mailOptions = {
                             to: user.email,
                             from: "zacharienziuki@gmail.com",
-                            subject: "Reset your password on Practicecodingoj",
-                            text: `You are receiving this email because you (or someone else) have requested the reset of the password for your account.\n\n
+                            subject: "Validate your email  on Practice Coding OJ",
+                            text: `You are receiving this email because you (or someone else) have registered on Practice Coding OJ with this email.\n\n
                               Please click on the following link, or paste this into your browser to complete the process:\n\n
-                              ${API}/resetPassword/${token}\n\n
-                              If you did not request this, please ignore this email and your password will remain unchanged.\n`
+                              ${API}/validate/${token}\n\n
+                              If you did not request this, please ignore this email and the registration will be unsuccessfull.\n`
                         };
                         transporter.sendMail(mailOptions, (err, info) => {
                             done(err, info);
@@ -940,7 +972,7 @@ export class UsersService {
                         return reject({
                             code: HTTPStatusCodes.EXPECTATION_FAILED,
                             body: {
-                                name: "Couldn't send an email! Try again later."
+                                name: "Couldn't send an email! Make sure it is a valid email and try again."
                             }
                         });
                     }
@@ -948,7 +980,7 @@ export class UsersService {
                     return resolve({
                         code: HTTPStatusCodes.OK,
                         body: {
-                            result: "Email sent."
+                            result: "An email has been sent to validate your account."
                         }
                     });
                 });
@@ -957,7 +989,7 @@ export class UsersService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: "Couldn't send an email! Try again later."
+                        name: "Couldn't send an email! Make sure it is a valid email and try again."
                     }
                 });
             }

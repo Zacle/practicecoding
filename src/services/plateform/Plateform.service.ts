@@ -526,7 +526,7 @@ export class Codeforces extends Plateform {
             const link: string = "https://codeforces.com/api/user.status?handle=" + handle;
             let result: any;
             let status: any[];
-            let statusFiltered: any[];
+            let statusFiltered: any[] = [];
             let startSecond: number = contest.startDate.getTime() / 1000;
 
             try {
@@ -540,9 +540,15 @@ export class Codeforces extends Plateform {
                     });
                 }
                 status = result.result;
-                statusFiltered = status.filter((submission) => {
-                    return submission.creationTimeSeconds >= startSecond && submission.verdict != "TESTING";
-                });
+                for (let i = 0; i < status.length; i++) {
+                    let submission = status[i];
+                    if (submission.creationTimeSeconds >= startSecond && submission.verdict != "TESTING") {
+                        statusFiltered.push(submission);
+                    }
+                    if (submission.creationTimeSeconds < startSecond) {
+                        break;
+                    } 
+                }
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {

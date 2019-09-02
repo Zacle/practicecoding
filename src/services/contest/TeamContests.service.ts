@@ -42,6 +42,7 @@ export class TeamContestService extends ContestsService {
             let startDate = new Date(contest.startDateYear, contest.startDateMonth - 1, contest.startDateDay, contest.startTimeHour, contest.startTimeMinute);
             let endDate = new Date(contest.endDateYear, contest.endDateMonth - 1, contest.endDateDay, contest.endTimeHour, contest.endTimeMinute);
             let duration: string = this.duration(startDate, endDate);
+            let total: number;
 
             let new_contest: Contests = {
                 name: contest.name,
@@ -60,6 +61,18 @@ export class TeamContestService extends ContestsService {
             
 
             try {
+                total = await this.contests.find({}).count().exec();
+                new_contest.name = (total + 1) + " - " + contest.name;
+                let exist: boolean = await this.exists(new_contest.name);
+
+                if (exist) {
+                    return reject({
+                        code: HTTPStatusCodes.CONFLICT,
+                        body: {
+                            name: "Contest name already exists"
+                        }
+                    });
+                }
                 let isValid: boolean = await this.isValidDate(startDate, endDate);
                 if (!isValid) {
                     return reject({
@@ -135,8 +148,21 @@ export class TeamContestService extends ContestsService {
                 standings: null
             };
             let group: Groups;
+            let total: number;
 
             try {
+                total = await this.contests.find({}).count().exec();
+                new_contest.name = (total + 1) + " - " + contest.name;
+                let exist: boolean = await this.exists(new_contest.name);
+
+                if (exist) {
+                    return reject({
+                        code: HTTPStatusCodes.CONFLICT,
+                        body: {
+                            name: "Contest name already exists"
+                        }
+                    });
+                }
                 let isValid: boolean = await this.isValidDate(startDate, endDate);
                 if (!isValid) {
                     return reject({
@@ -146,14 +172,36 @@ export class TeamContestService extends ContestsService {
                         }
                     });
                 }
+                let solved: number[] = [];
+                let unSolved: number[] = [];
+                for (let i = 0; i < 151; i++) {
+                    solved.push(0);
+                    unSolved.push(0);
+                }
                 let user: Users = await this.users.findById(userID).exec();
                 group = await this.groups.findById(groupID).exec();
 
                 let createdContest = new this.contests(new_contest);
                 await createdContest.save();
 
+                let tracker: Trackers;
+
+                tracker = {
+                    country: user.country,
+                    solvedCount: 0,
+                    penalty: 0,
+                    solved: solved,
+                    unSolved: unSolved,
+                    contestant: user._id,
+                    contestants: null,
+                    contestID: createdContest._id
+                };
+
+                let createTracker = new this.trackers(tracker);
+                await createTracker.save();
+
                 let standing: Standings = {
-                    trackers: [],
+                    trackers: [createTracker],
                     contestID: createdContest._id
                 };
 

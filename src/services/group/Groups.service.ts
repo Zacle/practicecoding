@@ -41,10 +41,12 @@ export class GroupsService {
             };
     
             let result: Groups;
+            let total: number;
     
             try {
-
-                let exist: boolean = await this.exists(name);
+                total = await this.groups.find({}).count().exec();
+                group.name = (total + 1) + " - " + name;
+                let exist: boolean = await this.exists(group.name);
 
                 if (exist) {
                     return reject({
@@ -56,7 +58,7 @@ export class GroupsService {
                 }
                 await this.groups.create(group);
     
-                result = await this.groups.findOne({name: name}, "-__v").exec();
+                result = await this.groups.findOne({name: group.name}, "-__v").exec();
     
                 if (result) {
                     let ans: InsightResponse;
@@ -71,6 +73,7 @@ export class GroupsService {
                 });
             }
             catch (err) {
+                console.log("CREATE ERROR: ", err);
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
@@ -505,24 +508,43 @@ export class GroupsService {
         });
     }
 
+    
     /**
-     * Get all contests organized by this group
-     * @param id the group id to query
+     * @param id
+     * @returns all group coming contests
      */
-    async getGroupContests(id: string): Promise<InsightResponse> {
+    async getComingContests(id: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
             let contests: Groups;
+            let comingContests: any[] = [];
 
             try {
                 contests = await this.groups.findById(id)
-                                            .populate("contests")
+                                            .populate({
+                                                path: "contests",
+                                                populate: [{
+                                                    path: "users"
+                                                },
+                                                {
+                                                    path: "owner"
+                                                }]
+                                            })
                                             .exec();
-                
+
+                console.log("USERS COMING CONTEST: ", contests.contests);
+                for (let i = 0; i < contests.contests.length; i++) {
+                    let contest: any = contests.contests[i];
+                    const date: Date = new Date(contest.startDate);
+                    if (date.getTime() > Date.now()) {
+                        comingContests.push(contest);
+                    }
+                }
+                console.log("USERS COMING CONTEST: ", comingContests);
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: contests.contests
+                        result: comingContests
                     }
                 });
             }
@@ -530,7 +552,110 @@ export class GroupsService {
                 return reject({
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {
-                        name: err
+                        name: "Couldn't get all contests attended by the user"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @param id
+     * @returns all group running contests 
+     */
+    async getRunningContests(id: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contests: Groups;
+            let runningContests: any[] = [];
+
+            try {
+                contests = await this.groups.findById(id)
+                                            .populate({
+                                                path: "contests",
+                                                populate: [{
+                                                    path: "users"
+                                                },
+                                                {
+                                                    path: "owner"
+                                                }]
+                                            })
+                                            .exec();
+
+                console.log("USERS RUNNING CONTEST: ", contests.contests);
+
+                for (let i = 0; i < contests.contests.length; i++) {
+                    let contest: any = contests.contests[i];
+                    const date1: Date = new Date(contest.startDate);
+                    const date2: Date = new Date(contest.endDate);
+                    if (date1.getTime() < Date.now() && date2.getTime() > Date.now()) {
+                        runningContests.push(contest);
+                    }
+                }
+                console.log("USERS RUNNING CONTEST: ", runningContests);
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: runningContests
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't get all contests attended by the user"
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * @param id
+     * @returns all group past contests 
+     */
+    async getContests(id: string): Promise<InsightResponse> {
+        
+        return new Promise<InsightResponse>(async (resolve, reject) => {
+            let contests: Groups;
+            let pastContests: any[] = [];
+
+            try {
+                contests = await this.groups.findById(id)
+                                            .populate({
+                                                path: "contests",
+                                                populate: [{
+                                                    path: "users"
+                                                },
+                                                {
+                                                    path: "owner"
+                                                }]
+                                            })
+                                            .exec();
+
+                console.log("USERS PAST CONTEST: ", contests.contests);
+
+                for (let i = 0; i < contests.contests.length; i++) {
+                    let contest: any = contests.contests[i];
+                    const date: Date = new Date(contest.endDate);
+                    if (date.getTime() < Date.now()) {
+                        pastContests.push(contest);
+                    }
+                }
+                console.log("USERS PAST CONTEST: ", pastContests);
+                return resolve({
+                    code: HTTPStatusCodes.OK,
+                    body: {
+                        result: pastContests
+                    }
+                });
+            }
+            catch (err) {
+                return reject({
+                    code: HTTPStatusCodes.BAD_REQUEST,
+                    body: {
+                        name: "Couldn't get all contests attended by the user"
                     }
                 });
             }

@@ -16,6 +16,8 @@ export const SESSION_SECRET = process.env["SESSION_SECRET"];
 export const MONGODB_URI = prod ? process.env["MONGODB_URI"] : process.env["MONGODB_URI_LOCAL"];
 export const JWT_SECRET = process.env["JWT"];
 
+export const HACKEREARTH_SECRET = process.env["HACKEREARTH_SECRET"];
+
 if (!SESSION_SECRET) {
     logger.error("No client secret. Set SESSION_SECRET environment variable.");
     process.exit(1);

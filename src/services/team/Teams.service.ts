@@ -29,10 +29,12 @@ export class TeamsService {
             };
     
             let result: Teams;
+            let total: number;
     
             try {
-
-                let exist: boolean = await this.exists(name);
+                total = await this.teams.find({}).count().exec();
+                team.name = (total + 1) + " - " + name;
+                let exist: boolean = await this.exists(team.name);
 
                 if (exist) {
                     return reject({
@@ -44,7 +46,7 @@ export class TeamsService {
                 }
                 await this.teams.create(team);
     
-                result = await this.teams.findOne({name: name}, "-__v").exec();
+                result = await this.teams.findOne({name: team.name}, "-__v").exec();
     
                 if (result) {
                     let ans: InsightResponse;
