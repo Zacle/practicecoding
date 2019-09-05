@@ -528,6 +528,7 @@ export class Codeforces extends Plateform {
             let status: any[];
             let statusFiltered: any[] = [];
             let startSecond: number = contest.startDate.getTime() / 1000;
+            let endSecond: number = contest.endDate.getTime() / 1000;
 
             try {
                 result = await this.readAPI(link);
@@ -542,7 +543,7 @@ export class Codeforces extends Plateform {
                 status = result.result;
                 for (let i = 0; i < status.length; i++) {
                     let submission = status[i];
-                    if (submission.creationTimeSeconds >= startSecond && submission.verdict != "TESTING") {
+                    if (submission.creationTimeSeconds >= startSecond && submission.creationTimeSeconds < endSecond && submission.verdict != "TESTING") {
                         statusFiltered.push(submission);
                     }
                     if (submission.creationTimeSeconds < startSecond) {
@@ -940,8 +941,8 @@ export class Uva extends Plateform {
             const link: string = "https://uhunt.onlinejudge.org/api/subs-pids/";
             let status: any;
             let statusFiltered: any[];
-            let startSecond: number = contest.startDate.getTime() / 1000;
-
+            let startSecond: number = new Date(contest.startDate).getTime() / 1000;
+            let endSecond: number = new Date(contest.endDate).getTime() / 1000;
             try {
                 let converted: number = await this.readAPI(converToId);
                 if (converted == 0) {
@@ -962,10 +963,12 @@ export class Uva extends Plateform {
                         }
                     });
                 }
-                statusFiltered = status[convertedToString].subs.filter((submission: any[]) => {
-                    console.log("SUBMISSION: ", submission);
-                    return submission[4] >= startSecond && this.getVerdict(submission[2]) != "IN_QUEUE";
+                statusFiltered = status[convertedToString].subs;
+                statusFiltered = statusFiltered.filter((submission: any[]) => {
+                    console.log("SUBMISSION: "+ submission[4] + " " + startSecond + " "+ endSecond);
+                    return (new Date(submission[4]).getTime()) >= startSecond && submission[4] < endSecond && submission[2] != 20;
                 });
+                console.log("FILTERED: ", statusFiltered);
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
@@ -1357,7 +1360,8 @@ export class LiveArchive extends Plateform {
             const link: string = "https://icpcarchive.ecs.baylor.edu/uhunt/api/subs-pids/";
             let status: any;
             let statusFiltered: any[];
-            let startSecond: number = contest.startDate.getTime() / 1000;
+            let startSecond: number = new Date(contest.startDate).getTime() / 1000;
+            let endSecond: number = new Date(contest.endDate).getTime() / 1000;
 
             try {
                 let converted: number = await this.readAPI(converToId);
@@ -1379,9 +1383,12 @@ export class LiveArchive extends Plateform {
                         }
                     });
                 }
-                statusFiltered = status[convertedToString].subs.filter((submission: any[]) => {
-                    return submission[4] >= startSecond && this.getVerdict(submission[2]) != "IN_QUEUE";
+                statusFiltered = status[convertedToString].subs;
+                statusFiltered = statusFiltered.filter((submission: any[]) => {
+                    console.log("SUBMISSION: "+ submission[4] + " " + startSecond + " "+ endSecond);
+                    return (new Date(submission[4] * 1000).getTime()) >= startSecond && submission[4] < endSecond && submission[2] != 20;
                 });
+                console.log("FILTERED: ", statusFiltered);
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
