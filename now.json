@@ -1,0 +1,18 @@
+{
+    "version": 2,
+    "name": "practicecoding-backend",
+    "github": {
+        "autoAlias": false
+    },
+    "builds": [{
+        "src": "src/server.ts",
+        "use": "@now/node-server"
+    }],
+    "routes": [{
+        "src": "/(.*)",
+        "dest": "src/server.ts"
+    }],
+    "env": {
+        "NODE_ENV": "production"
+    }
+}
