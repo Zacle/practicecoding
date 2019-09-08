@@ -5,12 +5,15 @@
         "autoAlias": false
     },
     "builds": [{
-        "src": "./src/**/*.ts",
-        "use": "@now/node@canary"
+        "src": "dist/server.js",
+        "use": "@now/node-server",
+        "config": {
+            "useBuildUtils": "@now/build-utils@canary"
+        }
     }],
     "routes": [{
         "src": "/(.*)",
-        "dest": "/src/$1"
+        "dest": "/dist/$1"
     }],
     "env": {
         "NODE_ENV": "production"
