@@ -226,7 +226,7 @@ export class UsersService {
             let result: Users;
 
             try {
-                result = await this.users.findOne({ username: username, activated: true }, '-__v').exec();
+                result = await this.users.findOne({ username: username }, '-__v').exec();
                 
                 if (!result) {
                     return resolve(false);
@@ -290,7 +290,7 @@ export class UsersService {
 
             try {
 
-                result = await this.users.findOne({ email: email.toLowerCase(), activated: true }, '-__v').exec();
+                result = await this.users.findOne({ email: email.toLowerCase() }, '-__v').exec();
 
                 if (result) {
                     return resolve(true);
@@ -377,6 +377,7 @@ export class UsersService {
                 });
             }
             catch(err) {
+                console.log("LOGIN ERROR: ", err);
                 reject({                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
                     code: HTTPStatusCodes.BAD_REQUEST,
                     body: {

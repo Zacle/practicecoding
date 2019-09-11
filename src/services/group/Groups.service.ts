@@ -452,10 +452,22 @@ export class GroupsService {
                 const saveGroup = new this.groups(group);
                 await saveGroup.save();
 
+                group = await this.groups.findById(groupID, "-__v")
+                                         .populate([{
+                                             path: "members",
+                                             populate: {
+                                                 path: "user"
+                                             }
+                                         },
+                                         {
+                                             path: "admin"
+                                         }])
+                                         .exec();
+
                 return resolve({
                     code: HTTPStatusCodes.OK,
                     body: {
-                        result: saveGroup
+                        result: group
                     }
                 });
             }

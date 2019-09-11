@@ -23,12 +23,6 @@ const MongoStore = mongo(session);
 // Load environment variables from .env file, where API keys and passwords are configured
 dotenv.config({ path: ".env.example" });
 
-// Controllers (route handlers)
-import * as homeController from "./controllers/v1/home.controller";
-import * as userController from "./controllers/v1/user.controller";
-import * as apiController from "./controllers/v1/api.controller";
-import * as contactController from "./controllers/v1/contact.controller";
-
 
 // API keys and Passport configuration
 import * as passportConfig from "./config/passport";
@@ -70,7 +64,8 @@ app.use(
   mongoose : {
     url : mongoUrl,
     connectionOptions: {
-      "useNewUrlParser": true
+      "useNewUrlParser": true,
+      "useUnifiedTopology": true
     }
   },
   mount: {

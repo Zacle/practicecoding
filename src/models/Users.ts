@@ -14,8 +14,6 @@ export class Users {
 
     @Property()
     @Email()
-    @Required()
-    @Unique()
     @Description("Email of the user")
     email: string;
 
@@ -93,8 +91,6 @@ export class Users {
     fullname: string;
 
     @Property()
-    @Required()
-    @Unique()
     @Description("User name that will be displayed")
     username: string;
 

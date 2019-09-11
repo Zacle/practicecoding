@@ -9,6 +9,7 @@ import { Submissions } from "../../models/contests/Submissions";
 import { Users } from "../../models/Users";
 import axios from "axios";
 import { HTTPStatusCodes } from "../../util/httpCode";
+import moment from 'moment';
 
 
 
@@ -252,7 +253,7 @@ export class Codeforces extends Plateform {
             const path: string = "https://codeforces.com/api/problemset.problems";
             let res: any[] = [];
 
-            this.problemsModel.find({}).remove().exec();
+            this.problemsModel.deleteMany({}).exec();
 
             try {
                 let status: any = await this.readAPI(path);
@@ -966,7 +967,7 @@ export class Uva extends Plateform {
                 statusFiltered = status[convertedToString].subs;
                 statusFiltered = statusFiltered.filter((submission: any[]) => {
                     console.log("SUBMISSION: "+ submission[4] + " " + startSecond + " "+ endSecond);
-                    return (new Date(submission[4]).getTime()) >= startSecond && submission[4] < endSecond && submission[2] != 20;
+                    return (new Date(submission[4]).getTime()) >= startSecond && (new Date(submission[4]).getTime()) < endSecond && submission[2] != 20;
                 });
                 console.log("FILTERED: ", statusFiltered);
                 return resolve({
@@ -1385,8 +1386,10 @@ export class LiveArchive extends Plateform {
                 }
                 statusFiltered = status[convertedToString].subs;
                 statusFiltered = statusFiltered.filter((submission: any[]) => {
-                    console.log("SUBMISSION: "+ submission[4] + " " + startSecond + " "+ endSecond);
-                    return (new Date(submission[4] * 1000).getTime()) >= startSecond && submission[4] < endSecond && submission[2] != 20;
+                    let offset = 7.30;
+                    let date: Date = new Date((submission[4]*1000)+(3600000*offset));
+                    console.log("SUBMISSION: "+ date+ " " + " " + date.getTime() + " " + startSecond + " "+ endSecond);
+                    return (date.getTime()/1000) >= startSecond && (date.getTime()/1000) < endSecond && submission[2] != 20;
                 });
                 console.log("FILTERED: ", statusFiltered);
                 return resolve({
@@ -1416,11 +1419,13 @@ export class LiveArchive extends Plateform {
             let problem: Problems;
             try {
                 problem = await this.problemsModel.findOne({problemID: submission[1], plateform: this.getPlateform()}).exec();
+                let offset = 7.30;
+                let date: Date = new Date((submission[4]*1000)+(3600000*offset));
                 let sub: Submissions = {
                     submissionID: submission[0],
                     problemID: submission[1],
                     verdict: this.getVerdict(submission[2]),
-                    submissionTime: new Date(submission[4] * 1000),
+                    submissionTime: date,
                     OJ: this.getPlateform(),
                     problemName: problem.name,
                     problemLink: problem.link,
