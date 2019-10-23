@@ -15,7 +15,7 @@ import {TodosService} from '../../../services/todo/Todo.service';
 import { InsightResponse } from "../../../interfaces/InterfaceFacade";
 
 
-@Controller("/todos")
+@Controller("/api/todos")
 export class TodosCtrl {
 
     constructor(private todos: TodosService) {}

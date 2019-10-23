@@ -120,6 +120,11 @@ export class Server extends ServerLoader {
           .use(lusca.xframe("SAMEORIGIN"))
           .use(lusca.xssProtection(true));
 
+      if (process.env.NODE_ENV == "production") {
+        this.use(express.static("client/build"));
+        
+      }
+
       return null;
   }
 

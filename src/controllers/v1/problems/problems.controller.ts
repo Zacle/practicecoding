@@ -23,7 +23,7 @@ import { BadRequest } from "ts-httpexceptions";
 /*
  * REST end-point to access problems saved in our database
 */
-@Controller("/problems")
+@Controller("/api/problems")
 export class ProblemsCtrl {
 
     constructor(private plateformB: PlateformBuilding, private allPlateforms: AllPlateforms) {}

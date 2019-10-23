@@ -18,7 +18,7 @@ import { InsightResponse } from "../../../interfaces/InterfaceFacade";
 import { Summary } from "@tsed/swagger";
 import { EditorService } from "../../../services/editor/Editor.service";
 
-@Controller("/editor")
+@Controller("/api/editor")
 export class EditorCtrl {
 
     constructor(private editorService: EditorService) {}
