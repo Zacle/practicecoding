@@ -6,6 +6,9 @@
     "type": "git",
     "url": "https://github.com/Zacle/practicecoding"
   },
+  "engines": {
+    "node": "8.14.0"
+  },
   "author": "Zacle",
   "scripts": {
     "client-dev": "cd client && yarn dev",
