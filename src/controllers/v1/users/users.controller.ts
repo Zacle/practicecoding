@@ -17,7 +17,7 @@ import { MongooseModel } from "@tsed/mongoose";
  * REST end-point for authentication
 */
 
-@Controller("/api/users")
+@Controller("/users")
 export class UsersCtrl {
 
     constructor(private usersServices: UsersService,

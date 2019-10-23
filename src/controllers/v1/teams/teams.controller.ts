@@ -21,7 +21,7 @@ import {Summary} from "@tsed/swagger";
 import { Teams } from "../../../models/Teams";
 import { TeamsService } from "../../../services/team/Teams.service";
 
-@Controller("/api/teams")
+@Controller("/teams")
 export class TeamsCtrl {
 
     constructor(private teams: TeamsService) {}

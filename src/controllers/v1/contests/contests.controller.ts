@@ -26,7 +26,7 @@ import { Problems } from "../../../models/Problems";
  * REST end-point for contests
  */
 
-@Controller("/api/contests")
+@Controller("/contests")
 export class ContestsCtrl {
 
     constructor(private contestBuilder: ContestBuilderService,

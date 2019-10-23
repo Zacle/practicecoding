@@ -25,7 +25,7 @@ import { ContestsService } from "../../../services/contest/Contests.service";
 import { Contests } from "../../../models/contests/Contests";
 
 
-@Controller("/api/groups")
+@Controller("/groups")
 export class GroupsCtrl {
 
     constructor(private groups: GroupsService,

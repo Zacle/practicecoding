@@ -17,6 +17,7 @@ import passport from "passport";
 import expressValidator from "express-validator";
 import { MONGODB_URI, SESSION_SECRET } from "./util/secrets";
 import cors from 'cors';
+import { RestCtrl } from "./controllers/v1/RestCtrl";
 
 const MongoStore = mongo(session);
 
@@ -32,6 +33,15 @@ import Log from "./Util";
 // const app = express();
 const rootDir = path.resolve(__dirname);
 const mongoUrl = MONGODB_URI;
+
+// if (process.env.NODE_ENV === 'production') {
+//   app.use(express.static('client/build'));
+//   const path = require('path');
+//   app.get('*', (req, res) => {
+//     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
+//   });
+// }
+
 
 // Express configuration
 /*app.use(passport.initialize());
@@ -120,10 +130,6 @@ export class Server extends ServerLoader {
           .use(lusca.xframe("SAMEORIGIN"))
           .use(lusca.xssProtection(true));
 
-      if (process.env.NODE_ENV == "production") {
-        this.use(express.static("client/build"));
-        
-      }
 
       return null;
   }

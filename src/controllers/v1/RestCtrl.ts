@@ -1,7 +1,7 @@
 import {Controller, Get, RouteService} from "@tsed/common";
-import Log from "src/Util";
+import Log from "../../../src/util/logger";
 
-@Controller("/")
+@Controller("/api")
 export class RestCtrl {
 
     constructor(private routeService: RouteService) {

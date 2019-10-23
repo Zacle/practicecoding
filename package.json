@@ -6,14 +6,15 @@
     "type": "git",
     "url": "https://github.com/Zacle/practicecoding"
   },
+  "main": "dist/src/server.js",
   "engines": {
     "node": "8.14.0"
   },
   "author": "Zacle",
   "scripts": {
-    "client-dev": "cd client && npm run dev",
+    "client-dev": "cd client && yarn dev",
     "client": "cd client && yarn start",
-    "dev": "concurrently --kill-others-on-fail \"npm run serve\" \"npm run client\"",
+    "dev": "concurrently --kill-others-on-fail \"npm run serve\" \"npm run client-dev\"",
     "start": "npm run serve",
     "heroku-postbuild": "cd client && npm install && npm install --only=dev --no-shrinkwrap && npm run build",
     "build": "npm run build-sass && npm run build-ts && npm run tslint && npm run build-test && npm run copy-static-assets",
