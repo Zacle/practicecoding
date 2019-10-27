@@ -5,7 +5,7 @@
         "autoAlias": false
     },
     "builds": [{
-        "src": "/dist/src/server.js",
+        "src": "dist/src/server.js",
         "use": "@now/node-server",
         "config": {
             "useBuildUtils": "@now/build-utils@canary"
