@@ -1,22 +1,14 @@
 {
-  "name": "express-typescript-starter",
+  "name": "practice-coding",
   "version": "0.1.0",
   "description": "practicecoding is a website that will help developer across the world to improve their coding skills by suggesting coding problems based on their level",
   "repository": {
     "type": "git",
     "url": "https://github.com/Zacle/practicecoding"
   },
-  "main": "dist/src/server.js",
-  "engines": {
-    "node": "8.14.0"
-  },
   "author": "Zacle",
   "scripts": {
-    "client-dev": "cd client && yarn dev",
-    "client": "cd client && yarn start",
-    "dev": "concurrently --kill-others-on-fail \"npm run serve\" \"npm run client-dev\"",
     "start": "npm run serve",
-    "heroku-postbuild": "cd client && npm install && npm install --only=dev --no-shrinkwrap && npm run build",
     "build": "npm run build-sass && npm run build-ts && npm run tslint && npm run build-test && npm run copy-static-assets",
     "serve": "node dist/src/server.js",
     "watch-node": "nodemon dist/src/server.js",
@@ -33,6 +25,9 @@
     "debug": "npm run build && npm run watch-debug",
     "serve-debug": "nodemon --inspect dist/src/server.js",
     "watch-debug": "concurrently -k -p \"[{name}]\" -n \"Sass,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-sass\" \"npm run watch-ts\" \"npm run serve-debug\""
+  },
+  "engines": {
+    "node": "8.14.0"
   },
   "dependencies": {
     "@tsed/common": "^5.12.0",
@@ -125,7 +120,7 @@
     "@types/supertest": "^2.0.4",
     "@types/winston": "^2.3.7",
     "chai": "^4.1.2",
-    "concurrently": "^3.6.1",
+    "concurrently": "^3.5.1",
     "jest": "^22.0.4",
     "node-sass": "^4.7.2",
     "nodemon": "^1.13.0",
