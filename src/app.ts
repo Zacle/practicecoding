@@ -12,8 +12,6 @@ import dotenv from "dotenv";
 import mongo from "connect-mongo";
 import flash from "express-flash";
 import path from "path";
-import mongoose from "mongoose";
-import passport from "passport";
 import expressValidator from "express-validator";
 import { MONGODB_URI, SESSION_SECRET } from "./util/secrets";
 import cors from 'cors';
