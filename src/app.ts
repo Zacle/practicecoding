@@ -30,6 +30,7 @@ import Log from "./Util";
 // const app = express();
 const rootDir = path.resolve(__dirname);
 const mongoUrl = MONGODB_URI;
+const distDir = __dirname + "/dist/";
 
 
 
@@ -118,7 +119,8 @@ export class Server extends ServerLoader {
           .use(cors())
           .use(flash())
           .use(lusca.xframe("SAMEORIGIN"))
-          .use(lusca.xssProtection(true));
+          .use(lusca.xssProtection(true))
+          .use(express.static(distDir));
 
 
       return null;
