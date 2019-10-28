@@ -28,12 +28,13 @@ export class TodosCtrl {
             let res: InsightResponse;
 
             try {
+                console.log("CALLING TODO DB....");
                 res = await this.todos.get(request.user._id);
                 console.log("TODOS: ", res.body);
                 response.status(res.code);
                 response.setHeader('Content-Type', 'application/json');
                 response.json(res.body.result);
-                resolve(res.body.result);
+                // resolve(res.body.result);
             } catch (err) {
                 res = err;
                 response.status(res.code);
