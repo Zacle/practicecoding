@@ -67,6 +67,7 @@
     "express-validator": "^4.3.0",
     "fbgraph": "^1.4.4",
     "hackerearth-node": "^2.3.9",
+    "http-proxy": "^1.18.0",
     "jsonschema": "^1.2.4",
     "jsonwebtoken": "^8.5.1",
     "jszip": "^3.2.1",
