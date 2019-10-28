@@ -23,7 +23,8 @@
     },
     "filesGlob": [
         "/src/**/*.ts",
-        "/test/**/*.ts"
+        "/test/**/*.ts",
+        "/client/**/*.ts"
     ],
     "exclude": [
         "node_modules"

@@ -40,13 +40,7 @@ dotenv_1.default.config({ path: ".env.example" });
 // const app = express();
 const rootDir = path_1.default.resolve(__dirname);
 const mongoUrl = secrets_1.MONGODB_URI;
-// if (process.env.NODE_ENV === 'production') {
-//   app.use(express.static('client/build'));
-//   const path = require('path');
-//   app.get('*', (req, res) => {
-//     res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html'));
-//   });
-// }
+const distDir = __dirname + "/dist/";
 // Express configuration
 /*app.use(passport.initialize());
 app.use(passport.session());
@@ -108,7 +102,8 @@ let Server = class Server extends common_1.ServerLoader {
                 .use(cors_1.default())
                 .use(express_flash_1.default())
                 .use(lusca_1.default.xframe("SAMEORIGIN"))
-                .use(lusca_1.default.xssProtection(true));
+                .use(lusca_1.default.xssProtection(true))
+                .use(express_1.default.static(distDir));
             return null;
         });
     }
