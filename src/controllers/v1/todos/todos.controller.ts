@@ -32,13 +32,13 @@ export class TodosCtrl {
                 response.status(res.code);
                 response.setHeader('Content-Type', 'application/json');
                 response.json(res.body.result);
-                resolve(res.body.result);
+                // resolve(res.body.result);
             } catch (err) {
                 res = err;
                 response.status(res.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(res.body.name);
-                reject(res.body.name);
+                // reject(res.body.name);
             }
         });
     }
@@ -58,13 +58,13 @@ export class TodosCtrl {
                 response.status(res.code);
                 response.setHeader('Content-Type', 'application/json');
                 response.json(res.body.result);
-                resolve(res.body.result);
+                // resolve(res.body.result);
             } catch (err) {
                 res = err;
                 response.status(res.code);
                 response.setHeader("Content-Type", "application/json");
                 response.json(res.body.name);
-                reject(res.body.name);
+                // reject(res.body.name);
             }
         });
     }
