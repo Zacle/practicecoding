@@ -29,6 +29,7 @@ export class TodosCtrl {
 
             try {
                 res = await this.todos.get(request.user._id);
+                console.log("TODOS: ", res.body);
                 response.status(res.code);
                 response.setHeader('Content-Type', 'application/json');
                 response.json(res.body.result);
