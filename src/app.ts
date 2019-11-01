@@ -32,14 +32,6 @@ const rootDir = path.resolve(__dirname);
 const mongoUrl = MONGODB_URI;
 const distDir = __dirname + "/dist/";
 
-const httpProxy = require('http-proxy');
-
-httpProxy.createProxyServer({
-  target: 'https://apipracticecoding.herokuapp.com',
-  toProxy: true,
-  changeOrigin: true,
-  xfwd: true
-});
 
 // Express configuration
 /*app.use(passport.initialize());
