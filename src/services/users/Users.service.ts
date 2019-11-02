@@ -783,7 +783,8 @@ export class UsersService {
                             to: user.email,
                             from: "zacharienziuki@gmail.com",
                             subject: "Your password has been changed",
-                            text: `Hello,\n\nThis is a confirmation that the password for your account ${user.email} has just been changed.\n`
+                            text: `Hello,\n\nThis is a confirmation that the password for your account ${user.email} has just been changed.\n
+                                    \n\n Happy Coding :)`
                         };
                         transporter.sendMail(mailOptions, (err) => {
                             done(err, user);
@@ -830,7 +831,7 @@ export class UsersService {
     async forgotPassword(users: MongooseModel<Users>, request: Express.Request, email: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
-            const API = 'http://localhost:3000';
+            const API = 'https://practicecodes.com';
             let isValidEmail: boolean;
             try {
                 isValidEmail = await this.emailExists(email.toLowerCase());
@@ -924,7 +925,7 @@ export class UsersService {
     async sendActivationLink(users: MongooseModel<Users>, email: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
-            const API = 'http://localhost:3000';
+            const API = 'https://practicecodes.com';
             try {
 
                 async.waterfall([
