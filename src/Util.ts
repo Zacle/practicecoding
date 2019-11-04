@@ -2,6 +2,8 @@
 
 import * as dotenv from "dotenv";
 
+export const API = "https://www.practicecodes.com";
+
 dotenv.config();
 
 enum LogLevel {

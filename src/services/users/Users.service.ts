@@ -10,6 +10,7 @@ import * as Express from "express";
 import async from "async";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import { API } from '../../Util';
 
 @Service()
 export class UsersService {
@@ -831,7 +832,6 @@ export class UsersService {
     async forgotPassword(users: MongooseModel<Users>, request: Express.Request, email: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
-            const API = 'https://practicecodes.com';
             let isValidEmail: boolean;
             try {
                 isValidEmail = await this.emailExists(email.toLowerCase());
@@ -925,7 +925,6 @@ export class UsersService {
     async sendActivationLink(users: MongooseModel<Users>, email: string): Promise<InsightResponse> {
         
         return new Promise<InsightResponse>(async (resolve, reject) => {
-            const API = 'https://practicecodes.com';
             try {
 
                 async.waterfall([
