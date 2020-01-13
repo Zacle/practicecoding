@@ -58,7 +58,7 @@
     "connect-mongo": "^3.0.0",
     "cookie-parser": "^1.4.4",
     "cors": "^2.8.5",
-    "csv-parse": "^4.4.0",
+    "csv-parse": "^4.4.6",
     "dotenv": "^4.0.0",
     "errorhandler": "^1.5.0",
     "express": "^4.17.1",
